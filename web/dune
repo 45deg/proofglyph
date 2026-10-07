@@ -1,0 +1,28 @@
+(executable
+ (name browser)
+ (modules browser examples_data)
+ (modes js)
+ (libraries tinyprover js_of_ocaml))
+
+(rule
+ (targets index.html app.js catalog.json)
+ (deps index.source.html app.source.js ../examples/catalog.json)
+ (action
+  (progn
+   (copy index.source.html index.html)
+   (copy app.source.js app.js)
+   (copy ../examples/catalog.json catalog.json))))
+
+(alias
+ (name browser)
+ (deps browser.bc.js index.html app.js catalog.json))
+
+(executable
+ (name bundle_examples)
+ (modules bundle_examples)
+ (libraries tinyprover str))
+
+(rule
+ (targets examples_data.ml)
+ (deps (source_tree ../examples))
+ (action (with-stdout-to %{targets} (run %{exe:bundle_examples.exe}))))

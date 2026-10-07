@@ -60,3 +60,7 @@ Dune と OCaml 標準ライブラリ（`Unix.realpath` を使うため `unix` �
 読み込み済み宣言は `Source.compile_declarations` でも検査できる。import の状態は1回の読み込みに閉じ、作業ディレクトリや Kernel の規則は変更しない。記号言語・定数番号・前提の禁止規則にも変更はない。
 
 `Source.compiled.sourcemap` は宣言ごとの定数番号・名前・ソース位置・出力バイト範囲を保持する。`Source.sourcemap_json result` で JSON に直列化する。範囲はエンコード時に記録し、記号列の再検査に成功した場合だけ結果を返す。
+
+`Source.annotate_assembly_error` は宣言のバイト範囲に含まれる診断に元位置と宣言名を添える。範囲外の診断はそのまま返す。コンパイル時の型エラーにも適用する。ブラウザの `compileAt` は map を返し、`checkMapped` は保持したコンパイル出力と入力が完全一致する場合だけ名前表示に使う。UI は tp・pa の編集時に map の使用を解除する。検証は毎回新しい Kernel で行う。
+
+デモ用の証明例は `web/bundle_examples.ml` が import を宣言位置に展開して収録する。宣言本文と個別の説明コメントを保持し、定型のファイル冒頭コメントは除く。共通の依存は1度だけ含める。ブラウザは展開済みの tp を表示・コンパイルし、import の入力は拒否する。map の位置は表示した展開済みソースの行列になる。

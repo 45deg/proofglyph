@@ -1,0 +1,26 @@
+import "../foundation/classical.tp";
+
+theorem demorgan_or_forward (A B : Prop) (h : Prf (Not (Or A B)))
+  : Prf (And (Not A) (Not B))
+  := and_intro (Not A) (Not B)
+    (not_intro A (fun (a : Prf A) => not_elim (Or A B) h (or_left A B a)))
+    (not_intro B (fun (b : Prf B) => not_elim (Or A B) h (or_right A B b)));
+
+theorem demorgan_or_backward (A B : Prop) (h : Prf (And (Not A) (Not B)))
+  : Prf (Not (Or A B))
+  := not_intro (Or A B) (fun (ab : Prf (Or A B)) => or_elim A B False ab
+    (fun (a : Prf A) => not_elim A (and_left (Not A) (Not B) h) a)
+    (fun (b : Prf B) => not_elim B (and_right (Not A) (Not B) h) b));
+
+theorem demorgan_and_forward (A B : Prop) (h : Prf (Not (And A B)))
+  : Prf (Or (Not A) (Not B))
+  := or_elim A (Not A) (Or (Not A) (Not B)) (excluded_middle A)
+    (fun (a : Prf A) => or_right (Not A) (Not B)
+      (not_intro B (fun (b : Prf B) => not_elim (And A B) h (and_intro A B a b))))
+    (fun (na : Prf (Not A)) => or_left (Not A) (Not B) na);
+
+theorem demorgan_and_backward (A B : Prop) (h : Prf (Or (Not A) (Not B)))
+  : Prf (Not (And A B))
+  := not_intro (And A B) (fun (ab : Prf (And A B)) => or_elim (Not A) (Not B) False h
+    (fun (na : Prf (Not A)) => not_elim A na (and_left A B ab))
+    (fun (nb : Prf (Not B)) => not_elim B nb (and_right A B ab)));

@@ -21,7 +21,7 @@
 | 論理 | 連言の交換則・結合則（両方向） | [and_comm](../examples/commons/logic/propositional.tp), [and_assoc_forward](../examples/commons/logic/propositional.tp), [and_assoc_backward](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
 | 論理 | 選言の交換則・場合分け | [or_comm](../examples/commons/logic/propositional.tp), [cases](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
 | 論理 | 対偶 `(A → B) → (¬B → ¬A)` | [contraposition](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
-| 論理 | ド・モルガン則（4方向） | [demorgan_or_forward](../examples/commons/logic/propositional.tp), [demorgan_or_backward](../examples/commons/logic/propositional.tp), [demorgan_and_forward](../examples/commons/logic/classical.tp), [demorgan_and_backward](../examples/commons/logic/propositional.tp) | `logic/propositional.tp`, `logic/classical.tp` |
+| 論理 | ド・モルガン則 `¬(A ∨ B) ⇔ (¬A ∧ ¬B)`、`¬(A ∧ B) ⇔ (¬A ∨ ¬B)` | [demorgan_or_forward](../examples/commons/logic/demorgan.tp), [demorgan_or_backward](../examples/commons/logic/demorgan.tp), [demorgan_and_forward](../examples/commons/logic/demorgan.tp), [demorgan_and_backward](../examples/commons/logic/demorgan.tp) | `logic/demorgan.tp` |
 | 論理 | 全称の具体化・存在への証人導入 | [forall_specialize](../examples/commons/logic/quantifiers.tp), [exists_witness](../examples/commons/logic/quantifiers.tp), [forall_to_exists](../examples/commons/logic/quantifiers.tp) | `logic/quantifiers.tp` |
 | 等式 | 対称律・推移律・関数による保存 | [eq_sym](../examples/commons/equality.tp), [eq_trans](../examples/commons/equality.tp), [eq_cong](../examples/commons/equality.tp) | `equality.tp` |
 | 自然数 | `0 + n = n`, `n + 0 = n` | [add_zero_left](../examples/commons/nat/addition.tp), [add_zero_right](../examples/commons/nat/addition.tp) | `nat/addition.tp` |

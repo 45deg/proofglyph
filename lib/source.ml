@@ -12,14 +12,15 @@ let lex ?file s =
   let ident_start = function 'a'..'z' | 'A'..'Z' | '_' -> true | _ -> false in
   let ident c = ident_start c || (c >= '0' && c <= '9') || c = '\'' in
   let rec loop i line col acc =
-    let tok text j = loop j line (col+j-i) ({text;line;col;file}::acc) in
+    let tok text j = j, line, col+j-i, {text;line;col;file}::acc in
     if i = n then Array.of_list (List.rev ({text="<eof>";line;col;file}::acc))
-    else match s.[i] with
-    | '\n' -> loop (i+1) (line+1) 1 acc
-    | ' ' | '\r' | '\t' -> loop (i+1) line (col+1) acc
+    else
+    let next_i, next_line, next_col, next_acc = match s.[i] with
+    | '\n' -> i+1, line+1, 1, acc
+    | ' ' | '\r' | '\t' -> i+1, line, col+1, acc
     | '/' when i+1 < n && s.[i+1] = '/' ->
         let j = ref (i+2) in while !j < n && s.[!j] <> '\n' do incr j done;
-        loop !j line (col+ !j-i) acc
+        !j, line, col+ !j-i, acc
     | '"' ->
         let j = ref (i+1) in
         while !j < n && s.[!j] <> '"' && s.[!j] <> '\n' && s.[!j] <> '\r'
@@ -35,6 +36,7 @@ let lex ?file s =
         let j = ref (i+1) in while !j < n && ident s.[!j] do incr j done;
         tok (String.sub s i (!j-i)) !j
     | c -> error {text="";line;col;file} (Printf.sprintf "unexpected character %C" c)
+    in loop next_i next_line next_col next_acc
   in loop 0 1 1 []
 let reserved = ["axiom";"def";"theorem";"import";"forall";"fun";"Type";"Kind"]
 let is_name s = String.length s > 0 &&
@@ -191,6 +193,25 @@ let sourcemap_json result =
       m.line m.column m.start_byte m.end_byte) result.sourcemap in
   "{\"version\":1,\"mappings\":[\n" ^ String.concat ",\n" entries ^ "\n]}\n"
 
+(* Maps diagnostics to declarations; never participates in type checking. *)
+let annotate_assembly_error mappings message =
+  let offset =
+    try
+      if not (String.starts_with ~prefix:"byte " message) then None else
+      let colon = String.index message ':' in
+      Some (int_of_string (String.sub message 5 (colon - 5)))
+    with Not_found | Failure _ | Invalid_argument _ -> None in
+  match offset with
+  | None -> message
+  | Some offset ->
+      match List.find_opt (fun (m : mapping) ->
+        m.start_byte <= offset && offset < m.end_byte) mappings with
+      | None -> message
+      | Some m ->
+          Printf.sprintf "%s%d:%d (%s): %s"
+            (match m.file with None -> "" | Some file -> file ^ ":")
+            m.line m.column m.name message
+
 let compile_declarations ?(fuel=1_000_000) declarations =
   let globals = ref [] in
   let names = ref [] in
@@ -213,7 +234,9 @@ let compile_declarations ?(fuel=1_000_000) declarations =
     names := !names @ [d.name]) declarations;
   let assembly = Buffer.contents output in
   (* Check precisely the serialized artifact, through the independent reader. *)
-  Assembly.run (Kernel.create ~fuel ()) assembly;
+  (try Assembly.run (Kernel.create ~fuel ()) assembly
+   with Assembly.Error message ->
+     raise (Error (annotate_assembly_error (List.rev !mappings) message)));
   {assembly; names= !names; declarations; sourcemap=List.rev !mappings}
 
 let compile ?fuel source = compile_declarations ?fuel (parse source)

@@ -30,6 +30,25 @@ let () =
     assert ((compile "").sourcemap = []);
     assert (Source.sourcemap_json (compile "") = "{\"version\":1,\"mappings\":[\n\n]}\n");
     assert (Source.json_string "a\"\\\n\t\000" = "\"a\\\"\\\\\\u000a\\u0009\\u0000\""));
+  test "sourcemap annotates diagnostics only inside declaration ranges" (fun () ->
+    let compiled = compile "axiom A : Type;\ndef id (x : A) : A := x;" in
+    let m = List.nth compiled.sourcemap 1 in
+    let message = Printf.sprintf "byte %d: proof type mismatch" (m.end_byte - 1) in
+    assert (Source.annotate_assembly_error compiled.sourcemap message
+      = "2:1 (id): " ^ message);
+    assert (Source.annotate_assembly_error compiled.sourcemap "byte 2: unknown instruction"
+      = "byte 2: unknown instruction");
+    assert (Source.annotate_assembly_error compiled.sourcemap "byte 999: unfinished stack"
+      = "byte 999: unfinished stack");
+    assert (Source.annotate_assembly_error compiled.sourcemap "other error" = "other error");
+    let with_file = [{m with file = Some "examples/test.tp"}] in
+    assert (Source.annotate_assembly_error with_file message
+      = "examples/test.tp:2:1 (id): " ^ message));
+  test "source type errors retain declaration location and assembly byte" (fun () ->
+    match compile "// heading\naxiom A : Type;\ndef bad : A := Type;" with
+    | _ -> assert false
+    | exception Source.Error message ->
+        assert (String.starts_with ~prefix:"3:1 (bad): byte " message));
   test "two binder index" (fun () ->
     let r = compile "axiom A : Type; def keep (x y : A) : A := x;" in
     assert (r.assembly="*:\n#0#0#0>>#0#0$1\\\\!\n"));
