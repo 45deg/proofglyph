@@ -1,0 +1,32 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "arithmetic.tp";
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom choose : Nat -> Nat -> Nat;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom convolution : Nat -> (Nat -> Nat) -> (Nat -> Nat) -> Nat;
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom choose_pascal (n k : Nat) : Prf (Eq (choose (succ n) (succ k)) (add (choose n k) (choose n (succ
+    k))));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom choose_zero_column (n : Nat) : Prf (Eq (choose n zero) (succ zero));
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom diagonal : Nat -> (Nat -> Nat -> Nat) -> Nat;
+
+// Definition by an explicit binomial-weighted diagonal sum.
+axiom convolution_definition (n : Nat) (f g : Nat -> Nat)
+  : Prf (Eq (convolution n f g) (diagonal n (fun (i j : Nat) => mul (choose n i) (mul (f i) (g j)))));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom diagonal_succ (n : Nat) (h : Nat -> Nat -> Nat) : Prf (Eq (diagonal (succ n) h) (add (diagonal n (fun
+    (i j : Nat) => h i (succ j))) (h (succ n) zero)));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom choose_zero_row (k : Nat) : Prf (Eq (choose zero (succ k)) zero);
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom diagonal_zero (h : Nat -> Nat -> Nat) : Prf (Eq (diagonal zero h) (h zero zero));

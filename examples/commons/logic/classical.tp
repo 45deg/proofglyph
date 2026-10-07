@@ -1,0 +1,9 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/classical.tp";
+
+theorem demorgan_and_forward (A B : Prop) (h : Prf (Not (And A B)))
+  : Prf (Or (Not A) (Not B))
+  := or_elim A (Not A) (Or (Not A) (Not B)) (excluded_middle A)
+    (fun (a : Prf A) => or_right (Not A) (Not B)
+      (not_intro B (fun (b : Prf B) => not_elim (And A B) h (and_intro A B a b))))
+    (fun (na : Prf (Not A)) => or_left (Not A) (Not B) na);

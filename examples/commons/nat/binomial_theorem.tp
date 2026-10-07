@@ -1,0 +1,106 @@
+// Checked proofs; prerequisites are imported by subject.
+import "convolution.tp";
+import "powers.tp";
+
+theorem binomial_theorem (a b n : Nat) : Prf (Eq (convolution n (fun (k : Nat) => pow a k) (fun (k : Nat) =>
+    pow b k)) (pow (add a b) n))
+  := nat_induction (fun (x : Nat) => (Eq (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b
+    k))
+    (pow (add a b) x)))
+    (eq_trans (convolution zero (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (succ zero) (pow (add
+    a b)
+    zero) (eq_trans (convolution zero (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (mul (succ
+    zero) (succ zero)) (succ zero)
+    (eq_trans (convolution zero (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (mul (succ zero) (pow
+    b zero))
+    (mul (succ zero) (succ zero)) (eq_trans (convolution zero (fun (k : Nat) => pow a k) (fun (k : Nat) =>
+    pow b k)) (mul (pow
+    a zero) (pow b zero)) (mul (succ zero) (pow b zero)) (convolution_zero (fun (k : Nat) => pow a k) (fun
+    (k : Nat)
+    => pow b k)) (eq_cong (fun (z : Nat) => (mul z (pow b zero))) (pow a zero) (succ zero) (pow_zero a)))
+    (eq_cong
+    (fun (z : Nat) => (mul (succ zero) z)) (pow b zero) (succ zero) (pow_zero b))) (mul_one_left (succ
+    zero))) (eq_sym (pow (add a b)
+    zero) (succ zero) (pow_zero (add a b))))
+    (fun (x : Nat) (ih : Prf (Eq (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (pow
+    (add a b) x))) => eq_trans (convolution (succ x) (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))
+    (mul (add a b) (pow (add a b) x)) (pow (add a b) (succ x)) (eq_trans (convolution (succ x) (fun (k :
+    Nat)
+    => pow a k) (fun (k : Nat) => pow b k)) (mul (add a b) (convolution x (fun (k : Nat) => pow a k) (fun (k
+    :
+    Nat) => pow b k))) (mul (add a b) (pow (add a b) x)) (eq_trans (convolution (succ x) (fun (k : Nat) =>
+    pow
+    a k) (fun (k : Nat) => pow b k)) (add (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) =>
+    pow b k))) (mul b (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)))) (mul (add a b)
+    (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (eq_trans (convolution (succ x)
+    (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (add (mul a (convolution x (fun (k : Nat) => pow
+    a
+    k) (fun (k : Nat) => pow b k))) (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b (succ
+    k)))) (add (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (mul b
+    (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)))) (eq_trans (convolution (succ x)
+    (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)) (add (convolution x (fun (k : Nat) => pow a (succ
+    k)) (fun (k : Nat) => pow b k)) (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b (succ
+    k)))) (add (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (convolution x
+    (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b (succ k)))) (convolution_pascal x (fun (k : Nat) =>
+    pow
+    a k) (fun (k : Nat) => pow b k)) (eq_cong (fun (z : Nat) => (add z (convolution x (fun (k : Nat) => pow
+    a
+    k) (fun (k : Nat) => pow b (succ k))))) (convolution x (fun (k : Nat) => pow a (succ k)) (fun (k : Nat)
+    =>
+    pow b k)) (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (eq_trans
+    (convolution x (fun (k : Nat) => pow a (succ k)) (fun (k : Nat) => pow b k)) (convolution x (fun (k :
+    Nat)
+    => mul a (pow a k)) (fun (k : Nat) => pow b k)) (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k
+    :
+    Nat) => pow b k))) (convolution_ext x (fun (k : Nat) => pow a (succ k)) (fun (k : Nat) => pow b k) (fun
+    (k
+    : Nat) => mul a (pow a k)) (fun (k : Nat) => pow b k) (fun (k : Nat) => pow_succ a k) (fun (k : Nat) =>
+    eq_refl (pow b k))) (convolution_scale_left x a (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b
+    k)))))
+    (eq_cong (fun (z : Nat) => (add (mul a (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b
+    k))) z)) (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b (succ k))) (mul b
+    (convolution
+    x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (eq_trans (convolution x (fun (k : Nat) => pow
+    a
+    k) (fun (k : Nat) => pow b (succ k))) (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => mul b
+    (pow b k))) (mul b (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)))
+    (convolution_ext
+    x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b (succ k)) (fun (k : Nat) => pow a k) (fun (k : Nat)
+    => mul b (pow b k)) (fun (k : Nat) => eq_refl (pow a k)) (fun (k : Nat) => pow_succ b k))
+    (convolution_scale_right x b (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))))) (eq_sym (mul (add
+    a
+    b) (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (add (mul a (convolution x
+    (fun
+    (k : Nat) => pow a k) (fun (k : Nat) => pow b k))) (mul b (convolution x (fun (k : Nat) => pow a k) (fun
+    (k : Nat) => pow b k)))) (mul_add_left a b (convolution x (fun (k : Nat) => pow a k) (fun (k : Nat) =>
+    pow
+    b k))))) (eq_cong (fun (z : Nat) => (mul (add a b) z)) (convolution x (fun (k : Nat) => pow a k) (fun (k
+    :
+    Nat) => pow b k)) (pow (add a b) x) (ih))) (eq_sym (pow (add a b) (succ x)) (mul (add a b) (pow (add a
+    b)
+    x)) (pow_succ (add a b) x))) n;
+
+theorem binomial_at_one (x n : Nat) (hn : Prf (Lt zero n)) : Prf (Eq (pow (add x (succ zero)) n) (add (add
+    (pow x n)
+    (succ zero)) (sum_between zero n (fun (k : Nat) => mul (choose n k) (pow x k)))))
+  := eq_trans (pow (add x (succ zero)) n) (add (add (pow x n) (pow x zero)) (sum_between zero n (fun (k :
+    Nat) => mul
+    (choose n k) (pow x k)))) (add (add (pow x n) (succ zero)) (sum_between zero n (fun (k : Nat) => mul
+    (choose n k)
+    (pow x k)))) (eq_trans (pow (add x (succ zero)) n) (convolution n (fun (k : Nat) => pow x k) (fun (k :
+    Nat) =>
+    (succ zero))) (add (add (pow x n) (pow x zero)) (sum_between zero n (fun (k : Nat) => mul (choose n k)
+    (pow x
+    k)))) (eq_trans (pow (add x (succ zero)) n) (convolution n (fun (k : Nat) => pow x k) (fun (k : Nat) =>
+    pow (succ zero)
+    k)) (convolution n (fun (k : Nat) => pow x k) (fun (k : Nat) => (succ zero))) (eq_sym (convolution n
+    (fun (k :
+    Nat) => pow x k) (fun (k : Nat) => pow (succ zero) k)) (pow (add x (succ zero)) n) (binomial_theorem x
+    (succ zero) n))
+    (convolution_ext n (fun (k : Nat) => pow x k) (fun (k : Nat) => pow (succ zero) k) (fun (k : Nat) => pow
+    x k) (fun
+    (k : Nat) => (succ zero)) (fun (k : Nat) => eq_refl (pow x k)) (fun (k : Nat) => pow_one k)))
+    (convolution_unit_right n (fun (k : Nat) => pow x k) hn)) (eq_cong (fun (z : Nat) => (add z (sum_between
+    zero n (fun (k : Nat) => mul (choose n k) (pow x k))))) (add (pow x n) (pow x zero)) (add (pow x n)
+    (succ zero))
+    (eq_cong (fun (z : Nat) => (add (pow x n) z)) (pow x zero) (succ zero) (pow_zero x)));

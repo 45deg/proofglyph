@@ -1,0 +1,13 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/quantifiers.tp";
+
+theorem exists_witness (P : U -> Prop) (x : U) (h : Prf (P x))
+  : Prf (Exists P) := exists_intro P x h;
+
+theorem forall_specialize (P : U -> Prop) (h : Prf (All P)) (x : U)
+  : Prf (P x) := all_elim P h x;
+
+theorem forall_to_exists (P : U -> Prop) (h : Prf (All P)) (x : U)
+  : Prf (Exists P) := exists_intro P x (forall_specialize P h x);
+
+theorem function_composition (f g : U -> U) (x : U) : U := g (f x);

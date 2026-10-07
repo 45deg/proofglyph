@@ -1,0 +1,130 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/congruence.tp";
+import "../foundation/divisibility.tp";
+import "multiplication.tp";
+
+theorem divides_to_cong_zero (d a : Nat) (h : Prf (Divides d a)) : Prf (Cong a zero d)
+  := divides_elim d a (Cong a zero d) h
+    (fun (k : Nat) (ha : Prf (Eq a (mul d k))) =>
+      cong_intro a zero d zero k (eq_trans (add a (mul d zero)) (mul d k) (add zero (mul d k)) (eq_trans
+    (add
+    a (mul d zero)) a (mul d k) (eq_trans (add a (mul d zero)) (add a zero) a (eq_cong (fun (z : Nat) =>
+    (add
+    a z)) (mul d zero) zero (mul_zero_right d)) (add_zero_right a)) (ha)) (eq_sym (add zero (mul d k)) (mul
+    d
+    k) (add_zero (mul d k)))));
+
+theorem cong_add (a b c d m : Nat) (hab : Prf (Cong a b m)) (hcd : Prf (Cong c d m))
+  : Prf (Cong (add a c) (add b d) m)
+  := cong_elim a b m (Cong (add a c) (add b d) m) hab
+    (fun (x y : Nat) (h : Prf (Eq (add a (mul m x)) (add b (mul m y)))) =>
+      cong_elim c d m (Cong (add a c) (add b d) m) hcd
+        (fun (u v : Nat) (k : Prf (Eq (add c (mul m u)) (add d (mul m v)))) =>
+          cong_intro (add a c) (add b d) m (add x u) (add y v) (eq_trans (add (add a c) (mul m (add x u)))
+    (add (add b d) (add (mul m y) (mul m v))) (add (add b d) (mul m (add y v))) (eq_trans (add (add a c)
+    (mul
+    m (add x u))) (add (add b (mul m y)) (add d (mul m v))) (add (add b d) (add (mul m y) (mul m v)))
+    (eq_trans (add (add a c) (mul m (add x u))) (add (add b (mul m y)) (add c (mul m u))) (add (add b (mul m
+    y)) (add d (mul m v))) (eq_trans (add (add a c) (mul m (add x u))) (add (add a (mul m x)) (add c (mul m
+    u))) (add (add b (mul m y)) (add c (mul m u))) (eq_trans (add (add a c) (mul m (add x u))) (add (add a
+    c)
+    (add (mul m x) (mul m u))) (add (add a (mul m x)) (add c (mul m u))) (eq_cong (fun (z : Nat) => (add
+    (add
+    a c) z)) (mul m (add x u)) (add (mul m x) (mul m u)) (mul_add_right m x u)) (add_interchange a c (mul m
+    x)
+    (mul m u))) (eq_cong (fun (z : Nat) => (add z (add c (mul m u)))) (add a (mul m x)) (add b (mul m y))
+    (h))) (eq_cong (fun (z : Nat) => (add (add b (mul m y)) z)) (add c (mul m u)) (add d (mul m v)) (k)))
+    (add_interchange b (mul m y) d (mul m v))) (eq_cong (fun (z : Nat) => (add (add b d) z)) (add (mul m y)
+    (mul m v)) (mul m (add y v)) (eq_sym (mul m (add y v)) (add (mul m y) (mul m v)) (mul_add_right m y
+    v))))));
+
+theorem cong_trans (a b c m : Nat) (hab : Prf (Cong a b m)) (hbc : Prf (Cong b c m))
+  : Prf (Cong a c m)
+  := cong_elim a b m (Cong a c m) hab
+    (fun (x y : Nat) (h : Prf (Eq (add a (mul m x)) (add b (mul m y)))) =>
+      cong_elim b c m (Cong a c m) hbc
+        (fun (u v : Nat) (k : Prf (Eq (add b (mul m u)) (add c (mul m v)))) =>
+          cong_intro a c m (add x u) (add y v) (eq_trans (add a (mul m (add x u))) (add c (add (mul m y)
+    (mul
+    m v))) (add c (mul m (add y v))) (eq_trans (add a (mul m (add x u))) (add c (add (mul m v) (mul m y)))
+    (add c (add (mul m y) (mul m v))) (eq_trans (add a (mul m (add x u))) (add (add c (mul m v)) (mul m y))
+    (add c (add (mul m v) (mul m y))) (eq_trans (add a (mul m (add x u))) (add (add b (mul m u)) (mul m y))
+    (add (add c (mul m v)) (mul m y)) (eq_trans (add a (mul m (add x u))) (add b (add (mul m u) (mul m y)))
+    (add (add b (mul m u)) (mul m y)) (eq_trans (add a (mul m (add x u))) (add b (add (mul m y) (mul m u)))
+    (add b (add (mul m u) (mul m y))) (eq_trans (add a (mul m (add x u))) (add (add b (mul m y)) (mul m u))
+    (add b (add (mul m y) (mul m u))) (eq_trans (add a (mul m (add x u))) (add (add a (mul m x)) (mul m u))
+    (add (add b (mul m y)) (mul m u)) (eq_trans (add a (mul m (add x u))) (add a (add (mul m x) (mul m u)))
+    (add (add a (mul m x)) (mul m u)) (eq_cong (fun (z : Nat) => (add a z)) (mul m (add x u)) (add (mul m x)
+    (mul m u)) (mul_add_right m x u)) (eq_sym (add (add a (mul m x)) (mul m u)) (add a (add (mul m x) (mul m
+    u))) (add_assoc a (mul m x) (mul m u)))) (eq_cong (fun (z : Nat) => (add z (mul m u))) (add a (mul m x))
+    (add b (mul m y)) (h))) (add_assoc b (mul m y) (mul m u))) (eq_cong (fun (z : Nat) => (add b z)) (add
+    (mul
+    m y) (mul m u)) (add (mul m u) (mul m y)) (add_comm (mul m y) (mul m u)))) (eq_sym (add (add b (mul m
+    u))
+    (mul m y)) (add b (add (mul m u) (mul m y))) (add_assoc b (mul m u) (mul m y)))) (eq_cong (fun (z : Nat)
+    => (add z (mul m y))) (add b (mul m u)) (add c (mul m v)) (k))) (add_assoc c (mul m v) (mul m y)))
+    (eq_cong (fun (z : Nat) => (add c z)) (add (mul m v) (mul m y)) (add (mul m y) (mul m v)) (add_comm (mul
+    m
+    v) (mul m y)))) (eq_cong (fun (z : Nat) => (add c z)) (add (mul m y) (mul m v)) (mul m (add y v))
+    (eq_sym
+    (mul m (add y v)) (add (mul m y) (mul m v)) (mul_add_right m y v))))));
+
+theorem eq_to_cong (a b m : Nat) (h : Prf (Eq a b)) : Prf (Cong a b m)
+  := cong_intro a b m zero zero (eq_trans (add a (mul m zero)) (add b zero) (add b (mul m zero)) (eq_trans
+    (add a (mul m zero)) b (add b zero) (eq_trans (add a (mul m zero)) a b (eq_trans (add a (mul m zero))
+    (add
+    a zero) a (eq_cong (fun (z : Nat) => (add a z)) (mul m zero) zero (mul_zero_right m)) (add_zero_right
+    a))
+    (h)) (eq_sym (add b zero) b (add_zero_right b))) (eq_sym (add b (mul m zero)) (add b zero) (eq_cong (fun
+    (z : Nat) => (add b z)) (mul m zero) zero (mul_zero_right m))));
+
+theorem cong_refl (a m : Nat) : Prf (Cong a a m) := eq_to_cong a a m (eq_refl a);
+
+theorem cong_mul_right (a b c m : Nat) (hab : Prf (Cong a b m))
+  : Prf (Cong (mul a c) (mul b c) m)
+  := cong_elim a b m (Cong (mul a c) (mul b c) m) hab
+    (fun (x y : Nat) (h : Prf (Eq (add a (mul m x)) (add b (mul m y)))) =>
+      cong_intro (mul a c) (mul b c) m (mul x c) (mul y c) (eq_trans (add (mul a c) (mul m (mul x c))) (add
+    (mul b c) (mul (mul m y) c)) (add (mul b c) (mul m (mul y c))) (eq_trans (add (mul a c) (mul m (mul x
+    c)))
+    (mul (add b (mul m y)) c) (add (mul b c) (mul (mul m y) c)) (eq_trans (add (mul a c) (mul m (mul x c)))
+    (mul (add a (mul m x)) c) (mul (add b (mul m y)) c) (eq_trans (add (mul a c) (mul m (mul x c))) (add
+    (mul
+    a c) (mul (mul m x) c)) (mul (add a (mul m x)) c) (eq_cong (fun (z : Nat) => (add (mul a c) z)) (mul m
+    (mul x c)) (mul (mul m x) c) (eq_sym (mul (mul m x) c) (mul m (mul x c)) (mul_assoc m x c))) (eq_sym
+    (mul
+    (add a (mul m x)) c) (add (mul a c) (mul (mul m x) c)) (mul_add_left a (mul m x) c))) (eq_cong (fun (z :
+    Nat) => (mul z c)) (add a (mul m x)) (add b (mul m y)) (h))) (mul_add_left b (mul m y) c)) (eq_cong (fun
+    (z : Nat) => (add (mul b c) z)) (mul (mul m y) c) (mul m (mul y c)) (mul_assoc m y c))));
+
+theorem cong_mul_left (a b c m : Nat) (hbc : Prf (Cong b c m))
+  : Prf (Cong (mul a b) (mul a c) m)
+  := cong_trans (mul a b) (mul b a) (mul a c) m
+    (eq_to_cong (mul a b) (mul b a) m (mul_comm a b))
+    (cong_trans (mul b a) (mul c a) (mul a c) m
+      (cong_mul_right b c a m hbc)
+      (eq_to_cong (mul c a) (mul a c) m (mul_comm c a)));
+
+theorem cong_mul (a b c d m : Nat) (hab : Prf (Cong a b m)) (hcd : Prf (Cong c d m))
+  : Prf (Cong (mul a c) (mul b d) m)
+  := cong_trans (mul a c) (mul b c) (mul b d) m
+    (cong_mul_right a b c m hab) (cong_mul_left b c d m hcd);
+
+theorem cong_pow (a b n m : Nat) (hab : Prf (Cong a b m))
+  : Prf (Cong (pow a n) (pow b n) m)
+  := nat_induction (fun (k : Nat) => Cong (pow a k) (pow b k) m)
+    (eq_to_cong (pow a zero) (pow b zero) m
+      (eq_trans (pow a zero) (succ zero) (pow b zero) (pow_zero a) (eq_sym (pow b zero) (succ zero)
+    (pow_zero b))))
+    (fun (k : Nat) (ih : Prf (Cong (pow a k) (pow b k) m)) =>
+      cong_trans (pow a (succ k)) (mul a (pow a k)) (pow b (succ k)) m
+        (eq_to_cong (pow a (succ k)) (mul a (pow a k)) m (pow_succ a k))
+        (cong_trans (mul a (pow a k)) (mul b (pow b k)) (pow b (succ k)) m
+          (cong_mul a b (pow a k) (pow b k) m hab ih)
+          (eq_to_cong (mul b (pow b k)) (pow b (succ k)) m
+            (eq_sym (pow b (succ k)) (mul b (pow b k)) (pow_succ b k))))) n;
+
+theorem cong_sym (a b m : Nat) (h : Prf (Cong a b m)) : Prf (Cong b a m)
+  := cong_elim a b m (Cong b a m) h
+    (fun (x y : Nat) (e : Prf (Eq (add a (mul m x)) (add b (mul m y)))) =>
+      cong_intro b a m y x (eq_sym (add a (mul m x)) (add b (mul m y)) e));

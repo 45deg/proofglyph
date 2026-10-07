@@ -1,0 +1,77 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/sums.tp";
+import "factorization.tp";
+import "primes.tp";
+
+theorem factorial_divisor_positive (p n : Nat) (hp : Prf (Lt zero p)) (hle : Prf (Le p n))
+  : Prf (Divides p (factorial n))
+  := imp_elim (Lt zero p) (Divides p (factorial n))
+    (imp_elim (Le p n) (Imp (Lt zero p) (Divides p (factorial n)))
+      (all_nat_elim (fun (b : Nat) => (Imp (Le b n) (Imp (Lt zero b) (Divides b (factorial n)))))
+        (nat_induction (fun (x : Nat) => (AllNat (fun (b : Nat) => (Imp (Le b x) (Imp (Lt zero b) (Divides b
+    (factorial x))))))) (all_nat_intro (fun (b : Nat) => (Imp (Le b zero) (Imp (Lt zero b) (Divides b
+    (factorial zero)))))
+  (fun (b : Nat) => imp_intro (Le b zero) (Imp (Lt zero b) (Divides b (factorial zero)))
+    (fun (h : Prf (Le b zero)) => imp_intro (Lt zero b) (Divides b (factorial zero))
+      (fun (hp : Prf (Lt zero b)) => false_elim (Divides b (factorial zero)) (positive_not_zero b hp
+    (le_zero_eq b h))))))
+          (fun (x : Nat) (ih : Prf (AllNat (fun (b : Nat) => (Imp (Le b x) (Imp (Lt zero b) (Divides b
+    (factorial x))))))) => all_nat_intro (fun (b : Nat) => (Imp (Le b (succ x)) (Imp (Lt zero b) (Divides b
+    (factorial (succ x))))))
+  (fun (b : Nat) => imp_intro (Le b (succ x)) (Imp (Lt zero b) (Divides b (factorial (succ x))))
+    (fun (h : Prf (Le b (succ x))) => imp_intro (Lt zero b) (Divides b (factorial (succ x)))
+      (fun (hp : Prf (Lt zero b)) => or_elim (Le b x) (Eq b (succ x)) (Divides b (factorial (succ x)))
+        (le_succ_split b x h)
+        (fun (hle : Prf (Le b x)) => divides_eq b (mul (succ x) (factorial x)) (factorial (succ x)) (eq_sym
+    (factorial (succ x)) (mul (succ x) (factorial x)) (factorial_succ x))
+  (divides_mul_left b (succ x) (factorial x)
+    (imp_elim (Lt zero b) (Divides b (factorial x))
+      (imp_elim (Le b x) (Imp (Lt zero b) (Divides b (factorial x)))
+        (all_nat_elim (fun (b : Nat) => (Imp (Le b x) (Imp (Lt zero b) (Divides b (factorial x))))) ih b)
+    hle) hp)))
+        (fun (he : Prf (Eq b (succ x))) => eq_subst (fun (z : Nat) => Divides z (factorial (succ x))) (succ
+    x) b (eq_sym b (succ x) he)
+  (divides_intro (succ x) (factorial (succ x)) (factorial x) (factorial_succ x))))))) n) p) hle) hp;
+
+theorem factorial_divisor (p n : Nat) (hp : Prf (Prime p)) (hle : Prf (Le p n))
+  : Prf (Divides p (factorial n)) := factorial_divisor_positive p n (prime_positive p hp) hle;
+
+theorem factorial_positive (n : Nat) : Prf (Lt zero (factorial n))
+  := nat_induction (fun (x : Nat) => Lt zero (factorial x))
+    (eq_subst (fun (z : Nat) => Lt zero z) (succ zero) (factorial zero)
+      (eq_sym (factorial zero) (succ zero) factorial_zero) (zero_lt_succ zero))
+    (fun (x : Nat) (ih : Prf (Lt zero (factorial x))) =>
+      eq_subst (fun (z : Nat) => Lt zero z) (mul (succ x) (factorial x)) (factorial (succ x))
+        (eq_sym (factorial (succ x)) (mul (succ x) (factorial x)) (factorial_succ x))
+        (mul_succ_positive x (factorial x) ih)) n;
+
+theorem factorial_prime_above (n p : Nat) (hp : Prf (Prime p))
+  (hd : Prf (Divides p (succ (factorial n)))) : Prf (Lt n p)
+  := or_elim (Lt n p) (Le p n) (Lt n p) (prime_bound_cases p n)
+    (fun (h : Prf (Lt n p)) => h)
+    (fun (h : Prf (Le p n)) => false_elim (Lt n p)
+      (prime_not_divides_one p hp
+        (divides_cancel_add p (factorial n) (succ zero) (factorial_divisor p n hp h)
+          (divides_eq p (succ (factorial n)) (add (factorial n) (succ zero))
+            (eq_sym (add (factorial n) (succ zero)) (succ (factorial n)) (add_one_right (factorial n)))
+    hd))));
+
+theorem factorial_successor_gt_one (n : Nat) : Prf (Lt (succ zero) (succ (factorial n)))
+  := lt_elim zero (factorial n) (Lt (succ zero) (succ (factorial n))) (factorial_positive n)
+    (fun (k : Nat) (hk : Prf (Eq (factorial n) (add zero (succ k)))) => lt_intro (succ zero) (succ
+    (factorial n)) k (eq_trans (succ (factorial n)) (succ (add zero (succ k))) (add (succ zero) (succ k))
+    (eq_cong (fun (z : Nat) => (succ z)) (factorial n) (add zero (succ k)) (hk)) (eq_sym (add (succ zero)
+    (succ k)) (succ (add zero (succ k))) (add_succ zero (succ k)))));
+
+theorem primes_infinite (n : Nat)
+  : Prf (Exists (fun (p : Nat) => And (Prime p) (Lt n p)))
+  := exists_elim (fun (p : Nat) => And (Prime p) (Divides p (succ (factorial n))))
+    (Exists (fun (p : Nat) => And (Prime p) (Lt n p)))
+    (prime_factor (succ (factorial n)) (factorial_successor_gt_one n))
+    (fun (p : Nat) (h : Prf (And (Prime p) (Divides p (succ (factorial n))))) =>
+      exists_intro (fun (q : Nat) => And (Prime q) (Lt n q)) p
+        (and_intro (Prime p) (Lt n p)
+          (and_left (Prime p) (Divides p (succ (factorial n))) h)
+          (factorial_prime_above n p
+            (and_left (Prime p) (Divides p (succ (factorial n))) h)
+            (and_right (Prime p) (Divides p (succ (factorial n))) h))));

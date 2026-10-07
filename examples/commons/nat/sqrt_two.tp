@@ -1,0 +1,137 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/parity.tp";
+import "../foundation/sqrt_two.tp";
+import "euclid.tp";
+
+theorem even_square_implies_even (a : Nat) (h : Prf (Even (mul a a))) : Prf (Even a)
+  := even_elim (mul a a) (Even a) h
+    (fun (k : Nat) (hk : Prf (Eq (mul a a) (add k k))) =>
+      divides_elim (succ (succ zero)) a (Even a)
+        (prime_divides_square (succ (succ zero)) a prime_two
+          (divides_intro (succ (succ zero)) (mul a a) k
+            (eq_trans (mul a a) (add k k) (mul (succ (succ zero)) k) hk
+              (eq_sym (mul (succ (succ zero)) k) (add k k) (mul_two_left k)))))
+        (fun (j : Nat) (hj : Prf (Eq a (mul (succ (succ zero)) j))) =>
+          even_intro a j (eq_trans a (mul (succ (succ zero)) j) (add j j) hj (mul_two_left j))));
+
+theorem square_two_divides_base (a b : Nat)
+  (h : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) : Prf (Divides (succ (succ zero)) a)
+  := prime_divides_square (succ (succ zero)) a prime_two
+    (divides_eq (succ (succ zero)) (mul (succ (succ zero)) (mul b b)) (mul a a)
+      (eq_sym (mul a a) (mul (succ (succ zero)) (mul b b)) h)
+      (divides_mul_right (succ (succ zero)) (succ (succ zero)) (mul b b) (divides_refl (succ (succ
+    zero)))));
+
+theorem square_two_divides_denominator (a b : Nat)
+  (h : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) : Prf (Divides (succ (succ zero)) b)
+  := divides_elim (succ (succ zero)) a (Divides (succ (succ zero)) b) (square_two_divides_base a b h)
+    (fun (k : Nat) (ha : Prf (Eq a (mul (succ (succ zero)) k))) =>
+      prime_divides_square (succ (succ zero)) b prime_two
+        (divides_eq (succ (succ zero)) (mul (succ (succ zero)) (mul k k)) (mul b b)
+          (mul_cancel_left (succ (succ zero)) (mul (succ (succ zero)) (mul k k)) (mul b b)
+            (prime_positive (succ (succ zero)) prime_two) (eq_trans (mul (succ (succ zero)) (mul (succ (succ
+    zero)) (mul k k))) (mul a a) (mul (succ (succ zero)) (mul b
+    b)) (eq_sym (mul a a) (mul (succ (succ zero)) (mul (succ (succ zero)) (mul k k))) (eq_trans (mul a a)
+    (mul (succ (succ zero)) (mul (mul (succ (succ zero)) k) k)) (mul
+    (succ (succ zero)) (mul (succ (succ zero)) (mul k k))) (eq_trans (mul a a) (mul (succ (succ zero)) (mul
+    (mul k (succ (succ zero))) k)) (mul (succ (succ zero)) (mul (mul (succ (succ zero)) k) k))
+    (eq_trans (mul a a) (mul (succ (succ zero)) (mul k (mul (succ (succ zero)) k))) (mul (succ (succ zero))
+    (mul (mul k (succ (succ zero))) k)) (eq_trans (mul a a) (mul
+    (mul (succ (succ zero)) k) (mul (succ (succ zero)) k)) (mul (succ (succ zero)) (mul k (mul (succ (succ
+    zero)) k))) (eq_trans (mul a a) (mul (mul (succ (succ zero)) k) a) (mul (mul
+    (succ (succ zero)) k) (mul (succ (succ zero)) k)) (eq_cong (fun (z : Nat) => (mul z a)) a (mul (succ
+    (succ zero)) k) (ha)) (eq_cong (fun (z : Nat) =>
+    (mul (mul (succ (succ zero)) k) z)) a (mul (succ (succ zero)) k) (ha))) (mul_assoc (succ (succ zero)) k
+    (mul (succ (succ zero)) k))) (eq_cong (fun (z : Nat) => (mul
+    (succ (succ zero)) z)) (mul k (mul (succ (succ zero)) k)) (mul (mul k (succ (succ zero))) k) (eq_sym
+    (mul (mul k (succ (succ zero))) k) (mul k (mul (succ (succ zero)) k)) (mul_assoc
+    k (succ (succ zero)) k)))) (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) (mul (mul k (succ
+    (succ zero))) k) (mul (mul (succ (succ zero)) k) k) (eq_cong (fun
+    (z : Nat) => (mul z k)) (mul k (succ (succ zero))) (mul (succ (succ zero)) k) (mul_comm k (succ (succ
+    zero)))))) (eq_cong (fun (z : Nat) => (mul (succ (succ zero))
+    z)) (mul (mul (succ (succ zero)) k) k) (mul (succ (succ zero)) (mul k k)) (mul_assoc (succ (succ zero))
+    k k)))) (h)))
+          (divides_mul_right (succ (succ zero)) (succ (succ zero)) (mul k k) (divides_refl (succ (succ
+    zero))))));
+
+theorem sqrt_two_coprime_contradiction (a b : Nat) (hc : Prf (Coprime a b))
+  (h : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) : Prf False
+  := coprime_no_common_prime a b (succ (succ zero)) hc prime_two
+    (square_two_divides_base a b h) (square_two_divides_denominator a b h);
+
+theorem sqrt_two_no_positive_fraction (a b : Nat) (hb : Prf (Lt zero b))
+  (h : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) : Prf False
+  := imp_elim (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) False (imp_elim (Lt zero b) (Imp (Eq (mul a
+    a) (mul (succ (succ zero)) (mul b b))) False)
+    (all_nat_elim (fun (a : Nat) => (Imp (Lt zero b) (Imp (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))
+    False)))
+      (nat_strong_induction (fun (b : Nat) => (AllNat (fun (a : Nat) => (Imp (Lt zero b) (Imp (Eq (mul a a)
+    (mul (succ (succ zero)) (mul b b))) False)))))
+        (fun (b : Nat) (ih : forall (j : Nat), Prf (Lt j b) -> Prf (AllNat (fun (a : Nat) => (Imp (Lt zero
+    j) (Imp (Eq (mul a a) (mul (succ (succ zero)) (mul j j))) False))))) => all_nat_intro (fun (a : Nat) =>
+    (Imp (Lt zero b) (Imp (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) False)))
+  (fun (a : Nat) => imp_intro (Lt zero b) (Imp (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) False) (fun
+    (hpos : Prf (Lt zero b)) =>
+    imp_intro (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) False (fun (h : Prf (Eq (mul a a) (mul (succ
+    (succ zero)) (mul b b)))) =>
+      divides_elim (succ (succ zero)) a False (square_two_divides_base a b h)
+        (fun (k : Nat) (ha : Prf (Eq a (mul (succ (succ zero)) k))) =>
+          divides_elim (succ (succ zero)) b False (square_two_divides_denominator a b h)
+            (fun (j : Nat) (hb : Prf (Eq b (mul (succ (succ zero)) j))) => imp_elim (Eq (mul k k) (mul (succ
+    (succ zero)) (mul j j))) False
+  (imp_elim (Lt zero j) (Imp (Eq (mul k k) (mul (succ (succ zero)) (mul j j))) False)
+    (all_nat_elim (fun (a : Nat) => (Imp (Lt zero j) (Imp (Eq (mul a a) (mul (succ (succ zero)) (mul j j)))
+    False)))
+      (ih j (positive_addend_lt j j b (nonzero_positive j (not_intro (Eq j zero) (fun (hj0 : Prf (Eq j
+    zero)) =>
+  positive_not_zero b hpos (eq_trans b (mul (succ (succ zero)) zero) zero (eq_trans b (mul (succ (succ
+    zero)) j) (mul (succ (succ zero)) zero) (hb) (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) j
+    zero (hj0))) (mul_zero_right (succ (succ zero))))))) (eq_trans b (mul (succ (succ zero)) j) (add j j)
+    (hb) (mul_two_left j)))) k) (nonzero_positive j (not_intro (Eq j zero) (fun (hj0 : Prf (Eq j zero)) =>
+  positive_not_zero b hpos (eq_trans b (mul (succ (succ zero)) zero) zero (eq_trans b (mul (succ (succ
+    zero)) j) (mul (succ (succ zero)) zero) (hb) (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) j
+    zero (hj0))) (mul_zero_right (succ (succ zero)))))))) (mul_cancel_left (succ (succ zero)) (mul k k) (mul
+    (succ (succ zero)) (mul j j)) (prime_positive (succ (succ zero)) prime_two)
+  (mul_cancel_left (succ (succ zero)) (mul (succ (succ zero)) (mul k k)) (mul (succ (succ zero)) (mul (succ
+    (succ zero)) (mul j j))) (prime_positive (succ (succ zero)) prime_two) (eq_trans (mul (succ (succ zero))
+    (mul (succ (succ zero)) (mul k k))) (mul (succ (succ zero)) (mul b b)) (mul (succ (succ zero)) (mul
+    (succ (succ zero)) (mul (succ (succ zero)) (mul j j)))) (eq_trans (mul (succ (succ zero)) (mul (succ
+    (succ zero)) (mul k k))) (mul a a) (mul (succ (succ zero)) (mul b b)) (eq_sym (mul a a) (mul (succ (succ
+    zero)) (mul (succ (succ zero)) (mul k k))) (eq_trans (mul a a) (mul (succ (succ zero)) (mul (mul (succ
+    (succ zero)) k) k)) (mul (succ (succ zero)) (mul (succ (succ zero)) (mul k k))) (eq_trans (mul a a) (mul
+    (succ (succ zero)) (mul (mul k (succ (succ zero))) k)) (mul (succ (succ zero)) (mul (mul (succ (succ
+    zero)) k) k)) (eq_trans (mul a a) (mul (succ (succ zero)) (mul k (mul (succ (succ zero)) k))) (mul (succ
+    (succ zero)) (mul (mul k (succ (succ zero))) k)) (eq_trans (mul a a) (mul (mul (succ (succ zero)) k)
+    (mul (succ (succ zero)) k)) (mul (succ (succ zero)) (mul k (mul (succ (succ zero)) k))) (eq_trans (mul a
+    a) (mul (mul (succ (succ zero)) k) a) (mul (mul (succ (succ zero)) k) (mul (succ (succ zero)) k))
+    (eq_cong (fun (z : Nat) => (mul z a)) a (mul (succ (succ zero)) k) (ha)) (eq_cong (fun (z : Nat) => (mul
+    (mul (succ (succ zero)) k) z)) a (mul (succ (succ zero)) k) (ha))) (mul_assoc (succ (succ zero)) k (mul
+    (succ (succ zero)) k))) (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) (mul k (mul (succ (succ
+    zero)) k)) (mul (mul k (succ (succ zero))) k) (eq_sym (mul (mul k (succ (succ zero))) k) (mul k (mul
+    (succ (succ zero)) k)) (mul_assoc k (succ (succ zero)) k)))) (eq_cong (fun (z : Nat) => (mul (succ (succ
+    zero)) z)) (mul (mul k (succ (succ zero))) k) (mul (mul (succ (succ zero)) k) k) (eq_cong (fun (z : Nat)
+    => (mul z k)) (mul k (succ (succ zero))) (mul (succ (succ zero)) k) (mul_comm k (succ (succ zero))))))
+    (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) (mul (mul (succ (succ zero)) k) k) (mul (succ
+    (succ zero)) (mul k k)) (mul_assoc (succ (succ zero)) k k)))) (h)) (eq_cong (fun (z : Nat) => (mul (succ
+    (succ zero)) z)) (mul b b) (mul (succ (succ zero)) (mul (succ (succ zero)) (mul j j))) (eq_trans (mul b
+    b) (mul (succ (succ zero)) (mul (mul (succ (succ zero)) j) j)) (mul (succ (succ zero)) (mul (succ (succ
+    zero)) (mul j j))) (eq_trans (mul b b) (mul (succ (succ zero)) (mul (mul j (succ (succ zero))) j)) (mul
+    (succ (succ zero)) (mul (mul (succ (succ zero)) j) j)) (eq_trans (mul b b) (mul (succ (succ zero)) (mul
+    j (mul (succ (succ zero)) j))) (mul (succ (succ zero)) (mul (mul j (succ (succ zero))) j)) (eq_trans
+    (mul b b) (mul (mul (succ (succ zero)) j) (mul (succ (succ zero)) j)) (mul (succ (succ zero)) (mul j
+    (mul (succ (succ zero)) j))) (eq_trans (mul b b) (mul (mul (succ (succ zero)) j) b) (mul (mul (succ
+    (succ zero)) j) (mul (succ (succ zero)) j)) (eq_cong (fun (z : Nat) => (mul z b)) b (mul (succ (succ
+    zero)) j) (hb)) (eq_cong (fun (z : Nat) => (mul (mul (succ (succ zero)) j) z)) b (mul (succ (succ zero))
+    j) (hb))) (mul_assoc (succ (succ zero)) j (mul (succ (succ zero)) j))) (eq_cong (fun (z : Nat) => (mul
+    (succ (succ zero)) z)) (mul j (mul (succ (succ zero)) j)) (mul (mul j (succ (succ zero))) j) (eq_sym
+    (mul (mul j (succ (succ zero))) j) (mul j (mul (succ (succ zero)) j)) (mul_assoc j (succ (succ zero))
+    j)))) (eq_cong (fun (z : Nat) => (mul (succ (succ zero)) z)) (mul (mul j (succ (succ zero))) j) (mul
+    (mul (succ (succ zero)) j) j) (eq_cong (fun (z : Nat) => (mul z j)) (mul j (succ (succ zero))) (mul
+    (succ (succ zero)) j) (mul_comm j (succ (succ zero)))))) (eq_cong (fun (z : Nat) => (mul (succ (succ
+    zero)) z)) (mul (mul (succ (succ zero)) j) j) (mul (succ (succ zero)) (mul j j)) (mul_assoc (succ (succ
+    zero)) j j))))))))))))) b) a) hb) h;
+
+theorem sqrt_two_irrational (h : Prf RationalRootTwo) : Prf False
+  := rational_root_two_elim False h (fun (a b : Nat) (hb : Prf (Lt zero b))
+    (he : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) => sqrt_two_no_positive_fraction a b hb
+    he);

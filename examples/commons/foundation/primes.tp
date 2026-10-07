@@ -1,0 +1,27 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "divisibility.tp";
+import "order.tp";
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom Prime : Nat -> Prop;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom prime_elim (p : Nat) (P : Prop) : Prf (Prime p)
+  -> (Prf (Lt (succ zero) p) -> (forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d
+    p))) -> Prf P) -> Prf P;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom Coprime : Nat -> Nat -> Prop;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom coprime_elim (a b : Nat) : Prf (Coprime a b)
+  -> forall (d : Nat), Prf (Divides d a) -> Prf (Divides d b) -> Prf (Eq d (succ zero));
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom prime_intro (p : Nat) : Prf (Lt (succ zero) p)
+  -> (forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p))) -> Prf (Prime p);
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom coprime_intro (a b : Nat)
+  : (forall (d : Nat), Prf (Divides d a) -> Prf (Divides d b) -> Prf (Eq d (succ zero))) -> Prf (Coprime a
+    b);

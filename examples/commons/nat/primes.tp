@@ -1,0 +1,55 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/primes.tp";
+import "divisibility.tp";
+import "ordered_multiplication.tp";
+
+theorem prime_positive (p : Nat) (hp : Prf (Prime p)) : Prf (Lt zero p)
+  := prime_elim p (Lt zero p) hp
+    (fun (h : Prf (Lt (succ zero) p)) (divs : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ
+    zero)) (Eq d p))) =>
+      lt_elim (succ zero) p (Lt zero p) h
+        (fun (k : Nat) (hk : Prf (Eq p (add (succ zero) (succ k)))) => lt_intro zero p (succ k) (eq_trans p
+    (succ (succ k)) (add zero (succ (succ k))) (eq_trans p (succ (add zero (succ k))) (succ (succ k))
+    (eq_trans p (add (succ zero) (succ k)) (succ (add zero (succ k))) (hk) (add_succ zero (succ k)))
+    (eq_cong (fun (z : Nat) => (succ z)) (add zero (succ k)) (succ k) (add_zero (succ k)))) (eq_sym (add
+    zero (succ (succ k))) (succ (succ k)) (add_zero (succ (succ k)))))));
+
+theorem prime_not_divides_interior (p k : Nat) (hp : Prf (Prime p))
+  (hk : Prf (Lt zero k)) (hkp : Prf (Lt k p)) (hd : Prf (Divides p k)) : Prf False
+  := le_lt_absurd p k (divisor_le_positive p k hk hd) hkp;
+
+theorem prime_not_one (p : Nat) (hp : Prf (Prime p)) (he : Prf (Eq p (succ zero))) : Prf False
+  := prime_elim p False hp
+    (fun (h : Prf (Lt (succ zero) p)) (divs : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ
+    zero)) (Eq d p))) =>
+      lt_elim (succ zero) p False h (fun (k : Nat) (hk : Prf (Eq p (add (succ zero) (succ k)))) =>
+        add_succ_not_self (succ zero) k (eq_trans (add (succ zero) (succ k)) p (succ zero) (eq_sym p (add
+    (succ zero) (succ k)) hk) he)));
+
+theorem coprime_no_common_prime (a b p : Nat) (hc : Prf (Coprime a b))
+  (hp : Prf (Prime p)) (ha : Prf (Divides p a)) (hb : Prf (Divides p b)) : Prf False
+  := prime_not_one p hp (coprime_elim a b hc p ha hb);
+
+theorem prime_two : Prf (Prime (succ (succ zero)))
+  := prime_intro (succ (succ zero)) (lt_intro (succ zero) (succ (succ zero)) zero (eq_sym (add (succ zero)
+    (succ zero)) (succ (succ zero)) (eq_trans (add (succ zero) (succ zero)) (succ (add zero (succ zero)))
+    (succ (succ zero)) (add_succ zero (succ zero)) (eq_cong (fun (z : Nat) => (succ z)) (add zero (succ
+    zero)) (succ zero) (add_zero (succ zero))))))
+    (fun (d : Nat) (hd : Prf (Divides d (succ (succ zero)))) =>
+      or_elim (Eq d zero) (Or (Eq d (succ zero)) (Eq d (succ (succ zero)))) (Or (Eq d (succ zero)) (Eq d
+    (succ (succ zero))))
+        (le_two_cases d (divisor_le_positive d (succ (succ zero)) (zero_lt_succ (succ zero)) hd))
+        (fun (hdzero : Prf (Eq d zero)) => divides_elim d (succ (succ zero)) (Or (Eq d (succ zero)) (Eq d
+    (succ (succ zero)))) hd
+          (fun (k : Nat) (hk : Prf (Eq (succ (succ zero)) (mul d k))) => false_elim (Or (Eq d (succ zero))
+    (Eq d (succ (succ zero)))) (succ_not_zero (succ zero) (eq_trans (succ (succ zero)) (mul zero k) zero
+    (eq_trans (succ (succ zero)) (mul d k) (mul zero k) (hk) (eq_cong (fun (z : Nat) => (mul z k)) d zero
+    (hdzero))) (mul_zero k)))))
+        (fun (h : Prf (Or (Eq d (succ zero)) (Eq d (succ (succ zero))))) => h));
+
+theorem prime_bound_cases (p n : Nat) : Prf (Or (Lt n p) (Le p n)) := order_cases p n;
+
+theorem prime_not_divides_one (p : Nat) (hp : Prf (Prime p)) (hd : Prf (Divides p (succ zero))) : Prf False
+  := divides_elim p (succ zero) False hd
+    (fun (k : Nat) (hk : Prf (Eq (succ zero) (mul p k))) => prime_not_one p hp
+      (mul_eq_one_left p k (eq_sym (succ zero) (mul p k) hk)));

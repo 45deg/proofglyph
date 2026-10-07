@@ -1,0 +1,46 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/parity.tp";
+import "addition.tp";
+
+theorem even_add (a b : Nat) (ha : Prf (Even a)) (hb : Prf (Even b))
+  : Prf (Even (add a b))
+  := even_elim a (Even (add a b)) ha
+    (fun (k : Nat) (ha : Prf (Eq a (add k k))) =>
+      even_elim b (Even (add a b)) hb
+        (fun (j : Nat) (hb : Prf (Eq b (add j j))) =>
+          even_intro (add a b) (add k j) (eq_trans (add a b) (add (add k k) (add j j)) (add (add k j) (add k
+    j)) (eq_trans (add a b) (add (add k k) b) (add (add k k) (add j j)) (eq_cong (fun (z : Nat) => (add z
+    b))
+    a (add k k) (ha)) (eq_cong (fun (z : Nat) => (add (add k k) z)) b (add j j) (hb))) (add_interchange k k
+    j
+    j))));
+
+theorem odd_add (a b : Nat) (ha : Prf (Odd a)) (hb : Prf (Odd b))
+  : Prf (Even (add a b))
+  := odd_elim a (Even (add a b)) ha
+    (fun (k : Nat) (ha : Prf (Eq a (succ (add k k)))) =>
+      odd_elim b (Even (add a b)) hb
+        (fun (j : Nat) (hb : Prf (Eq b (succ (add j j)))) =>
+          even_intro (add a b) (succ (add k j)) (eq_trans (add a b) (succ (succ (add (add k j) (add k j))))
+    (add (succ (add k j)) (succ (add k j))) (eq_trans (add a b) (succ (succ (add (add k k) (add j j))))
+    (succ
+    (succ (add (add k j) (add k j)))) (eq_trans (add a b) (succ (add (add k k) (succ (add j j)))) (succ
+    (succ
+    (add (add k k) (add j j)))) (eq_trans (add a b) (add (succ (add k k)) (succ (add j j))) (succ (add (add
+    k
+    k) (succ (add j j)))) (eq_trans (add a b) (add (succ (add k k)) b) (add (succ (add k k)) (succ (add j
+    j)))
+    (eq_cong (fun (z : Nat) => (add z b)) a (succ (add k k)) (ha)) (eq_cong (fun (z : Nat) => (add (succ
+    (add
+    k k)) z)) b (succ (add j j)) (hb))) (add_succ (add k k) (succ (add j j)))) (eq_cong (fun (z : Nat) =>
+    (succ z)) (add (add k k) (succ (add j j))) (succ (add (add k k) (add j j))) (add_succ_right (add k k)
+    (add
+    j j)))) (eq_cong (fun (z : Nat) => (succ z)) (succ (add (add k k) (add j j))) (succ (add (add k j) (add
+    k
+    j))) (eq_cong (fun (z : Nat) => (succ z)) (add (add k k) (add j j)) (add (add k j) (add k j))
+    (add_interchange k k j j)))) (eq_sym (add (succ (add k j)) (succ (add k j))) (succ (succ (add (add k j)
+    (add k j)))) (eq_trans (add (succ (add k j)) (succ (add k j))) (succ (add (add k j) (succ (add k j))))
+    (succ (succ (add (add k j) (add k j)))) (add_succ (add k j) (succ (add k j))) (eq_cong (fun (z : Nat) =>
+    (succ z)) (add (add k j) (succ (add k j))) (succ (add (add k j) (add k j))) (add_succ_right (add k j)
+    (add
+    k j))))))));

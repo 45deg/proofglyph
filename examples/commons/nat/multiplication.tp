@@ -1,0 +1,118 @@
+// Checked proofs; prerequisites are imported by subject.
+import "addition.tp";
+
+theorem mul_add_left (a b c : Nat) : Prf (Eq (mul (add a b) c) (add (mul a c) (mul b c)))
+  := nat_induction (fun (x : Nat) => (Eq (mul (add x b) c) (add (mul x c) (mul b c))))
+    (eq_trans (mul (add zero b) c) (add zero (mul b c)) (add (mul zero c) (mul b c)) (eq_trans (mul (add
+    zero
+    b) c) (mul b c) (add zero (mul b c)) (eq_cong (fun (z : Nat) => (mul z c)) (add zero b) b (add_zero b))
+    (eq_sym (add zero (mul b c)) (mul b c) (add_zero (mul b c)))) (eq_sym (add (mul zero c) (mul b c)) (add
+    zero (mul b c)) (eq_cong (fun (z : Nat) => (add z (mul b c))) (mul zero c) zero (mul_zero c))))
+    (fun (x : Nat) (ih : Prf (Eq (mul (add x b) c) (add (mul x c) (mul b c)))) => eq_trans (mul (add (succ
+    x)
+    b) c) (add (add c (mul x c)) (mul b c)) (add (mul (succ x) c) (mul b c)) (eq_trans (mul (add (succ x) b)
+    c) (add c (add (mul x c) (mul b c))) (add (add c (mul x c)) (mul b c)) (eq_trans (mul (add (succ x) b)
+    c)
+    (add c (mul (add x b) c)) (add c (add (mul x c) (mul b c))) (eq_trans (mul (add (succ x) b) c) (mul
+    (succ
+    (add x b)) c) (add c (mul (add x b) c)) (eq_cong (fun (z : Nat) => (mul z c)) (add (succ x) b) (succ
+    (add
+    x b)) (add_succ x b)) (mul_succ (add x b) c)) (eq_cong (fun (z : Nat) => (add c z)) (mul (add x b) c)
+    (add
+    (mul x c) (mul b c)) (ih))) (eq_sym (add (add c (mul x c)) (mul b c)) (add c (add (mul x c) (mul b c)))
+    (add_assoc c (mul x c) (mul b c)))) (eq_sym (add (mul (succ x) c) (mul b c)) (add (add c (mul x c)) (mul
+    b
+    c)) (eq_cong (fun (z : Nat) => (add z (mul b c))) (mul (succ x) c) (add c (mul x c)) (mul_succ x c))))
+    a;
+
+theorem mul_one_left (a : Nat) : Prf (Eq (mul (succ zero) a) a)
+  := eq_trans (mul (succ zero) a) (add a zero) a (eq_trans (mul (succ zero) a) (add a (mul zero a)) (add a
+    zero) (eq_trans
+    (mul (succ zero) a) (mul (succ zero) a) (add a (mul zero a)) (eq_cong (fun (z : Nat) => (mul z a)) (succ
+    zero) (succ zero)
+    (one_succ)) (mul_succ zero a)) (eq_cong (fun (z : Nat) => (add a z)) (mul zero a) zero (mul_zero a)))
+    (add_zero_right a);
+
+theorem mul_succ_right (a b : Nat) : Prf (Eq (mul a (succ b)) (add a (mul a b)))
+  := nat_induction (fun (x : Nat) => (Eq (mul x (succ b)) (add x (mul x b))))
+    (eq_trans (mul zero (succ b)) (add zero zero) (add zero (mul zero b)) (eq_trans (mul zero (succ b)) zero
+    (add zero zero) (mul_zero (succ b)) (eq_sym (add zero zero) zero (add_zero zero))) (eq_sym (add zero
+    (mul
+    zero b)) (add zero zero) (eq_cong (fun (z : Nat) => (add zero z)) (mul zero b) zero (mul_zero b))))
+    (fun (x : Nat) (ih : Prf (Eq (mul x (succ b)) (add x (mul x b)))) => eq_trans (mul (succ x) (succ b))
+    (add
+    (succ x) (add b (mul x b))) (add (succ x) (mul (succ x) b)) (eq_trans (mul (succ x) (succ b)) (succ (add
+    x
+    (add b (mul x b)))) (add (succ x) (add b (mul x b))) (eq_trans (mul (succ x) (succ b)) (succ (add b (add
+    x
+    (mul x b)))) (succ (add x (add b (mul x b)))) (eq_trans (mul (succ x) (succ b)) (add (succ b) (add x
+    (mul
+    x b))) (succ (add b (add x (mul x b)))) (eq_trans (mul (succ x) (succ b)) (add (succ b) (mul x (succ
+    b)))
+    (add (succ b) (add x (mul x b))) (mul_succ x (succ b)) (eq_cong (fun (z : Nat) => (add (succ b) z)) (mul
+    x
+    (succ b)) (add x (mul x b)) (ih))) (add_succ b (add x (mul x b)))) (eq_cong (fun (z : Nat) => (succ z))
+    (add b (add x (mul x b))) (add x (add b (mul x b))) (eq_trans (add b (add x (mul x b))) (add (add x b)
+    (mul x b)) (add x (add b (mul x b))) (eq_trans (add b (add x (mul x b))) (add (add b x) (mul x b)) (add
+    (add x b) (mul x b)) (eq_sym (add (add b x) (mul x b)) (add b (add x (mul x b))) (add_assoc b x (mul x
+    b))) (eq_cong (fun (z : Nat) => (add z (mul x b))) (add b x) (add x b) (add_comm b x))) (add_assoc x b
+    (mul x b))))) (eq_sym (add (succ x) (add b (mul x b))) (succ (add x (add b (mul x b)))) (add_succ x (add
+    b
+    (mul x b))))) (eq_sym (add (succ x) (mul (succ x) b)) (add (succ x) (add b (mul x b))) (eq_cong (fun (z
+    :
+    Nat) => (add (succ x) z)) (mul (succ x) b) (add b (mul x b)) (mul_succ x b)))) a;
+
+theorem mul_zero_right (a : Nat) : Prf (Eq (mul a zero) zero)
+  := nat_induction (fun (x : Nat) => (Eq (mul x zero) zero))
+    (mul_zero zero)
+    (fun (x : Nat) (ih : Prf (Eq (mul x zero) zero)) => eq_trans (mul (succ x) zero) (add zero zero) zero
+    (eq_trans (mul (succ x) zero) (add zero (mul x zero)) (add zero zero) (mul_succ x zero) (eq_cong (fun (z
+    :
+    Nat) => (add zero z)) (mul x zero) zero (ih))) (add_zero zero)) a;
+
+theorem mul_comm (a b : Nat) : Prf (Eq (mul a b) (mul b a))
+  := nat_induction (fun (x : Nat) => (Eq (mul x b) (mul b x)))
+    (eq_trans (mul zero b) zero (mul b zero) (mul_zero b) (eq_sym (mul b zero) zero (mul_zero_right b)))
+    (fun (x : Nat) (ih : Prf (Eq (mul x b) (mul b x))) => eq_trans (mul (succ x) b) (add b (mul b x)) (mul b
+    (succ x)) (eq_trans (mul (succ x) b) (add b (mul x b)) (add b (mul b x)) (mul_succ x b) (eq_cong (fun (z
+    :
+    Nat) => (add b z)) (mul x b) (mul b x) (ih))) (eq_sym (mul b (succ x)) (add b (mul b x)) (mul_succ_right
+    b
+    x))) a;
+
+theorem mul_add_right (a b c : Nat) : Prf (Eq (mul a (add b c)) (add (mul a b) (mul a c)))
+  := eq_trans (mul a (add b c)) (add (mul a b) (mul c a)) (add (mul a b) (mul a c)) (eq_trans (mul a (add b
+    c)) (add (mul b a) (mul c a)) (add (mul a b) (mul c a)) (eq_trans (mul a (add b c)) (mul (add b c) a)
+    (add
+    (mul b a) (mul c a)) (mul_comm a (add b c)) (mul_add_left b c a)) (eq_cong (fun (z : Nat) => (add z (mul
+    c
+    a))) (mul b a) (mul a b) (mul_comm b a))) (eq_cong (fun (z : Nat) => (add (mul a b) z)) (mul c a) (mul a
+    c) (mul_comm c a));
+
+theorem mul_assoc (a b c : Nat) : Prf (Eq (mul (mul a b) c) (mul a (mul b c)))
+  := nat_induction (fun (x : Nat) => (Eq (mul (mul x b) c) (mul x (mul b c))))
+    (eq_trans (mul (mul zero b) c) zero (mul zero (mul b c)) (eq_trans (mul (mul zero b) c) (mul zero c)
+    zero
+    (eq_cong (fun (z : Nat) => (mul z c)) (mul zero b) zero (mul_zero b)) (mul_zero c)) (eq_sym (mul zero
+    (mul
+    b c)) zero (mul_zero (mul b c))))
+    (fun (x : Nat) (ih : Prf (Eq (mul (mul x b) c) (mul x (mul b c)))) => eq_trans (mul (mul (succ x) b) c)
+    (add (mul b c) (mul x (mul b c))) (mul (succ x) (mul b c)) (eq_trans (mul (mul (succ x) b) c) (add (mul
+    b
+    c) (mul (mul x b) c)) (add (mul b c) (mul x (mul b c))) (eq_trans (mul (mul (succ x) b) c) (mul (add b
+    (mul x b)) c) (add (mul b c) (mul (mul x b) c)) (eq_cong (fun (z : Nat) => (mul z c)) (mul (succ x) b)
+    (add b (mul x b)) (mul_succ x b)) (mul_add_left b (mul x b) c)) (eq_cong (fun (z : Nat) => (add (mul b
+    c)
+    z)) (mul (mul x b) c) (mul x (mul b c)) (ih))) (eq_sym (mul (succ x) (mul b c)) (add (mul b c) (mul x
+    (mul
+    b c))) (mul_succ x (mul b c)))) a;
+
+theorem mul_one_right (a : Nat) : Prf (Eq (mul a (succ zero)) a)
+  := eq_trans (mul a (succ zero)) (mul (succ zero) a) a (mul_comm a (succ zero)) (mul_one_left a);
+
+theorem mul_two_left (a : Nat) : Prf (Eq (mul (succ (succ zero)) a) (add a a))
+  := eq_trans (mul (succ (succ zero)) a) (add a (mul (succ zero) a)) (add a a) (eq_trans (mul (succ (succ
+    zero)) a) (mul (succ (succ zero)) a) (add a (mul
+    (succ zero) a)) (eq_cong (fun (z : Nat) => (mul z a)) (succ (succ zero)) (succ (succ zero)) (two_succ))
+    (mul_succ (succ zero) a)) (eq_cong (fun
+    (z : Nat) => (add a z)) (mul (succ zero) a) a (mul_one_left a));

@@ -1,0 +1,38 @@
+// Checked proofs; prerequisites are imported by subject.
+import "division.tp";
+import "primes.tp";
+
+theorem prime_mul_elim (p a b : Nat) (P : Prop) (hp : Prf (Prime p))
+  (hab : Prf (Divides p (mul a b))) (fa : Prf (Divides p a) -> Prf P) (fb : Prf (Divides p b) -> Prf P) :
+    Prf P
+  := exists_elim (fun (t : Nat) => (And (Lt zero t) (And (Divides p (mul a t)) (AllNat (fun (s : Nat) =>
+    (Imp (Lt zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))))))) P
+    (least_positive (fun (t : Nat) => Divides p (mul a t)) p (prime_positive p hp)
+      (divides_mul_left p a p (divides_refl p)))
+    (fun (t : Nat) (h : Prf (And (Lt zero t) (And (Divides p (mul a t)) (AllNat (fun (s : Nat) => (Imp (Lt
+    zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))))))) =>
+      (fun (ht : Prf (Lt zero t)) (hat : Prf (Divides p (mul a t))) (hmin : Prf (AllNat (fun (s : Nat) =>
+    (Imp (Lt zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))))) =>
+        prime_elim p P hp
+          (fun (hgt : Prf (Lt (succ zero) p))
+            (divs : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p))) =>
+            or_elim (Eq t (succ zero)) (Eq t p) P
+              (divs t (least_multiple_divides p a t p ht hat hmin (divides_mul_left p a p (divides_refl
+    p))))
+              (fun (ht1 : Prf (Eq t (succ zero))) => fa (divides_eq p (mul a t) a (eq_trans (mul a t) (mul a
+    (succ zero)) a (eq_cong (fun (z : Nat) => (mul a z)) t (succ zero) (ht1)) (mul_one_right a)) hat))
+              (fun (htp : Prf (Eq t p)) => fb (eq_subst (fun (z : Nat) => Divides z b) t p htp
+  (least_multiple_divides p a t b ht hat hmin hab)))))
+        (and_left (Lt zero t) (And (Divides p (mul a t)) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt
+    s t) (Not (Divides p (mul a s)))))))) h)
+        (and_left (Divides p (mul a t)) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not
+    (Divides p (mul a s))))))) (and_right (Lt zero t) (And (Divides p (mul a t)) (AllNat (fun (s : Nat) =>
+    (Imp (Lt zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))))) h))
+        (and_right (Divides p (mul a t)) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not
+    (Divides p (mul a s))))))) (and_right (Lt zero t) (And (Divides p (mul a t)) (AllNat (fun (s : Nat) =>
+    (Imp (Lt zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))))) h)));
+
+theorem prime_divides_square (p a : Nat) (hp : Prf (Prime p))
+  (h : Prf (Divides p (mul a a))) : Prf (Divides p a)
+  := prime_mul_elim p a a (Divides p a) hp h
+    (fun (ha : Prf (Divides p a)) => ha) (fun (ha : Prf (Divides p a)) => ha);

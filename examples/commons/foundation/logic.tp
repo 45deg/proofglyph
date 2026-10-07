@@ -1,0 +1,32 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+
+axiom Prop : Type;
+
+axiom Prf : Prop -> Type;
+
+axiom And : Prop -> Prop -> Prop;
+
+axiom and_intro (A B : Prop) : Prf A -> Prf B -> Prf (And A B);
+
+axiom and_left (A B : Prop) : Prf (And A B) -> Prf A;
+
+axiom and_right (A B : Prop) : Prf (And A B) -> Prf B;
+
+axiom Or : Prop -> Prop -> Prop;
+
+axiom or_elim (A B C : Prop) : Prf (Or A B)
+  -> (Prf A -> Prf C) -> (Prf B -> Prf C) -> Prf C;
+
+axiom Not : Prop -> Prop;
+
+axiom False : Prop;
+
+axiom not_intro (A : Prop) : (Prf A -> Prf False) -> Prf (Not A);
+
+axiom not_elim (A : Prop) : Prf (Not A) -> Prf A -> Prf False;
+
+axiom or_left (A B : Prop) : Prf A -> Prf (Or A B);
+
+axiom or_right (A B : Prop) : Prf B -> Prf (Or A B);
+
+axiom false_elim (A : Prop) : Prf False -> Prf A;

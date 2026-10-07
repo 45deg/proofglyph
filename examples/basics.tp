@@ -1,0 +1,15 @@
+// Every definition is opaque after registration.
+axiom A : Type;
+def id (x : A) : A := x;
+theorem keep (x : A) (y : A) : A := x;
+
+axiom B : A -> Type;
+theorem dependent_id (x : A) (y : B x) : B x := y;
+
+// Anonymous arrow binders must also count toward de Bruijn depth.
+theorem nested (x : A) : B x -> B x := fun (y : B x) => y;
+
+// This requires beta conversion inside a type.
+axiom a : A;
+axiom b : B a;
+theorem beta : (fun (x : A) => B x) a := b;
