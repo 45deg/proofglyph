@@ -4,12 +4,17 @@
 
 | ファイル | 責務 |
 | --- | --- |
-| `lib/term.ml` | AST、shift、捕獲を避ける置換、記号列出力、型表示 |
-| `lib/kernel.ml` / `.mli` | 型推論、Π の形成、β 同値、検査付きの署名追加 |
-| `lib/assembly.ml` | 記号言語の字句読み取りとスタック操作 |
-| `lib/source.ml` | 名前付きソースの解析、import、糖衣展開、名前解決、出力の再検査 |
+| `lib/core/term.ml` | AST、shift、捕獲を避ける置換、型表示 |
+| `lib/core/kernel.ml` / `.mli` | 型推論、Π の形成、β 同値、検査付きの署名追加 |
+| `lib/pa/reader.ml` | 記号言語の字句読み取りとスタック操作 |
+| `lib/pa/writer.ml` | 項から pa 記号列への出力 |
+| `lib/tp/source.ml` | 名前付きソースの解析、import、糖衣展開、名前解決、出力の再検査 |
 | `bin/main.ml` | ファイル I/O、CLI、エラー処理 |
 | `test/tests.ml` | 正しい証明、拒否すべき入力、変数操作の回帰テスト |
+
+Dune のライブラリは `tinyprover_core`、`tinyprover_pa`、`tinyprover_tp` に分離する。pa は core に、tp は pa と core に依存し、core と pa は tp に依存しない。ファイル import に必要な `unix` は tp の依存とする。
+
+OCaml API は `Tinyprover_core.Term` / `Kernel`、`Tinyprover_pa.Reader` / `Writer`、`Tinyprover_tp.Source` から利用する。従来の `Term.encode` は `Tinyprover_pa.Writer.encode` に移動した。
 
 Kernel の署名型は `.mli` で抽象化する。外部から未検査の定数を注入する操作は公開しない。コンパイラは Kernel の内部文脈や正規化器を操作しない。
 

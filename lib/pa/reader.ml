@@ -1,3 +1,4 @@
+open Tinyprover_core
 open Term
 
 (** {1 .pa Assembly Reader and Stack Machine}

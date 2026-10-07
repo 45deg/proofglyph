@@ -1,4 +1,4 @@
-open Tinyprover
+module Source = Tinyprover_tp.Source
 
 (** {1 Example Bundler and Catalog Generator}
 

@@ -2,7 +2,7 @@
  (name browser)
  (modules browser examples_data)
  (modes js)
- (libraries tinyprover js_of_ocaml))
+ (libraries tinyprover_core tinyprover_pa tinyprover_tp js_of_ocaml))
 
 (rule
  (targets index.html app.js catalog.json)
@@ -20,7 +20,7 @@
 (executable
  (name bundle_examples)
  (modules bundle_examples)
- (libraries tinyprover str))
+ (libraries tinyprover_tp str))
 
 (rule
  (targets examples_data.ml)

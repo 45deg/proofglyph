@@ -1,4 +1,6 @@
-open Tinyprover
+open Tinyprover_core
+module Assembly = Tinyprover_pa.Reader
+module Source = Tinyprover_tp.Source
 open Term
 
 (** {1 tinyprover Regression Test Suite}
@@ -339,10 +341,10 @@ let () =
     List.iter (fun (d:Source.declaration) ->
       if not (List.mem d.name ["excluded_middle"; "demorgan_and_forward"]) then (
         let typ = Source.resolve !globals d.at d.typ in
-        Buffer.add_string output (Term.encode typ);
+        Buffer.add_string output (Tinyprover_pa.Writer.encode typ);
         (match d.body with
          | None -> Buffer.add_char output ':'
-         | Some b -> Buffer.add_string output (Term.encode (Source.resolve !globals d.at b));
+         | Some b -> Buffer.add_string output (Tinyprover_pa.Writer.encode (Source.resolve !globals d.at b));
              Buffer.add_char output '!');
         globals := (d.name,List.length !globals)::!globals)) declarations;
     verify (Buffer.contents output));

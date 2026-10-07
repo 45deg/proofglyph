@@ -1,4 +1,6 @@
-open Tinyprover
+open Tinyprover_core
+module Assembly = Tinyprover_pa.Reader
+module Source = Tinyprover_tp.Source
 open Js_of_ocaml
 
 (** {1 Browser JavaScript Bindings}

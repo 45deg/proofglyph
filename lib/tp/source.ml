@@ -1,3 +1,6 @@
+open Tinyprover_core
+module Assembly = Tinyprover_pa.Reader
+
 (** {1 .tp Language Compiler and Frontend}
 
     Provides lexing, parsing, recursive import resolution, name resolution,
@@ -291,10 +294,10 @@ let compile_declarations ?(fuel=1_000_000) declarations =
     let start_byte = Buffer.length output in
     if List.mem_assoc d.name !globals then error d.at ("duplicate declaration: " ^ d.name);
     let typ = resolve !globals d.at d.typ in
-    Buffer.add_string output (Term.encode typ);
+    Buffer.add_string output (Tinyprover_pa.Writer.encode typ);
     (match d.body with
      | None -> Buffer.add_char output ':'
-     | Some b -> Buffer.add_string output (Term.encode (resolve !globals d.at b));
+     | Some b -> Buffer.add_string output (Tinyprover_pa.Writer.encode (resolve !globals d.at b));
          Buffer.add_char output '!');
     let end_byte = Buffer.length output in
     mappings := {constant; name=d.name; file=d.at.file; line=d.at.line;
