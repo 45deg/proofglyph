@@ -2,7 +2,7 @@
 ROCQ ?= rocq
 OCAMLC ?= ocamlc
 BUILD := _build
-VFILES := Syntax.v Substitution.v Kernel.v Program.v WellFormed.v TypingSubstitution.v Completeness.v Confluence.v Generation.v Preservation.v Regularity.v Counterexamples.v Tests.v Extraction.v
+VFILES := Syntax.v Substitution.v Kernel.v Program.v WellFormed.v TypingSubstitution.v Completeness.v Confluence.v Generation.v Preservation.v Regularity.v Normalization.v Arity.v Reducibility.v TypedNormalization.v DirectKernel.v Counterexamples.v Tests.v Extraction.v
 
 .PHONY: all verify test clean
 all: $(BUILD)/rocq4pa
@@ -21,6 +21,11 @@ $(BUILD)/verified: $(VFILES) Makefile
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Generation.v
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Preservation.v
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Regularity.v
+	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Normalization.v
+	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Arity.v
+	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Reducibility.v
+	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa TypedNormalization.v
+	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa DirectKernel.v
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Counterexamples.v
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Tests.v
 	cd $(BUILD) && $(ROCQ) compile -Q . Rocq4pa Extraction.v

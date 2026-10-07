@@ -2,6 +2,7 @@ From Stdlib Require Import List.
 From Rocq4pa Require Import Syntax Kernel Program WellFormed Completeness Counterexamples.
 From Rocq4pa Require Import Substitution Confluence Generation.
 From Rocq4pa Require Import TypingSubstitution Preservation Regularity.
+From Rocq4pa Require Import Normalization Arity Reducibility TypedNormalization DirectKernel.
 Import ListNotations.
 
 Definition identity :=
@@ -206,3 +207,43 @@ Print Assumptions normalization_preserves_type.
 Print Assumptions wf_signature_lookup.
 Print Assumptions wf_context_lookup.
 Print Assumptions typing_regular_representative.
+
+
+Example direct_identity_accepted :
+  check_program_direct 64 true [] identity = Some [tType; tPi (tConst 0) (tConst 0)].
+Proof. vm_compute; reflexivity. Qed.
+
+(** Uses only the declarative validity proof, not an algorithmic derivation. *)
+Example direct_identity_eventually : exists n, forall fuel, n <= fuel ->
+  check_program_direct fuel true [] identity = Some [tType; tPi (tConst 0) (tConst 0)].
+Proof.
+  apply empty_signature_program_complete.
+  - repeat constructor.
+  - exact identity_has_derivation.
+Qed.
+
+Example direct_kind_lambda_rejected :
+  infer_direct 64 [tType] [] (tLam (tConst 0) tType) = None.
+Proof. vm_compute; reflexivity. Qed.
+
+Example direct_family_lambda_accepted :
+  check_direct 64 [tType] (tLam (tConst 0) (tConst 0)) (tPi (tConst 0) tType) = true.
+Proof. vm_compute; reflexivity. Qed.
+
+Example direct_raw_expansion_rejected : check_direct 64 [] tType bad_expansion = false.
+Proof. vm_compute; reflexivity. Qed.
+
+Print Assumptions typing_strong_normalization.
+Print Assumptions typing_normal_complete.
+Print Assumptions typed_equal_complete.
+Print Assumptions infer_direct_sound.
+Print Assumptions check_program_direct_sound.
+Print Assumptions accepted_direct_program_wf.
+Print Assumptions declarative_infer_direct_complete.
+Print Assumptions declarative_check_direct_complete.
+Print Assumptions declarative_program_direct_complete.
+Print Assumptions program_direct_correct.
+Print Assumptions prelude_and_main_direct_complete.
+
+Print Assumptions program_direct_monotone.
+Print Assumptions prelude_and_main_direct_sound.

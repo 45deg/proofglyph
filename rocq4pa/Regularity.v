@@ -90,3 +90,93 @@ Proof.
   - destruct (IH CT) as [proper [C V]]. exists proper; split; [|exact V].
     eapply cv_trans; [apply cv_sym; exact EQ|exact C].
 Qed.
+
+Lemma conv_sort_unique s t : is_sort s -> is_sort t -> conv s t -> s = t.
+Proof.
+  intros S T C; apply normal_forms_unique; [exact C| |];
+    destruct S as [->| ->]; destruct T as [->| ->]; constructor.
+Qed.
+
+Lemma convertible_typing_unique sg ctx a b s t : wf_signature sg ->
+  typing sg ctx a s -> typing sg ctx b t -> conv a b -> conv s t.
+Proof.
+  intros W A B C; destruct (conv_joins _ _ C) as [u [AU BU]].
+  eapply typing_unique.
+  - exact (subject_reduction_parallel_steps _ _ _ _ _ W AU A).
+  - exact (subject_reduction_parallel_steps _ _ _ _ _ W BU B).
+Qed.
+
+Lemma sorted_not_conv_kind sg ctx a : wf_signature sg -> sorted_type sg ctx a ->
+  ~ conv a tKind.
+Proof.
+  intros W [s [T S]] C; destruct (conv_joins _ _ C) as [u [AU KU]].
+  pose proof (steps_normal_form _ _ KU nf_kind); subst u.
+  eapply kind_has_no_type; eapply subject_reduction_parallel_steps; eauto.
+Qed.
+
+Lemma application_type_regular sg ctx f x a :
+  wf_signature sg -> wf_context sg ctx -> typing sg ctx (tApp f x) a ->
+  exists proper, conv a proper /\ sorted_type sg ctx proper.
+Proof.
+  intros W CT T; apply typing_generation in T; cbn [generates] in T.
+  destruct T as [dom [cod [F [X RESULT]]]].
+  destruct (typing_regular_representative _ _ _ _ W CT F) as [proper [EQ [K|[s [PT SORT]]]]].
+  - subst proper; exfalso; eapply conv_pi_not_kind; exact EQ.
+  - destruct (conv_joins _ _ EQ) as [u [PISTEP PSTEP]].
+    destruct (steps_pi_inv _ _ PISTEP _ _ eq_refl) as [a' [b' [U [ASTEP BSTEP]]]].
+    subst u.
+    pose proof (subject_reduction_parallel_steps _ _ _ _ _ W PSTEP PT) as VALID.
+    apply typing_generation in VALID; cbn [generates] in VALID.
+    destruct VALID as [s' [AT [BT [SS SC]]]].
+    assert (ARG : typing sg ctx x a') by (eapply ty_conv; [exact X|apply steps_conv; exact ASTEP]).
+    exists (instantiate b' x); split.
+    + eapply cv_trans; [apply cv_sym; exact RESULT|].
+      rewrite !instantiate_as_substitute; apply conv_substitute; apply steps_conv; exact BSTEP.
+    + exists s'; split; [|exact SS].
+      rewrite <- (instantiate_sort s' x SS).
+      eapply typing_instantiate; [exact W|exact BT|exact ARG].
+Qed.
+
+(** Kinds have no computation at their head. In particular, variables of
+    well-formed local contexts are objects, never type-family variables. *)
+Inductive kind_shape : term -> Prop :=
+| ks_type : kind_shape tType
+| ks_pi : forall a k, kind_shape k -> kind_shape (tPi a k).
+
+Theorem typing_kind_shape sg ctx k : wf_signature sg -> wf_context sg ctx ->
+  typing sg ctx k tKind -> kind_shape k.
+Proof.
+  intros W; revert ctx; induction k; intros ctx CT T;
+    try (pose proof (typing_generation _ _ _ _ T) as G; cbn [generates] in G).
+  - constructor.
+  - contradiction.
+  - destruct G as [a [LOOK C]]. exfalso.
+    eapply (sorted_not_conv_kind sg ctx); [exact W| |exact C].
+    exists tType; split; [eapply wf_context_lookup; eauto|left; reflexivity].
+  - destruct G as [a [LOOK C]]. exfalso.
+    eapply (sorted_not_conv_kind sg ctx); [exact W| |exact C].
+    apply sorted_type_any_context; [exact W|eapply wf_signature_lookup; eauto].
+  - destruct G as [s [A [B [S C]]]].
+    assert (E : s = tKind) by (eapply conv_sort_unique; [exact S|right; reflexivity|exact C]).
+    subst s; constructor; eapply IHk2; [constructor; eauto|exact B].
+  - destruct G as [bt [s [A [B [PI [S C]]]]]].
+    exfalso; eapply conv_pi_not_kind; exact C.
+  - destruct (application_type_regular _ _ _ _ _ W CT T) as [proper [C S]].
+    exfalso; eapply sorted_not_conv_kind; [exact W|exact S|apply cv_sym; exact C].
+Qed.
+
+Lemma typing_function_regular sg ctx f a b :
+  wf_signature sg -> wf_context sg ctx -> typing sg ctx f (tPi a b) ->
+  exists c d s, typing sg ctx c tType /\ typing sg (c :: ctx) d s /\
+    is_sort s /\ conv a c /\ conv b d.
+Proof.
+  intros W CT F.
+  destruct (typing_regular_representative _ _ _ _ W CT F) as [proper [EQ [K|[s [PT SORT]]]]].
+  - subst proper; exfalso; eapply conv_pi_not_kind; exact EQ.
+  - destruct (conv_joins _ _ EQ) as [u [PISTEP PSTEP]].
+    destruct (steps_pi_inv _ _ PISTEP _ _ eq_refl) as [c [d [U [C D]]]]. subst u.
+    pose proof (subject_reduction_parallel_steps _ _ _ _ _ W PSTEP PT) as VALID.
+    apply typing_generation in VALID; cbn [generates] in VALID.
+    destruct VALID as [s' [CTY [DTY [SS SC]]]].
+    exists c, d, s'; repeat split; eauto using steps_conv.
+Qed.

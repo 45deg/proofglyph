@@ -31,186 +31,131 @@ Rocq が別の環境にある場合は `make -C rocq4pa ROCQ=/path/to/bin/rocq` 
 `make verify` は証明のコンパイル、計算例、`rocq check` による再検査まで実行します。
 
 Rocq 9.2.0 / Stdlib 9.1.0、抽出先 OCaml 5.5.0 で検証しています。
-CLI テストは正例・反例20件、決定的な変異入力120件、資源制限・prelude の検査、
+CLI テストは正例・反例22件、決定的な変異入力120件、資源制限・prelude の検査、
 既存の `.tp` 全48件（フェルマーの小定理を含む）の再検査を行います。
 
-## 証明の対象
+## 証明した保証
+
+CLI が使う検査器は `DirectKernel.v` の `check_program_direct` です。
+宣言的な型付け規則 `typing` / `valid_program` に対して、健全性と
+十分な fuel による完全性を証明しています。追加公理・`Admitted` は使っていません。
+
+```text
+check_program_direct_sound:
+  wf_signature Σ →
+  check_program_direct fuel allow Σ ds = Some Σ' → valid_program Σ ds Σ'
+
+declarative_program_direct_complete:
+  wf_signature Σ → permitted_declarations allow ds → valid_program Σ ds Σ' →
+  ∃ N, ∀ fuel ≥ N, check_program_direct fuel allow Σ ds = Some Σ'
+```
+
+`program_direct_correct` は、ある fuel で受理されることと、許可された宣言列が
+宣言的に正しいことの同値性です。`program_direct_monotone` により、受理後に
+fuel を増やしても結果は変わりません。型が正しくない入力は、どの fuel でも受理されません。
+ただし、一度の拒否は fuel 不足でも起きるため、型誤りの証明にはなりません。
+
+前提は次のとおりです。
+
+- `wf_signature Σ`：空の署名から順に、それ以前の署名で sort が付く型だけを追加した署名。
+- `permitted_declarations allow ds`：`allow = false` なら公理宣言を含まない。
+- `valid_program Σ ds Σ'`：各宣言型に sort が付き、証明宣言にはその型を持つ証明項がある。
+
+検査成功、正規化の停止性、有限の検査導出、公理の無矛盾性は前提に含めていません。
+型が正しい不透明な公理を許します。署名には型だけを追加し、証明の本体は展開しません。
+
+空の署名は整形式です。`accepted_direct_program_wf` は、受理した宣言列が作る署名も
+整形式であることを保証します。CLI は空の署名から始め、prelude も同じ検査器で検査します。
+`prelude_and_main_direct_complete` は、有効な prelude と公理禁止の本体について、
+共通の十分大きな fuel で両方を受理できることを証明しています。
+
+項単位でも証明しています。
+
+```text
+declarative_infer_direct_complete:
+  wf_signature Σ → wf_context Σ Γ → typing Σ Γ t A →
+  ∃ B N, conv B A ∧ ∀ fuel ≥ N, infer_direct fuel Σ Γ t = Some B
+
+declarative_check_direct_complete:
+  wf_signature Σ → sorted_type Σ [] A → typing Σ [] t A →
+  ∃ N, ∀ fuel ≥ N, check_direct fuel Σ t A = true
+```
+
+`wf_context` は各局所変数の型が、それ以前の文脈で `Type` を持つことを要求します。
+検査では目標型 `A` 自身の sort も要求します。推論では `Type : Kind` も扱い、
+返す型は宣言的な型と β 同値であることを保証します。
+
+## 完全性までの証明
+
+`typing` は生の β 同値による変換規則を持ちます。検査器の成功を型付け規則にはしていません。
+変換先そのものが未整形式な場合もあるため、正則性は β 同値な整形式の代表の存在として証明します。
+
+1. 同時置換・弱化・型付き置換、β 簡約の合流性、型保存、正則性を証明します。
+2. 型の形 `type_shape` が、型レベルの項に対する置換と β 同値で保たれることを示し、
+   宣言的な型付けを単純型の arity に対応させます。
+3. reducibility の議論から、その arity を持つ項の強正規化を証明します。
+   型注釈と束縛子の内部も簡約対象です。
+4. `typing_strong_normalization` と `typing_normal_complete` により、整形式な署名・文脈で
+   型が付く項は強正規化し、現在の正規化器が十分な fuel で成功すると示します。
+5. `declarative_synthesizes_direct` で、宣言的型付けから有限の検査導出を構成します。
+   各部分の fuel 境界の最大値を取り、全体の「すべての fuel ≥ N」での成功を得ます。
+
+中心となる定理の `Print Assumptions` はすべて `Closed under the global context` です。
+ビルド時に `rocq check` で証明を再検査します。
+
+## λ の検査変更と旧実装
+
+初期実装の `Kernel.v` / `Program.v` は比較用に残しています。旧 `infer` は λ の本体の型を
+推論した後、生成した Π 型を再度 `infer` していました。現在の `infer_direct` は、
+本体の推論結果が `Kind` なら拒否し、それ以外なら Π 型を返します。
+
+これを正当化するのが `infer_direct_sound` です。整形式な署名・文脈の下では、
+推論結果は「`Kind` または sort が付く型」であることを、型付けと同時に証明します。
+したがって `Kind` を除けば Π 型の形成条件が成立し、再検査は不要です。
+新実装の健全性は整形式な環境を前提にするため、未検査の署名を直接渡す用途は保証外です。
+CLI の経路では空の署名と整形式性保存の定理がこの前提を満たします。
+
+今回の宣言的完全性は、この変更を行った **新実装** の定理です。
+旧実装について `Completeness.v` に残る `declarative_bridge` などは、引き続き未証明の命題定義です。
+旧実装の完全性を証明済みと扱ったり、その命題を公理として使ったりはしていません。
+旧実装・既存 OCaml カーネルとの全入力での同値性も主張していません。
+
+`Counterexamples.v` には、整形式でない初期署名や未整形式な目標型を許した場合の、
+旧実装への完全性の反例を残しています。`bad_signature_not_wf` などが、それらを
+通常の宣言列から構築できないことを示しています。
+
+## ファイル
 
 | ファイル | 定義・証明 |
 | --- | --- |
-| `Syntax.v` | 項、shift、捕獲を避ける置換、β 同値、宣言的型付け関係 `typing` |
-| `Substitution.v` | 同時置換・変数の付け替えの代数則、既存の shift / instantiate との対応、β 同値の保存 |
-| `Kernel.v` | fuel 付き正規化・型推論・型検査と健全性 |
-| `Program.v` | 公理・証明の登録、宣言列の検査と健全性、公理禁止の保存 |
-| `WellFormed.v` | 署名・文脈・宣言型の整形式性、検査による署名の整形式性保存 |
-| `TypingSubstitution.v` | 閉じた署名、弱化、型付き同時置換、一変数の置換、文脈変換 |
-| `Completeness.v` | fuel の単調性、有限の検査導出に対する十分な fuel の存在 |
-| `Confluence.v` | 並列 β 簡約の合流性、正規形の一意性、Π 型の同値性の分解 |
-| `Generation.v` | 宣言的型付けの生成補題、β 同値を除いた型の一意性 |
-| `Preservation.v` | β 簡約・複数ステップ・成功した正規化の型保存 |
-| `Regularity.v` | 署名・文脈からの型取得の妥当性、型の整形式な代表の存在 |
-| `Counterexamples.v` | 前提を付けない宣言的完全性への反例 |
-| `Tests.v` | 受理・拒否・依存型・β 同値・置換の計算例、証明の仮定表示 |
-| `Extraction.v` | OCaml への抽出。自然数は帰納的表現を保持 |
-| `main.ml` | 手書きの `.pa` パーサー、ファイル読み込み、CLI |
-
-中心となる定理は次です。
-
-```text
-normal_sound:
-  normal fuel t = Some u → conv t u
-
-infer_sound:
-  infer fuel Σ Γ t = Some A → typing Σ Γ t A
-
-check_sound:
-  check fuel Σ t A = true →
-  typing Σ [] t A ∧ ∃ s, typing Σ [] A s ∧ is_sort s
-
-check_program_sound:
-  check_program fuel allow Σ ds = Some Σ' → valid_program Σ ds Σ'
-
-no_axioms:
-  check_program fuel false Σ ds = Some Σ' → ds に Assume がない
-```
-
-`valid_program` は、各宣言がそれ以前の署名だけを用いて正当化されることを表します。
-証明宣言には証明項の型付け、公理宣言にも宣言型の sort 検査を要求します。
-署名には型だけを追加し、定数の本体を展開しません。
-
-`typing` は生の β 同値による型変換を持つ宣言的な型付け関係です。
-検査器の成功自体を型付け規則にしてはいません。変換規則は変換先の型の sort
-を前提に取らない形式を採用しています。sort の妥当性を各変換規則に要求する
-別の LF 定式化との同値性と強正規化は未証明です。型付き置換と型保存は証明済みです。
-正則性は「任意の変換先も整形式」とはせず、β 同値な整形式の代表が存在する形で証明しています。
-shift と置換はこの仕様の定義そのものであり、既存 OCaml 関数との同値性も未証明です。
-
-## 十分な fuel と完全性
-
-`Completeness.v` では、成功した検査は fuel を増やしても同じ結果になることを証明しています。
-正規化、同値判定、sort 判定、型推論、型検査、宣言・宣言列の検査が対象です。
-
-また、fuel を含まない帰納的な関係を定義しています。
-`evaluates` は現在の正規化戦略による有限の評価導出、`synthesizes` / `checks` は
-その評価を使う有限の検査導出、`program_derivation` は宣言列の有限の検査導出です。
-これらの定義は実装の成功や fuel の存在を前提にしていません。
-
-```text
-normal_complete:
-  evaluates t u → ∃ N, ∀ fuel ≥ N, normal fuel t = Some u
-
-infer_complete:
-  synthesizes Σ Γ t A → ∃ N, ∀ fuel ≥ N, infer fuel Σ Γ t = Some A
-
-check_complete:
-  checks Σ t A → ∃ N, ∀ fuel ≥ N, check fuel Σ t A = true
-
-program_complete:
-  program_derivation allow Σ ds Σ' →
-  ∃ N, ∀ fuel ≥ N, check_program fuel allow Σ ds = Some Σ'
-```
-
-境界値は各有限導出の帰納法で構成し、子の境界値の最大値で fuel を共通化します。
-`normalization_iff` では `evaluates t u` と、ある fuel で正規化が成功することの同値性も
-証明しています。恒等関数の例では、有限の検査導出を構成して `program_complete` を適用しています。
-
-**これは宣言的な `typing` / `valid_program` 全体に対する完全性の証明ではありません。**
-そこから有限の検査導出が得られることが、まだ必要です。
-整形式な初期署名の下での未解決の目標を `declarative_bridge` として明記しています。
-これは命題の定義であり、公理や証明済み定理ではありません。
-
-```text
-declarative_bridge（未証明）:
-  ∀ allow Σ ds Σ',
-    wf_signature Σ → permitted_declarations allow ds →
-    valid_program Σ ds Σ' → program_derivation allow Σ ds Σ'
-```
-
-`wf_signature` は、空の署名から順に、それ以前の署名で sort が付く型だけを追加した署名です。
-`wf_context` は、各局所変数の型がそれ以前の文脈で `Type` を持つことを要求します。
-どちらも検査器の成功・停止性・正規化可能性を前提にはしていません。
-`permitted_declarations` は `allow = false` のときに公理宣言がないという実行上の方針です。
-`valid_program` は、各宣言型の sort と、証明宣言の証明項の型付けを既に要求しています。
-
-項単位の目標も明示しています。
-
-```text
-declarative_check_completeness（未証明）:
-  wf_signature Σ → sorted_type Σ [] A → typing Σ [] t A →
-  ∃ N, ∀ fuel ≥ N, check fuel Σ t A = true
-
-declarative_infer_completeness（未証明）:
-  wf_signature Σ → wf_context Σ Γ → typing Σ Γ t A →
-  ∃ B N, conv B A ∧ ∀ fuel ≥ N, infer fuel Σ Γ t = Some B
-```
-
-検査では目標型自身の sort を要求します。推論では `Type : Kind` も扱うため、
-同じ目標型条件は課さず、返す型が `A` と β 同値であることを要求します。
-
-`declarative_complete_if_bridge` は、この命題を仮定すれば目的の完全性が得られることだけを
-証明しています。橋渡しには、整形式な署名・文脈でのメタ理論、正規化と β 同値判定の
-完全性、型推論との対応を扱う必要があります。
-
-この橋渡しのために、次のメタ理論までは証明済みです。
-
-- `instantiate_as_substitute` / `substitute_beta`：実装で使う置換と同時置換の対応、β 簡約と置換の交換。
-- `conv_substitute`：β 同値が置換で保存される。
-- `parallel_diamond` / `steps_confluent` / `conv_joins`：並列簡約のダイヤモンド性、複数ステップの合流性、β 同値な項の共通簡約先。
-- `normal_forms_unique`：β 同値な正規形は構文的に等しい。
-- `conv_pi_injective`：β 同値な Π 型のドメイン同士・本体同士は β 同値。
-- `typing_generation` / `typing_unique`：導出から項の構文に対応する規則の前提を取り出せ、同じ項の型は β 同値を除いて一意。
-- `typing_subject_closed` / `wf_signature_closed`：型付けされた項は局所文脈に収まり、整形式な署名の宣言型は自由な局所変数を含まない。
-- `typing_rename` / `typing_weaken` / `typing_substitute` / `typing_instantiate`：文脈に合う変数の付け替え、弱化、型付き同時置換、一変数の置換で型付けが保存される。
-- `typing_context_conversion`：対応する宣言型が β 同値な文脈に移しても型付けが保たれる。
-- `subject_reduction` / `normalization_preserves_type`：型注釈・束縛子の内部も含む β 簡約、および成功した正規化が型を保つ。
-- `typing_regular_representative`：整形式な署名・文脈の下で `t : A` なら、`A` と β 同値な型 `B` が存在し、`B = Kind` または `B` 自身に sort が付く。
-
-これらは正規化の停止性を仮定しません。`equal_complete_from_convertibility` では、
-β 同値な二つの項の評価導出が与えられれば、十分な fuel で `equal` が成功することも示しています。
-ただし、**型が付くことから評価導出の存在を得る証明はまだありません**。
-正規化の停止性と、宣言的導出から `synthesizes` を構成する部分が残ります。
-`conv_substitute` は β 同値の保存、`typing_substitute` は型付けの保存で、別の定理です。
-`typing_regular_representative` は元の型 `A` 自身の整形式性を主張しません。
-生の `ty_conv` が未整形式な変換先を許すことは、既存の反例と矛盾せずに扱っています。
-
-前提を付けずに任意の署名へ拡張した完全性は偽です。`Counterexamples.v` には次を証明しています。
-
-- 変換先の型が整形式でない場合、`typing [] [] t A` だけでは `check` は成功しません。
-- 不正な初期署名では、宣言型に sort が付く `valid_declaration` でも全 fuel で拒否されます。
-  反例は、β 簡約で消える位置に発散項 Ω を置いた関数型です。宣言的な β 同値では消せますが、
-  現在の正規化器はその引数を先に評価するため停止しません。
-
-これは通常の `Axiom` / `Admitted` によって矛盾する命題を仮定することとは異なります。
-公理でも宣言型の整形式性は必要です（[Rocq の型付け規則](https://rocq-prover.org/doc/V9.1.0/refman/language/cic.html)）。
-今回の反例は不正な型を署名へ直接注入したものであり、通常の検査経路のバグを示すものではありません。
-従来の完全性の定式化に、整形式性の前提が欠けていました。
-完全性の目標には公理の無矛盾性を要求しません。型が正しい不透明な公理は引き続き許します。
-
-`accepted_prelude_wf` により、空の署名から受理した prelude がこの整形式性を満たすことを証明しています。
-`valid_program_preserves_wf` は宣言的な有効性についても保存を示します。
-`bad_signature_not_wf` / `bad_signature_not_from_accepted_prelude` により、反例の署名が条件を満たさず、
-通常の prelude 検査では構築できないことも証明済みです。
-`bad_expansion_not_sorted` は最初の反例を目標型の条件が除外することを示します。
-これらは追加公理・`Admitted` なしで検査しています。整形式性を明示しても、完全性の橋渡し自体は未証明です。
+| `Syntax.v` | 項、shift、置換、β 同値、宣言的型付け |
+| `Substitution.v` | 同時置換・変数の付け替えの代数則 |
+| `Kernel.v` / `Program.v` | 共通の正規化器・宣言仕様、旧検査器とその健全性 |
+| `WellFormed.v` / `TypingSubstitution.v` | 整形式性、弱化、型付き置換、文脈変換 |
+| `Completeness.v` | 評価導出、fuel の境界、旧検査器の有限導出に対する完全性 |
+| `Confluence.v` / `Generation.v` | 合流性、正規形・型の一意性、生成補題 |
+| `Preservation.v` / `Regularity.v` | 型保存、正則性、kind の構造 |
+| `Normalization.v` | 強正規化から有限評価・十分な fuel への接続 |
+| `Arity.v` / `Reducibility.v` | 型の形による対応、reducibility による強正規化 |
+| `TypedNormalization.v` | 宣言的型付けから強正規化・正規化成功・同値判定の完全性 |
+| `DirectKernel.v` | 現行検査器、健全性、宣言的完全性、fuel の単調性 |
+| `Counterexamples.v` / `Tests.v` | 反例、計算例、定理の適用例、仮定表示 |
+| `Extraction.v` / `main.ml` | OCaml 抽出、手書きパーサーと CLI |
 
 ## 信頼境界と制限
 
-- 健全性定理は Rocq 内の AST と宣言列が対象です。手書きのバイトパーサー、
-  I/O、CLI がそれらを正しく構成することは形式検証していません。
-- 実行ファイルでは Rocq の抽出機構、OCaml コンパイラと実行系も信頼します。
-  抽出したコードを手作業で変更しません。自然数を機械整数に置き換える抽出指示も使いません。
-- 任意に追加した公理の無矛盾性や、`.tp` から意図した命題への翻訳は保証しません。
-- 既存の OCaml カーネルの形式検証ではありません。既存実装とは回帰例で照合しますが、
-  全入力に対する同値性や、健全な型付け関係の意味論的モデルは証明していません。
-- fuel は再帰の深さの上限です。既存実装の共有ステップ数とは意味が異なります。
-  正規化も関数・引数を先に正規化する方式なので、資源不足による拒否は一致しません。
-  有限の検査導出に対する十分な fuel の存在は証明済みですが、宣言的型付け全体の完全性は未証明です。
-- CLI の既定 fuel は 2048、指定可能範囲は 1〜100000。入力 index は 100000 以下に
-  制限します。既存実装が受け付ける巨大な index は資源制限として拒否する場合があります。
-  時間・メモリの厳密な上限ではありません。
-  十分な fuel の定理は Rocq 内の任意の自然数が対象です。境界値が CLI の上限以下であることや、
-  実機の時間・メモリ内で実行できることは保証しません。
-- 終了コードは成功 0、検査・入力・I/O・資源エラー 1、CLI の使用法エラー 2。
-  型エラーと fuel 切れは同じ検査失敗として報告します。型検査失敗時に途中の受理結果は表示しません。
-
-次の課題は正規化の停止性と `declarative_bridge` の証明です。パーサーの形式検証も未実施です。
+- 定理の対象は Rocq 内の AST と宣言列です。手書きのバイトパーサー、I/O、CLI が
+  それらを正しく構成することは形式検証していません。
+- Rocq のカーネル・抽出機構、OCaml コンパイラと実行系を信頼します。
+  抽出コードを手で変更せず、自然数を機械整数に置き換える抽出指示も使いません。
+- 任意に追加した公理の無矛盾性、`.tp` から意図した命題への翻訳、
+  既存 OCaml カーネルそのものの正しさは保証しません。
+- 今回の宣言的仕様は変換先の sort を各変換規則で要求しません。
+  別の LF 定式化との同値性、既存 OCaml の shift・置換との同値性は未証明です。
+- fuel は再帰の深さです。既存実装の共有ステップ数とは意味が異なり、
+  資源不足による拒否が一致するとは限りません。
+- 十分な fuel の定理は任意の自然数を対象とします。CLI の既定 fuel は 2048、
+  指定範囲は 1〜100000、入力 index も 100000 以下です。
+  **必要な fuel が CLI の上限以下であることや、実機の時間・メモリ内での成功は保証しません。**
+- 終了コードは成功 0、検査・入力・I/O・資源エラー 1、CLI 使用法エラー 2。
+  型エラーと fuel 不足は同じ検査失敗として報告します。

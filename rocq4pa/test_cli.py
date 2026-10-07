@@ -24,6 +24,10 @@ def main():
         ("*:", True),
         ("*:#0#0>#0$0\\!", True),
         (" \n*:\t#00#0>#0$00\\!\r", True),
+        # A family lambda is valid; a lambda returning Type would require a
+        # Pi codomain Kind, which has no sort.
+        ("*:#0*>#0#0\\!", True),
+        ("*:#0^>#0*\\!", False),
         ("^:", False),
         ("*", False),
         ("@", False),

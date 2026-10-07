@@ -94,7 +94,7 @@ let run () =
   let fuel = nat_of_int !fuel in
   let verify allow sg path =
     let declarations = parse (read_file path) in
-    match check_program fuel allow sg declarations with
+    match check_program_direct fuel allow sg declarations with
     | Some result -> result
     | None -> raise (Input_error (path ^ ": rejected (type error, forbidden assumption, or exhausted fuel)"))
   in

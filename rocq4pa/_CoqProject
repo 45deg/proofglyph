@@ -10,6 +10,11 @@ Confluence.v
 Generation.v
 Preservation.v
 Regularity.v
+Normalization.v
+Arity.v
+Reducibility.v
+TypedNormalization.v
+DirectKernel.v
 Counterexamples.v
 Tests.v
 Extraction.v
