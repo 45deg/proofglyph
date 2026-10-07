@@ -69,7 +69,7 @@ let equal k a b = normal k a = normal k b
     - Variable [Var n] fetches type from [ctx] and shifts it to the current depth
     - Constant [Const n] fetches its type from the signature (opaque)
     - [Pi (a,b)] is well-formed when [a : Type] and [ctx, x:a |- b : s] where [s ∈ {Type, Kind}]
-    - [Lam (a,b)] is well-typed when [a : Type] and [Pi (a, infer(b))] is well-formed
+    - [Lam (a,b)] is well-typed when [a : Type] and [infer(b)] is not [Kind]
     - [App (f,x)] has type [b[x/0]] when [f] has type [Pi (a,b)] and [x] has type β-equivalent to [a] *)
 let rec infer_in k ctx t =
   tick k;
@@ -83,8 +83,11 @@ let rec infer_in k ctx t =
       sort k (a::ctx) b
   | Lam (a,b) ->
       if sort k ctx a <> Type then fail "lambda domain must have sort Type";
-      let result = Pi (a,infer_in k (a::ctx) b) in
-      ignore (sort k ctx result); result
+      (* In a well-formed context, an inferred type other than Kind has a sort,
+         so the Pi type does not need to be checked again. *)
+      (match infer_in k (a::ctx) b with
+       | Kind -> fail "Kind has no type"
+       | body_type -> Pi (a,body_type))
   | App (f,x) ->
       (match whnf k (infer_in k ctx f) with
        | Pi (a,b) ->

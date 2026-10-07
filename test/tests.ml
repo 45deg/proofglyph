@@ -89,6 +89,17 @@ let () =
   test "reject lambda returning Kind as type" (fun () ->
     let k=Kernel.create() in ignore(Kernel.assume k Type);
     rejects(fun () -> ignore(Kernel.infer k (Lam(Const 0,Type)))));
+  test "reject lambda whose Pi body has type Kind" (fun () ->
+    let k=Kernel.create() in ignore(Kernel.assume k Type);
+    rejects(fun () -> ignore(Kernel.infer k (Lam(Const 0,Pi(Const 0,Type))))));
+  test "lambda returning a type has a Pi type" (fun () ->
+    let k=Kernel.create() in ignore(Kernel.assume k Type);
+    assert(Kernel.infer k (Lam(Const 0,Const 0)) = Pi(Const 0,Type)));
+  test "nested lambdas infer within a linear fuel budget" (fun () ->
+    let k=Kernel.create ~fuel:400 () in ignore(Kernel.assume k Type);
+    let rec lambdas n = if n=0 then Var 99 else Lam(Const 0,lambdas(n-1)) in
+    let rec arrows n = if n=0 then Const 0 else Pi(Const 0,arrows(n-1)) in
+    assert(Kernel.infer k (lambdas 100) = arrows 100));
   test "reject mismatched proof" (fun () -> reject_source "axiom A : Type; axiom B : Type; axiom a : A; def bad : B := a;");
   test "reject mismatched application" (fun () -> reject_source "axiom A : Type; axiom B : Type; axiom f : A -> A; axiom b : B; def bad : A := f b;");
   test "reject nonfunction application" (fun () -> reject_source "axiom A : Type; axiom a : A; def bad : A := a a;");
