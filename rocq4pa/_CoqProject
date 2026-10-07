@@ -1,0 +1,15 @@
+-Q . Rocq4pa
+Syntax.v
+Substitution.v
+Kernel.v
+Program.v
+WellFormed.v
+TypingSubstitution.v
+Completeness.v
+Confluence.v
+Generation.v
+Preservation.v
+Regularity.v
+Counterexamples.v
+Tests.v
+Extraction.v
