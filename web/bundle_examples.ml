@@ -1,10 +1,20 @@
 open Tinyprover
 
+(** {1 Example Bundler and Catalog Generator}
+
+    Processes source files under [examples/] for web demo and documentation:
+    - Default mode: recursively inlines imports in .tp files into self-contained text
+      and emits the [Examples_data.files] OCaml source for the browser demo.
+    - [--catalog] mode: cross-references examples against [docs/proofs.md] to output
+      the JSON proof catalog. *)
+
+(** Reads an entire file into a string in binary mode. *)
 let read path =
   let ch = open_in_bin path in
   Fun.protect ~finally:(fun () -> close_in ch)
     (fun () -> really_input_string ch (in_channel_length ch))
 
+(** Recursively collects all [.tp] and [.pa] file paths in a directory. *)
 let rec files path =
   if Sys.is_directory path then
     Sys.readdir path |> Array.to_list |> List.sort String.compare
@@ -12,7 +22,8 @@ let rec files path =
   else if Filename.check_suffix path ".tp" || Filename.check_suffix path ".pa" then [path]
   else []
 
-(* Keep declaration text, replacing imports and removing repetitive file headers. *)
+(** Expands imports in-place in the source text, removing duplicates and repetitive headers.
+    Uses token byte offsets to preserve the original whitespace and layout as much as possible. *)
 let expand path =
   let seen = Hashtbl.create 16 in
   let rec visit active path =
@@ -42,7 +53,7 @@ let expand path =
       Hashtbl.add seen path ();
       Buffer.contents output)
   in
-  (* Validate imports with the same parser and filesystem rules as the CLI. *)
+  (* Pre-validate imports using standard parser and filesystem rules *)
   ignore (Source.load path);
   visit [] path |> String.split_on_char '\n'
   |> List.filter (fun line ->
@@ -53,6 +64,8 @@ let expand path =
   |> String.trim
 
 let quote = Source.json_string
+
+(** Formats key-value fields into an indented JSON object string. *)
 let object_json fields =
   let indent s = String.split_on_char '\n' s |> String.concat "\n  " in
   "{\n" ^ String.concat ",\n" (List.map (fun (key, value) ->

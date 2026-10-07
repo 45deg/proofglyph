@@ -1,5 +1,31 @@
 open Term
+
+(** {1 .pa Assembly Reader and Stack Machine}
+
+    Parses symbolic instructions in the .pa language and executes stack-based operations
+    to construct terms and register axioms and theorems in the kernel. *)
+
+(** Raised on syntax errors, stack underflow/overflow, or type errors, with byte position. *)
 exception Error of string
+
+(** [run ?allow_axioms kernel source] executes the .pa source code against [kernel].
+    The stack top is on the right in conceptual notation (represented by the list head).
+    Instructions:
+    - Whitespace (spaces, tabs, CR, LF): ignored between tokens.
+    - [*]  : Push [Type]
+    - [^]  : Push [Kind]
+    - [$n] : Push [Var n] (followed by decimal integer)
+    - [#n] : Push [Const n] (followed by decimal integer)
+    - [>]  : Pop [b], pop [a], push [Pi(a,b)]
+    - [\]  : Pop [b], pop [a], push [Lam(a,b)]
+    - [@]  : Pop [x], pop [f], push [App(f,x)]
+    - [:]  : If stack is exactly [[typ]], register [typ] as an axiom and clear stack
+    - [!]  : If stack is exactly [[proof; typ]], verify [proof : typ], register it, and clear stack
+
+    @param allow_axioms whether [:] (assumption) is permitted (defaults to [true]; set to [false]
+      when checking proofs after a trusted prelude).
+    @raise Error on unknown character, index overflow, stack mismatch, non-empty stack at EOF,
+      or kernel verification failure. *)
 let run ?(allow_axioms=true) kernel source =
   let stack = ref [] in
   let push t = stack := t :: !stack in

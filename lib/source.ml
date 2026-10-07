@@ -1,12 +1,48 @@
+(** {1 .tp Language Compiler and Frontend}
+
+    Provides lexing, parsing, recursive import resolution, name resolution,
+    code generation to the .pa assembly language, and source mapping for the
+    high-level named λΠ language (.tp). *)
+
+(** Raised on syntax, name resolution, or import errors, with source location. *)
 exception Error of string
-type token = { text : string; line : int; col : int; file : string option }
-type expr = Name of string | Universe | Top | Apply of expr * expr
-          | Product of string option * expr * expr | Lambda of string * expr * expr
-type declaration = { name : string; typ : expr; body : expr option; at : token }
+
+(** Lexical token annotated with source position. *)
+type token = {
+  text : string;          (** Token string content. *)
+  line : int;             (** 1-based line number. *)
+  col : int;              (** 1-based column byte offset. *)
+  file : string option;   (** Source file path, or [None] for direct string inputs. *)
+}
+
+(** Abstract syntax tree for expressions in .tp. *)
+type expr =
+  | Name of string                     (** Identifier (variable or global constant). *)
+  | Universe                           (** Universe [Type]. *)
+  | Top                                (** Super-universe [Kind]. *)
+  | Apply of expr * expr               (** Function application [e1 e2] (left-associative). *)
+  | Product of string option * expr * expr
+    (** Dependent product [forall (x:A), B] or non-dependent arrow [A -> B] ([None] name). *)
+  | Lambda of string * expr * expr     (** Lambda abstraction [fun (x:A) => b]. *)
+
+(** AST for a top-level declaration. *)
+type declaration = {
+  name : string;          (** Declared identifier name. *)
+  typ : expr;             (** Declared type expression. *)
+  body : expr option;     (** Definition or proof term, or [None] for [axiom]. *)
+  at : token;             (** Token pointing to the declaration keyword (for diagnostics). *)
+}
+
+(** Formats and raises an [Error] with file and line:column coordinates. *)
 let error t msg =
   let location = Printf.sprintf "%d:%d" t.line t.col in
   let location = match t.file with None -> location | Some p -> p ^ ":" ^ location in
   raise (Error (location ^ ": " ^ msg))
+
+(** Lexer for the .tp language.
+    - Recognizes ASCII identifiers, keywords, quoted import paths, and punctuation symbols.
+    - Skips line comments ([// ...]) and whitespace.
+    - Appends an [<eof>] token at the end of the input. *)
 let lex ?file s =
   let n = String.length s in
   let ident_start = function 'a'..'z' | 'A'..'Z' | '_' -> true | _ -> false in
@@ -38,11 +74,21 @@ let lex ?file s =
     | c -> error {text="";line;col;file} (Printf.sprintf "unexpected character %C" c)
     in loop next_i next_line next_col next_acc
   in loop 0 1 1 []
+
+(** Reserved keyword list. *)
 let reserved = ["axiom";"def";"theorem";"import";"forall";"fun";"Type";"Kind"]
+
+(** Checks if a string is a valid non-keyword identifier. *)
 let is_name s = String.length s > 0 &&
   (match s.[0] with 'a'..'z' | 'A'..'Z' | '_' -> true | _ -> false) &&
   not (List.mem s reserved)
+
+(** Top-level item in a source file (declaration or import statement). *)
 type item = Declaration of declaration | Import of token * string
+
+(** Recursive descent parser converting tokens into top-level items.
+    Desugars multi-variable parameters like [(x y : A)] into sequential bindings
+    and lifts declaration parameters into outer Pi (for types) and Lam (for bodies). *)
 let parse_items ?file source =
   let tokens = lex ?file source in
   let pos = ref 0 in
@@ -111,19 +157,25 @@ let parse_items ?file source =
       declarations (Declaration {name=n;typ;body;at}::acc)))
   in declarations []
 
+(** Parses declarations directly from a string source.
+    Direct string parsing rejects import statements, requiring file-based compilation. *)
 let parse source =
   List.map (function
     | Declaration d -> d
     | Import(at,_) -> error at "imports require compile_file or load")
     (parse_items source)
 
+(** Reads an entire file into a string in binary mode. *)
 let read_file path =
   let ch = open_in_bin path in
   Fun.protect ~finally:(fun () -> close_in ch)
     (fun () -> really_input_string ch (in_channel_length ch))
 
-(* Expand local source imports in place, once per canonical path. Import state
-   belongs to one compilation; it never changes the process working directory. *)
+(** Recursively expands import statements in place into a single declaration list.
+    - Resolves file paths via [Unix.realpath] to deduplicate diamonds and aliases.
+    - Relative imports are resolved relative to the importing file's directory.
+    - Detects cyclic dependencies and reports an error with the import cycle.
+    - Does not modify the process working directory. *)
 let load path =
   let seen = Hashtbl.create 16 in
   let rec visit active at path =
@@ -147,6 +199,10 @@ let load path =
       declarations)
   in visit [] None path
 
+(** Resolves names in expression [expr] into kernel terms [Term.t].
+    - Scopes local variables from innermost outward to de Bruijn indices ([Term.Var i]).
+    - Scopes global constants against prior declarations [globals] to constant indices ([Term.Const i]).
+    - Rejects unknown names, forward references, and duplicate names. *)
 let resolve globals at expr =
   let rec go locals = function
     | Universe -> Term.Type | Top -> Term.Kind
@@ -163,16 +219,26 @@ let resolve globals at expr =
     | Lambda(x,a,b) -> Term.Lam(go locals a,go (Some x::locals) b)
   in go [] expr
 
+(** Source mapping entry associating a byte range in the generated assembly with source location. *)
 type mapping = {
-  constant : int; name : string; file : string option; line : int; column : int;
-  start_byte : int; end_byte : int;
-}
-type compiled = {
-  assembly : string; names : string list; declarations : declaration list;
-  sourcemap : mapping list;
+  constant : int;          (** Assigned constant index (0-indexed). *)
+  name : string;           (** Original declaration name. *)
+  file : string option;    (** Canonical file path, or [None] for string inputs. *)
+  line : int;              (** 1-based declaration line number. *)
+  column : int;            (** 1-based declaration column byte offset. *)
+  start_byte : int;        (** Start byte offset in generated .pa assembly (inclusive). *)
+  end_byte : int;          (** End byte offset in generated .pa assembly (exclusive). *)
 }
 
-(* JSON escaping is independent of OCaml string-literal escaping. *)
+(** Compilation result record. *)
+type compiled = {
+  assembly : string;              (** Serialized .pa assembly instructions. *)
+  names : string list;            (** Declared constant names in registration order. *)
+  declarations : declaration list;(** Expanded declaration ASTs. *)
+  sourcemap : mapping list;       (** Declaration-level source mappings. *)
+}
+
+(** Escapes a string into a JSON string literal. *)
 let json_string s =
   let b = Buffer.create (String.length s + 2) in
   Buffer.add_char b '"';
@@ -184,6 +250,7 @@ let json_string s =
     | c -> Buffer.add_char b c) s;
   Buffer.add_char b '"'; Buffer.contents b
 
+(** Serializes source mappings into JSON. *)
 let sourcemap_json result =
   let entries = List.map (fun (m:mapping) ->
     Printf.sprintf
@@ -193,7 +260,8 @@ let sourcemap_json result =
       m.line m.column m.start_byte m.end_byte) result.sourcemap in
   "{\"version\":1,\"mappings\":[\n" ^ String.concat ",\n" entries ^ "\n]}\n"
 
-(* Maps diagnostics to declarations; never participates in type checking. *)
+(** Annotates an assembly-level byte offset error with the matching declaration's source location.
+    Returns the original message unchanged if the byte offset falls outside mapped ranges. *)
 let annotate_assembly_error mappings message =
   let offset =
     try
@@ -212,6 +280,8 @@ let annotate_assembly_error mappings message =
             (match m.file with None -> "" | Some file -> file ^ ":")
             m.line m.column m.name message
 
+(** Resolves names, generates .pa assembly, and verifies the serialized output through a fresh kernel.
+    @raise Error if verification fails (annotated with source location). *)
 let compile_declarations ?(fuel=1_000_000) declarations =
   let globals = ref [] in
   let names = ref [] in
@@ -233,11 +303,14 @@ let compile_declarations ?(fuel=1_000_000) declarations =
     globals := (d.name,List.length !names)::!globals;
     names := !names @ [d.name]) declarations;
   let assembly = Buffer.contents output in
-  (* Check precisely the serialized artifact, through the independent reader. *)
+  (* Verify precisely the serialized output through the independent assembly reader and kernel *)
   (try Assembly.run (Kernel.create ~fuel ()) assembly
    with Assembly.Error message ->
      raise (Error (annotate_assembly_error (List.rev !mappings) message)));
   {assembly; names= !names; declarations; sourcemap=List.rev !mappings}
 
+(** Compiles source code from a string into verified assembly and source mappings. *)
 let compile ?fuel source = compile_declarations ?fuel (parse source)
+
+(** Compiles a file and all its transitive imports into verified assembly and source mappings. *)
 let compile_file ?fuel path = compile_declarations ?fuel (load path)

@@ -1,14 +1,33 @@
 open Tinyprover
+
+(** {1 tinyprover CLI Entry Point}
+
+    Command-line interface implementation:
+    - [compile]: Compiles a .tp source file into verified .pa assembly and optional sourcemap.
+    - [check]: Verifies a .pa assembly file against the kernel.
+    - [inspect]: Verifies a .pa assembly file and prints each constant's type and provenance.
+
+    Exit codes:
+    - 0: Success
+    - 1: Verification, syntax, I/O, or resource failure (fuel exhaustion, stack overflow)
+    - 2: Command-line usage error *)
+
+(** Reads an entire file into a string in binary mode. *)
 let read path =
   let ch = open_in_bin path in
   Fun.protect ~finally:(fun () -> close_in ch)
     (fun () -> really_input_string ch (in_channel_length ch))
+
+(** Writes binary data to a file path. *)
 let write path data =
   let ch = open_out_bin path in
   Fun.protect ~finally:(fun () -> close_out ch) (fun () -> output_string ch data)
+
+(** Prints usage instructions to stderr and exits with status 2. *)
 let usage () =
   prerr_endline "Usage: tinyprover (compile SOURCE [-o FILE] [--sourcemap FILE] | check ASSEMBLY [--prelude FILE] [--no-axioms] | inspect ASSEMBLY) [--fuel N]";
   exit 2
+
 let () =
   try
     if Array.length Sys.argv < 3 then usage ();
@@ -29,6 +48,7 @@ let () =
     if !fuel < 1 then invalid_arg "fuel must be positive";
     (match command with
      | "compile" ->
+         (* compile: parse and expand source, compile to assembly, self-verify through kernel *)
          if !prelude <> None || !no_axioms then usage ();
          (match !output, !sourcemap with
           | Some a, Some b ->
@@ -39,14 +59,17 @@ let () =
               if identity a = identity b then
                 invalid_arg "assembly and sourcemap output paths must differ"
           | _ -> ());
-         let result = Source.compile_file ~fuel:!fuel path in
-         Option.iter (fun p -> write p (Source.sourcemap_json result)) !sourcemap;
-         (match !output with None -> print_string result.assembly | Some p -> write p result.assembly)
+          let result = Source.compile_file ~fuel:!fuel path in
+          Option.iter (fun p -> write p (Source.sourcemap_json result)) !sourcemap;
+          (match !output with None -> print_string result.assembly | Some p -> write p result.assembly)
      | "check" | "inspect" ->
+         (* check / inspect: parse assembly and verify through an independent kernel *)
          if !output <> None || !sourcemap <> None then usage ();
          if command="inspect" && (!prelude<>None || !no_axioms) then usage ();
          let k = Kernel.create ~fuel:!fuel () in
+         (* Execute prelude first if present (axioms allowed) *)
          Option.iter (fun p -> Assembly.run k (read p)) !prelude;
+         (* Execute target assembly; forbid axioms (:) if --prelude or --no-axioms is active *)
          Assembly.run ~allow_axioms:(not !no_axioms && !prelude=None) k (read path);
          let entries = Kernel.entries k in
          List.iteri (fun i (e:Kernel.entry) ->

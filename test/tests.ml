@@ -1,16 +1,31 @@
 open Tinyprover
 open Term
+
+(** {1 tinyprover Regression Test Suite}
+
+    Covers unit and regression tests for kernel type checking, assembly execution,
+    the .tp frontend compiler, import resolution, and mathematical libraries
+    (propositional/predicate logic, equality, Peano arithmetic, and Fermat's Little Theorem).
+    Also includes extensive negative test cases ensuring ill-formed inputs are rejected. *)
+
 let count = ref 0
+
+(** Runs a test assertion, printing [ok NN <name>] on success. *)
 let test name f =
   incr count;
   try f (); Printf.printf "ok %02d %s\n" !count name
   with exn -> Printf.eprintf "FAIL %s: %s\n" name (Printexc.to_string exn); exit 1
+
+(** Asserts that function [f] raises an error (Kernel/Assembly/Source [Error]). *)
 let rejects f =
   let rejected = try f (); false with
     | Kernel.Error _ | Assembly.Error _ | Source.Error _ -> true in
   if not rejected then failwith "invalid input accepted"
+
 let compile s = Source.compile s
 let verify s = Assembly.run (Kernel.create ()) s
+
+(** Asserts that compiling source string [s] is rejected with an error. *)
 let reject_source s = rejects (fun () -> ignore (compile s))
 let () =
   test "exact identity encoding" (fun () ->

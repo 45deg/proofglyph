@@ -1,6 +1,6 @@
 # 証明カタログ
 
-関連する規則・定義・定理を `examples/commons/` の分野別モジュールにまとめ、必要なモジュールを `import` する。従来の未証明補題は証明項に置き換え、算術の土台は Peano 公理、論理・等式の規則、明示した述語と再帰関数の定義に限定する。
+`examples/commons/` には、論理・等式・自然数・整数論などの規則・定義・定理を分野別のモジュールとして収録しています。算術の土台は Peano 公理、論理・等式の推論規則、および明示的な述語と再帰方程式の定義に限定し、すべての定理はこれらから導出された証明項として記述されています。
 
 - [命題論理](../examples/commons/logic/propositional.tp): 含意、連言、選言、対偶、構成的なド・モルガン則。古典論理と量化は別モジュール。
 - [等式](../examples/commons/equality.tp): 固定した型 `U` 上の反射律と置換から導出する3定理。
@@ -8,11 +8,11 @@
 - [Peano の土台](../examples/commons/foundation/peano.tp): 自然数の記号、等式、帰納法、後者関数の単射性と0との区別。
 - [フェルマーの利用例](../examples/fermat_application.tp): 証明済みの小定理を import し、和に適用する定理。
 
-`examples/commons/foundation/` は信頼する語彙・規則・定義、`examples/commons/logic/`・`examples/commons/equality.tp`・`examples/commons/nat/` は検査する証明項である。証明ファイルに `axiom` はない。Kernel の規則は変更していない。定義済み・証明済みの定数は不透明なままであり、計算や変形には等式の証明を使う。
+`examples/commons/foundation/` は前提となる語彙・公理・定義を含み、`examples/commons/logic/`、`examples/commons/equality.tp`、`examples/commons/nat/` はそれらに基づいて型検査される証明項です。証明ファイル自体には `axiom` を含みません。定義済みおよび証明済みの定数は不透明（opaque）として扱われるため、項の計算や式の変形には等式の証明項を用います。
 
 ## 実装した証明
 
-式中の `A → B` は証明の関数型 `Prf A -> Prf B`、`¬A` は `Not A` として表す。各宣言名のリンクで、個々の証明と import の依存先を読める。
+式中の `A → B` は証明の関数型 `Prf A -> Prf B`、`¬A` は `Not A` を表します。各宣言名のリンクから、個々の証明項と依存関係を参照できます。
 
 | 分野 | 命題・操作 | 宣言名 | ファイル |
 | --- | --- | --- | --- |
@@ -38,11 +38,11 @@
 | 整数論 | √2 の無理性 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.tp), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.tp) | `nat/sqrt_two.tp` |
 | 整数論 | フェルマーの小定理と和への適用 | [fermat](../examples/commons/nat/fermat.tp), [fermat_sum](../examples/commons/nat/fermat.tp) | `nat/fermat.tp` |
 
-`function_composition` は `f, g : U -> U` と `x : U` から `g (f x) : U` を構成する項であり、命題の証明ではない。
+なお、`function_composition` は `f, g : U -> U` と `x : U` から合成関数 `g (f x) : U` を構築するプログラム項であり、命題の証明項ではありません。
 
-## 残る axiom の意味
+## axiom の位置づけ
 
-ソースの `axiom` は、不透明な記号・規則を署名に登録する構文である。次の4種類を区別する。数学的な補題を仮定する宣言は残していないが、定義を自動展開しない LF のため、定義の規則・方程式も `axiom` 構文で明示する。
+ソースコード中の `axiom` は、不透明な記号や推論規則を署名に登録する構文です。本ライブラリでは任意の補題を公理として仮定することはせず、以下の4種類に限定して使用しています。定義の自動展開を行わない LF の性質上、述語の定義規則や再帰方程式も `axiom` 構文で明示します。
 
 | 種類 | 内容 |
 | --- | --- |
@@ -51,17 +51,17 @@
 | 論理 | 連言・選言・偽・否定・含意・量化の導入／除去、古典論理の排中律 |
 | 定義 | 述語の導入／除去、加算などの再帰方程式、有限和による `convolution` の定義 |
 
-たとえば `prime_intro` / `prime_elim` は、素数を「1より大きく、各約数が1または自分自身である数」と定義する。ユークリッドの補題をその規則に含めない。`coprime_intro` / `coprime_elim` は、共通の約数がすべて1であることを定義する。公理に残っていた `prime_mul_elim` と `coprime_no_common_prime` は、これらの定義から導出した定理である。
+たとえば `prime_intro` / `prime_elim` は、素数を「1より大きく、各約数が1または自分自身である数」と定義します（ユークリッドの補題は公理ではなく定理として証明します）。また `coprime_intro` / `coprime_elim` は、共通の約数が1のみであることを定義します。
 
-`proven` は、この明示した署名の下で証明項の型検査に成功したことを意味する。Kernel が公理・定義の標準的な数学的意味や、理論の無矛盾性を検証するわけではない。Peano の構成と定義方程式は署名に明示しており、Kernel 内に算術や書換え規則を組み込まない。
+`proven` は、明示した署名の下で証明項の型検査に成功した状態を表します。Peano の構成や定義方程式は署名として外部から与えられており、Kernel の内部に特定の算術論理や簡約規則は組み込まれていません。
 
-自然数ライブラリには135個の `theorem` がある。読み込まれる `axiom` の数は利用するモジュールに依存する。演算・述語の語彙、論理規則、述語の定義、再帰方程式を含むため、Peano 公理だけの数ではない。従来の補題・数値等式23宣言はすべて定理へ置き換えた。
+自然数ライブラリには135個の `theorem` が含まれます。読み込まれる `axiom` は利用するモジュールに応じて決定され、Peano 公理に加えて演算や述語の語彙、論理規則、再帰方程式などが含まれます。
 
 ### 自然数と再帰関数
 
-1は `succ zero`、2は `succ (succ zero)` と書く。不透明な数値定数や、それを値に結び付ける公理は使わない。`one_succ` / `two_succ` は現在は反射律の定理である。
+1 は `succ zero`、2 は `succ (succ zero)` と表します。不透明な数値定数やそれを値と同一視する公理は用いず、`one_succ` や `two_succ` は反射律の定理として定義されています。
 
-加算・乗算・累乗は次の再帰方程式を定義として持つ。`pred`、`factorial`、`triangular` も同様に、0と後者の場合を分けて定義する。
+加算・乗算・累乗は次の再帰方程式を定義として持ちます。`pred`、`factorial`、`triangular` も同様に、0 と後者の場合を分けて定義します。
 
 ```text
 add zero b = b
@@ -78,11 +78,11 @@ triangular zero = zero
 triangular (succ n) = add (triangular n) (succ n)
 ```
 
-加算・乗算の法則、累乗の加法則、三角数の公式、乗算の消去は帰納法で導出する。[強い帰納法](../examples/commons/nat/induction.tp) も、通常の Peano の帰納法と順序の定義から証明する。追加の帰納原理として仮定しない。
+加算・乗算の結合則や交換則、累乗の加法則、三角数の公式などは帰納法から導出されます。[強い帰納法](../examples/commons/nat/induction.tp) も、通常の Peano 帰納法と順序の定義から導出される定理です。
 
 ### 述語の定義
 
-導入・除去規則は、次の存在・全称による定義を表す。
+導入・除去規則は、次の存在・全称による定義を表します。
 
 ```text
 Le a b          ⇔ ∃k, b = a+k
@@ -96,21 +96,21 @@ Coprime a b     ⇔ ∀d, d|a → d|b → d=1
 RationalRootTwo ⇔ ∃a b, 0<b ∧ a*a=2*(b*b)
 ```
 
-合同式は自然数の切り捨て減算を避けるため、両側に倍数を足す定義を使う。整除性・合同式の推移律、演算による保存、整除性の加算からの消去は、証人と算術の等式を構成して証明する。整数型や実数型は導入していない。
+合同式は自然数の切り捨て減算を避けるため、両側に倍数を足す定義を採用しています。整除性・合同式の推移律や演算による保存などは、証人と等式を構成して証明します。
 
 ### 素因数、ユークリッドの補題、無限性
 
-[素因数の存在](../examples/commons/nat/factorization.tp) は、1より大きい数が素数ならその数自身を取り、素数でなければ真の約数へ強い帰納法で降りる。真の約数の存在は素数の定義と古典論理から導出する。
+[素因数の存在](../examples/commons/nat/factorization.tp) は、1 より大きい数が素数ならその数自身を取り、素数でなければ真の約数へ強い帰納法で降下します。真の約数の存在は素数の定義と古典論理から導出されます。
 
-[除法の原理](../examples/commons/nat/division.tp) は、正の除数 `d` に対して `n=d*q+r`, `r<d` を満たす `q,r` を強い帰納法で構成する。
+[除法の原理](../examples/commons/nat/division.tp) は、正の除数 `d` に対して `n = d * q + r`（`r < d`）を満たす `q, r` を強い帰納法で構成します。
 
-[ユークリッドの補題](../examples/commons/nat/euclid.tp) は、`p|a*t` を満たす最小の正の `t` を取る。除法の原理と最小性から、この `t` が `p` と `b` を割り切ることを示す。素数の定義による `t=1` または `t=p` の場合分けから、`p|a` または `p|b` を得る。
+[ユークリッドの補題](../examples/commons/nat/euclid.tp) は、`p | a * t` を満たす最小の正の `t` を取り、除法の原理と最小性から `t` が `p` と `b` を割り切ることを示します。素数の定義による `t = 1` または `t = p` の場合分けから `p | a` または `p | b` を導きます。
 
-[素数の無限性](../examples/commons/nat/prime_infinitude.tp) は `n!+1` の素因数を取る。もしそれが `n` 以下なら、階乗と `n!+1` の両方を割り切るので1も割り切るという矛盾になる。階乗の正値性・整除性、素数は1を割り切らないことも証明済みである。
+[素数の無限性](../examples/commons/nat/prime_infinitude.tp) は `n! + 1` の素因数を取ります。もしそれが `n` 以下であれば、階乗と `n! + 1` の両方を割り切るため 1 を割り切ることになり矛盾します。
 
 ### 二項係数と有限和
 
-二項係数の定義は、境界値とパスカルの再帰方程式である。
+二項係数の定義は、境界値とパスカルの再帰方程式です。
 
 ```text
 choose n zero = 1
@@ -118,9 +118,9 @@ choose zero (succ k) = zero
 choose (succ n) (succ k) = choose n k + choose n (succ k)
 ```
 
-[係数の恒等式](../examples/commons/nat/binomial_coefficients.tp) は、先に `choose_balance` で `(k+1)*C(n+1,k+1)=(n+1)*C(n,k)` を帰納法で証明し、正の添字を後者の形に移す。ユークリッドの補題と素数の整除性から `prime_divides_choose` を導出する。
+[係数の恒等式](../examples/commons/nat/binomial_coefficients.tp) は、先に `choose_balance` で `(k+1)*C(n+1,k+1)=(n+1)*C(n,k)` を帰納法で証明し、正の添字を後者の形に移します。ユークリッドの補題と素数の整除性から `prime_divides_choose` を導出します。
 
-有限和には、通常の接頭和 `sum`、開区間の和 `sum_between`、`i+j=n` の対角線上の和 `diagonal` を定義する。対角和は次の再帰方程式を持つ。
+有限和には、通常の接頭和 `sum`、開区間の和 `sum_between`、`i+j=n` の対角線上の和 `diagonal` を定義しています。対角和は次の再帰方程式を持ちます。
 
 ```text
 diagonal zero h = h zero zero
@@ -128,40 +128,40 @@ diagonal (succ n) h
   = diagonal n (i,j ↦ h i (succ j)) + h (succ n) zero
 ```
 
-`convolution` は、この対角和を使った明示的な定義である。
+`convolution` は、この対角和を用いた定義です。
 
 ```text
 convolution n f g = diagonal n (i,j ↦ C(n,i)*f(i)*g(j))
                  = Σ(i+j=n) C(n,i)*f(i)*g(j)
 ```
 
-パスカルの関係式に対応する `convolution_pascal`、基底の `convolution_zero`、外延性、係数の取り出し、両端の分離はすべて定理である。パスカルの式を `convolution` の公理として残さず、二項係数の再帰と対角和の加法・添字の移動から導出する。
+パスカルの関係式に対応する `convolution_pascal`、基底の `convolution_zero`、外延性、係数の取り出し、両端の分離はいずれも定理です。パスカルの式を公理として仮定するのではなく、二項係数の再帰と対角和の性質から導出しています。
 
-[二項定理](../examples/commons/nat/binomial_theorem.tp) はこれらの補題、累乗の再帰、分配則から `n` の帰納法で証明する。開区間の和の合同保存も、その和の再帰定義と順序の比較から帰納法で証明する。
+[二項定理](../examples/commons/nat/binomial_theorem.tp) はこれらの補題、累乗の再帰、分配則から `n` の帰納法で証明します。開区間の和の合同保存も、その和の再帰定義と順序の比較から帰納法で証明します。
 
 ### √2 の無理性
 
-[sqrt_two_no_positive_fraction](../examples/commons/nat/sqrt_two.tp) は、任意の自然数 `a,b` に対して `b>0` と `a*a=2*(b*b)` から矛盾を導く。既約分数への変換や互いに素であることを仮定しない。
+[sqrt_two_no_positive_fraction](../examples/commons/nat/sqrt_two.tp) は、任意の自然数 `a, b` に対して `b > 0` と `a * a = 2 * (b * b)` から矛盾を導きます。既約分数への変換や互いに素であることを仮定しません。
 
-ユークリッドの補題と2の素数性から `a` と `b` がともに2の倍数であることを示し、`a=2k`, `b=2j` を取る。2を消去すると `k*k=2*(j*j)` となり、`0<j<b` なので分母についての強い帰納法で矛盾する。`sqrt_two_irrational` は有理数表示の存在をこの定理で排除する。実数の平方根や有理数型自体の構築は、この算術的な表現とは別である。
+ユークリッドの補題と 2 の素数性から `a` と `b` がともに 2 の倍数であることを示し、`a = 2k`, `b = 2j` と置きます。2 を消去すると `k * k = 2 * (j * j)` となり、`0 < j < b` であるため分母に関する強い帰納法により矛盾が導かれます。`sqrt_two_irrational` はこの定理から有理数表示の存在を排除します。
 
 ### 論理と古典性
 
-論理・等式のカタログも基本規則から導出する。論理の量化は固定した型 `U` 上、算術の量化は `Nat` 上、有限和の証明には自然数値の関数を量化する論理規則も使う。
+論理・等式のモジュールも基本規則から導出されます。論理の量化は固定した型 `U` 上、算術の量化は `Nat` 上で行い、有限和の証明には自然数値の関数を量化する規則も用います。
 
-ド・モルガン則の `¬(A ∧ B) → ¬A ∨ ¬B` は排中律を使う。残る3方向と対偶は構成的である。算術では素因数・最小の正の証人・ユークリッドの補題などの証明に古典論理を使う。すべての証明が構成的という主張はしない。
+ド・モルガン則のうち `¬(A ∧ B) → ¬A ∨ ¬B` の証明には排中律を用います（他の3方向および対偶は直観主義論理の範囲で構成的です）。算術ライブラリにおいても、素因数の存在、最小の正の証人、ユークリッドの補題などの一部の定理では古典論理を用いて証明しています。
 
 ## フェルマーの小定理
 
-[fermat](../examples/commons/nat/fermat.tp) は、以下の順で証明する。
+[fermat](../examples/commons/nat/fermat.tp) は、以下の順で証明します。
 
-1. `prime_divides_choose` から、二項展開の内側の各項が0と合同になる。
-2. `sum_between_cong_zero` で内側の和も0と合同になる。
+1. `prime_divides_choose` から、二項展開の内側の各項が 0 と合同になる。
+2. `sum_between_cong_zero` で内側の和も 0 と合同になる。
 3. `binomial_theorem` と証明済みの両端分離から、`(x+1)^p ≡ x^p+1 (mod p)` を得る。
 4. 帰納法の仮定 `x^p ≡ x` を使い、後者の式へ移す。
 5. 素数の正値性と `pow_zero_positive` を基底として、自然数の帰納法を適用する。
 
-[fermat_sum](../examples/commons/nat/fermat.tp) は、証明済みの小定理に `x=a+b` を代入する。利用例の `fermat_application` はこの定理を import して適用する。
+[fermat_sum](../examples/commons/nat/fermat.tp) は、証明済みの小定理に `x = a + b` を代入します。利用例の `fermat_application` はこの定理を import して適用します。
 
 ## 検証
 
@@ -170,11 +170,9 @@ dune build
 dune runtest
 dune exec bin/main.exe -- compile examples/commons/nat/fermat.tp -o /tmp/fermat.pa
 dune exec bin/main.exe -- check /tmp/fermat.pa
-# 分野別モジュールを単独で検査できる。
+# 分野別モジュールを単独で検査できる
 dune exec bin/main.exe -- compile examples/commons/nat/euclid.tp -o /tmp/euclid.pa
 dune exec bin/main.exe -- check /tmp/euclid.pa
 ```
 
-回帰テストは、各候補と旧補題のすべてが `Proven` として登録されることを確認する。前提の語彙は固定した許可一覧に限定し、証明ファイルからの公理追加を許さない。固定前提を先頭に集めた署名でも再コンパイルし、証明部分を前提追加禁止で再検証する。誤った結論、合同式の法、添字の条件、存在の証人、平方根の方程式、分母の正値性を使った証明は拒否する。
-
-これらは実装と証明項の検査であり、Kernel 自体の形式的な健全性証明ではない。
+回帰テストでは、カタログに記載されたすべての定理が `Proven` として正しく登録されることを確認します。前提として許可される語彙は指定の公理一覧に限定され、証明ファイル側での公理追加は禁止されます。また、前提を先頭に集めた署名に対して証明部分を前提追加禁止（`--no-axioms` 同等）で再検証し、誤った結論や不正な証明項が適切に拒否されることを確認しています。

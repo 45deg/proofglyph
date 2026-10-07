@@ -1,5 +1,25 @@
-type t = Type | Kind | Var of int | Const of int | Pi of t * t | Lam of t * t | App of t * t
+(** {1 Term Representation and Basic Operations}
 
+    Provides the abstract syntax tree (AST) for types and terms in the λΠ-calculus
+    (an LF-style dependent type theory), de Bruijn index operations (shifting and substitution),
+    serialization to the .pa assembly language, and pretty-printing to human-readable strings. *)
+
+(** Abstract syntax tree for terms and types.
+    In this system, terms and types share the same syntax.
+    Variable bindings use de Bruijn indices, where [Var 0] refers to the innermost bound variable. *)
+type t =
+  | Type          (** Universe [Type] : [Kind] *)
+  | Kind          (** Super-universe [Kind]; has no type of its own *)
+  | Var of int    (** Bound variable identified by its de Bruijn index (>= 0) *)
+  | Const of int  (** Global constant identifier, numbered sequentially from 0 *)
+  | Pi of t * t   (** Dependent product type [Π (x:A). B]. Only the second argument [B] binds a variable *)
+  | Lam of t * t  (** Lambda abstraction [λ (x:A). b]. Only the second argument [b] binds a variable *)
+  | App of t * t  (** Function application [f x] *)
+
+(** [shift delta cutoff t] adjusts the de Bruijn indices of free variables in term [t].
+    - [delta]: index adjustment (+1 when introducing a binder, -1 when removing one)
+    - [cutoff]: current binding depth. Only variables with indices >= cutoff are shifted.
+    When descending into the body of [Pi] or [Lam], [cutoff] is incremented by 1. *)
 let rec shift delta cutoff = function
   | Var n -> if n >= cutoff then Var (n + delta) else Var n
   | Pi (a,b) -> Pi (shift delta cutoff a, shift delta (cutoff+1) b)
@@ -7,7 +27,11 @@ let rec shift delta cutoff = function
   | App (f,x) -> App (shift delta cutoff f, shift delta cutoff x)
   | (Type | Kind | Const _) as t -> t
 
-(* Substitute for the outermost variable, removing its binder. *)
+(** [instantiate body value] substitutes [value] for the outermost variable (index 0) in [body],
+    stripping the corresponding binder (used for β-reduction: [(λ x. body) value → body[value/x]]).
+    - [Var n] matching [depth] is replaced with [value] shifted to [depth].
+    - Free variables [Var n] with [n > depth] have their indices decremented by 1.
+    - Bound variables [Var n] with [n < depth] remain unchanged. *)
 let instantiate body value =
   let rec go depth = function
     | Var n when n = depth -> shift depth 0 value
@@ -19,6 +43,14 @@ let instantiate body value =
     | (Type | Kind | Const _) as t -> t
   in go 0 body
 
+(** [encode term] serializes [term] into the reverse-Polish notation of the .pa assembly language:
+    - [Type] -> [*]
+    - [Kind] -> [^]
+    - [Var n] -> [$n]
+    - [Const n] -> [#n]
+    - [Pi (a,b)] -> [encode a] [encode b] [>]
+    - [Lam (a,b)] -> [encode a] [encode b] [\]
+    - [App (f,x)] -> [encode f] [encode x] [@] *)
 let encode term =
   let b = Buffer.create 64 in
   let rec go = function
@@ -31,6 +63,9 @@ let encode term =
     | App (f,x) -> go f; go x; Buffer.add_char b '@'
   in go term; Buffer.contents b
 
+(** [pretty ?names t] formats [term] into a human-readable string.
+    Bound variables are named [$x0], [$x1], ... according to their binding depth.
+    - [names]: function mapping constant indices to identifiers (defaults to "c" ^ index). *)
 let pretty ?(names = fun n -> "c" ^ string_of_int n) t =
   let rec go ctx = function
     | Type -> "Type" | Kind -> "Kind"
