@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Rocq4pa Require Import Syntax Substitution Kernel Completeness.
+From Rocq4pa Require Import Syntax Substitution Kernel Evaluation.
 
 Inductive parallel : term -> term -> Prop :=
 | par_type : parallel tType tType

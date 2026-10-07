@@ -1,5 +1,5 @@
 From Stdlib Require Import List Arith.Wf_nat.
-From Rocq4pa Require Import Syntax Substitution Kernel Completeness Confluence Preservation.
+From Rocq4pa Require Import Syntax Substitution Kernel Evaluation Confluence Preservation.
 
 (** Accessibility is oriented towards reducts. It includes reductions inside
     annotations and under binders, just like [normal]. *)
@@ -8,9 +8,6 @@ Definition strongly_normalizing t := Acc (fun u t => reduces t u) t.
 Inductive beta_plus : term -> term -> Prop :=
 | plus_one : forall t u, reduces t u -> beta_plus t u
 | plus_more : forall t u v, reduces t u -> beta_plus u v -> beta_plus t v.
-
-Lemma beta_plus_steps t u : beta_plus t u -> beta_steps t u.
-Proof. intros H; induction H; eauto using beta_steps. Qed.
 
 Lemma beta_steps_plus t u v : beta_steps t u -> beta_plus u v -> beta_plus t v.
 Proof. intros H; induction H; eauto using beta_plus. Qed.
@@ -23,10 +20,6 @@ Proof. intros F t u H; induction H; eauto using beta_plus. Qed.
 Lemma strongly_normalizing_step t u : strongly_normalizing t -> reduces t u ->
   strongly_normalizing u.
 Proof. intros H R; exact (Acc_inv H R). Qed.
-
-Lemma strongly_normalizing_steps t u : strongly_normalizing t -> beta_steps t u ->
-  strongly_normalizing u.
-Proof. intros H R; induction R; eauto using strongly_normalizing_step. Qed.
 
 Lemma strongly_normalizing_plus t : strongly_normalizing t ->
   Acc (fun u t => beta_plus t u) t.
@@ -100,11 +93,4 @@ Theorem strongly_normalizing_evaluates t : strongly_normalizing t ->
 Proof.
   intros H; pose proof (strongly_normalizing_plus _ H) as A. clear H.
   induction A as [t NEXT IH]. apply evaluation_from_reducts; exact IH.
-Qed.
-
-Theorem strongly_normalizing_normal t : strongly_normalizing t ->
-  exists u bound, forall fuel, bound <= fuel -> normal fuel t = Some u.
-Proof.
-  intros H; destruct (strongly_normalizing_evaluates _ H) as [u E].
-  exists u; apply normal_complete; exact E.
 Qed.

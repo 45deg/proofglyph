@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Rocq4pa Require Import Syntax Substitution WellFormed TypingSubstitution Confluence Generation Kernel Completeness.
+From Rocq4pa Require Import Syntax Substitution WellFormed TypingSubstitution Confluence Generation Kernel Evaluation.
 Import ListNotations.
 
 (** One beta step, including all annotations and binder bodies. *)

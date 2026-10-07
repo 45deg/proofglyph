@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
 From Rocq4pa Require Import Syntax Substitution WellFormed TypingSubstitution
-  Kernel Completeness Confluence Generation Preservation Regularity.
+  Kernel Evaluation Confluence Generation Preservation Regularity.
 Import ListNotations.
 
 Inductive arity : Type := base | arrow (a b : arity).

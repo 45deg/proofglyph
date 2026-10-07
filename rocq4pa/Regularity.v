@@ -1,6 +1,6 @@
 From Stdlib Require Import List PeanoNat Compare_dec Lia.
 From Rocq4pa Require Import Syntax Substitution WellFormed TypingSubstitution
-  Kernel Completeness Confluence Generation Preservation.
+  Kernel Evaluation Confluence Generation Preservation.
 Import ListNotations.
 
 Lemma typing_signature_extension sg ctx t a extra : typing sg ctx t a ->

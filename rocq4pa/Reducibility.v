@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Rocq4pa Require Import Syntax Substitution Kernel Completeness Confluence
+From Rocq4pa Require Import Syntax Substitution Kernel Evaluation Confluence
   Preservation Normalization Arity.
 Import ListNotations.
 
