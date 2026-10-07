@@ -25,6 +25,12 @@ dune exec bin/main.exe -- inspect examples/identity.pa
 
 `compile` は出力する記号列を再読み込みして Kernel で検査します。検査に失敗した場合、出力先ファイルを書き換えません。`-o` を省くと標準出力に出します。出力の改行はすべて削除できます。
 
+`--sourcemap FILE` を指定すると、宣言単位の対応表を JSON で保存します。import 先を含む元ファイル・行・列・宣言名・定数番号と、出力のバイト範囲を記録します。
+
+```sh
+dune exec bin/main.exe -- compile examples/basics.tp -o /tmp/basics.pa --sourcemap /tmp/basics.pa.map
+```
+
 `check` と `inspect` はどちらも全宣言を検査して、各定数の型と `assumption` / `proven` を表示します。証明済み定数の展開は行いません。
 
 信頼する前提を別ファイルに分ける場合は、次のようにします。対象ファイルの定数番号は prelude の続きです。

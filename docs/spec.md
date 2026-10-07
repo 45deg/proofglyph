@@ -130,12 +130,26 @@ atom = name | "Type" | "Kind" | "(", term, ")" ;
 ## 6. CLI と資源制限
 
 ```text
-compile SOURCE [-o FILE] [--fuel N]
+compile SOURCE [-o FILE] [--sourcemap FILE] [--fuel N]
 check ASSEMBLY [--prelude FILE] [--no-axioms] [--fuel N]
 inspect ASSEMBLY [--fuel N]
 ```
 
 `compile` は指定した入口ファイルと、その推移的な import を空の署名からコンパイルし、生成した記号列全体を検査してから出力する。すべての読み込み・検査が成功するまで出力先を書き換えない。ソース prelude の別出力は未対応。表示名は出力形式には含まれない。
+
+`compile --sourcemap FILE` は宣言単位の JSON 対応表を別ファイルに保存する。`-o` を省いた標準出力との併用も可能。記号列と対応表に同じ出力先は指定できない。読み込み・型検査の失敗時には、どちらの出力先も書き換えない。出力時の I/O エラーに対する2ファイルの同時更新は保証しない。
+
+形式は `{"version":1,"mappings":[...]}`。これは tinyprover 独自の形式であり、JavaScript の Source Map v3 ではない。各要素は次のフィールドを持つ。
+
+| フィールド | 意味 |
+| --- | --- |
+| `constant` | 登録順の定数番号（0始まり） |
+| `name` | 元の宣言名 |
+| `file` | 元ファイルの canonical な絶対パス。文字列 API では `null` |
+| `line`, `column` | 宣言キーワードの行・バイト列（1始まり。タブは1列） |
+| `start_byte`, `end_byte` | 出力記号列の0始まりの半開区間。登録命令を含み、末尾改行を除く |
+
+import 展開後の登録順で1宣言につき1要素を記録する。空の入力では配列も空。バイト範囲は生成した記号列そのものに対応するため、改行を削除するなどの編集後には使えない。対応表は検証には使用せず、`check` / `inspect` の診断形式も変えない。
 
 `check --prelude FILE` は同じ Kernel に prelude を読み込み、その後、対象ファイルを前提追加禁止で読む。番号は prelude から続く。`--no-axioms` も対象ファイルの前提追加を禁止する。
 

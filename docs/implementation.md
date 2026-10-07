@@ -58,3 +58,5 @@ Dune と OCaml 標準ライブラリ（`Unix.realpath` を使うため `unix` �
 `Source.parse` / `Source.compile` は従来どおり文字列を扱い、import を含む入力はファイル読み込み API の使用を求める診断で拒否する。`Source.parse_items` は import と宣言を区別して解析する。`Source.load path` は import を展開した宣言一覧、`Source.compile_file path` は検査済みの記号列・宣言名・ファイル位置付き宣言一覧を返す。
 
 読み込み済み宣言は `Source.compile_declarations` でも検査できる。import の状態は1回の読み込みに閉じ、作業ディレクトリや Kernel の規則は変更しない。記号言語・定数番号・前提の禁止規則にも変更はない。
+
+`Source.compiled.sourcemap` は宣言ごとの定数番号・名前・ソース位置・出力バイト範囲を保持する。`Source.sourcemap_json result` で JSON に直列化する。範囲はエンコード時に記録し、記号列の再検査に成功した場合だけ結果を返す。

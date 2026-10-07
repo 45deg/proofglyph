@@ -161,12 +161,43 @@ let resolve globals at expr =
     | Lambda(x,a,b) -> Term.Lam(go locals a,go (Some x::locals) b)
   in go [] expr
 
-type compiled = { assembly : string; names : string list; declarations : declaration list }
+type mapping = {
+  constant : int; name : string; file : string option; line : int; column : int;
+  start_byte : int; end_byte : int;
+}
+type compiled = {
+  assembly : string; names : string list; declarations : declaration list;
+  sourcemap : mapping list;
+}
+
+(* JSON escaping is independent of OCaml string-literal escaping. *)
+let json_string s =
+  let b = Buffer.create (String.length s + 2) in
+  Buffer.add_char b '"';
+  String.iter (function
+    | '"' -> Buffer.add_string b "\\\""
+    | '\\' -> Buffer.add_string b "\\\\"
+    | c when Char.code c < 0x20 ->
+        Buffer.add_string b (Printf.sprintf "\\u%04x" (Char.code c))
+    | c -> Buffer.add_char b c) s;
+  Buffer.add_char b '"'; Buffer.contents b
+
+let sourcemap_json result =
+  let entries = List.map (fun (m:mapping) ->
+    Printf.sprintf
+      "    {\"constant\":%d,\"name\":%s,\"file\":%s,\"line\":%d,\"column\":%d,\"start_byte\":%d,\"end_byte\":%d}"
+      m.constant (json_string m.name)
+      (match m.file with None -> "null" | Some p -> json_string p)
+      m.line m.column m.start_byte m.end_byte) result.sourcemap in
+  "{\"version\":1,\"mappings\":[\n" ^ String.concat ",\n" entries ^ "\n]}\n"
+
 let compile_declarations ?(fuel=1_000_000) declarations =
   let globals = ref [] in
   let names = ref [] in
   let output = Buffer.create 256 in
-  List.iter (fun d ->
+  let mappings = ref [] in
+  List.iteri (fun constant (d:declaration) ->
+    let start_byte = Buffer.length output in
     if List.mem_assoc d.name !globals then error d.at ("duplicate declaration: " ^ d.name);
     let typ = resolve !globals d.at d.typ in
     Buffer.add_string output (Term.encode typ);
@@ -174,13 +205,16 @@ let compile_declarations ?(fuel=1_000_000) declarations =
      | None -> Buffer.add_char output ':'
      | Some b -> Buffer.add_string output (Term.encode (resolve !globals d.at b));
          Buffer.add_char output '!');
+    let end_byte = Buffer.length output in
+    mappings := {constant; name=d.name; file=d.at.file; line=d.at.line;
+      column=d.at.col; start_byte; end_byte} :: !mappings;
     Buffer.add_char output '\n';
     globals := (d.name,List.length !names)::!globals;
     names := !names @ [d.name]) declarations;
   let assembly = Buffer.contents output in
   (* Check precisely the serialized artifact, through the independent reader. *)
   Assembly.run (Kernel.create ~fuel ()) assembly;
-  {assembly; names= !names; declarations}
+  {assembly; names= !names; declarations; sourcemap=List.rev !mappings}
 
 let compile ?fuel source = compile_declarations ?fuel (parse source)
 let compile_file ?fuel path = compile_declarations ?fuel (load path)

@@ -16,6 +16,20 @@ let () =
   test "exact identity encoding" (fun () ->
     let r = compile "axiom A : Type; def id (x : A) : A := x;" in
     assert (r.assembly="*:\n#0#0>#0$0\\!\n"); verify r.assembly);
+  test "sourcemap records exact declaration byte ranges and locations" (fun () ->
+    let r = compile "// comment\n  axiom A : Type;\n\ndef id (x : A) : A := x;" in
+    (match r.sourcemap with
+     | [a; b] ->
+         assert (a.constant = 0 && a.name = "A" && a.file = None);
+         assert (a.line = 2 && a.column = 3 && a.start_byte = 0 && a.end_byte = 2);
+         assert (b.constant = 1 && b.name = "id" && b.line = 4 && b.column = 1);
+         assert (b.start_byte = 3 && b.end_byte = String.length r.assembly - 1);
+         assert (String.sub r.assembly b.start_byte (b.end_byte - b.start_byte)
+           = "#0#0>#0$0\\!")
+     | _ -> assert false);
+    assert ((compile "").sourcemap = []);
+    assert (Source.sourcemap_json (compile "") = "{\"version\":1,\"mappings\":[\n\n]}\n");
+    assert (Source.json_string "a\"\\\n\t\000" = "\"a\\\"\\\\\\u000a\\u0009\\u0000\""));
   test "two binder index" (fun () ->
     let r = compile "axiom A : Type; def keep (x y : A) : A := x;" in
     assert (r.assembly="*:\n#0#0#0>>#0#0$1\\\\!\n"));
@@ -123,7 +137,10 @@ let () =
       (fun dir _ ->
         Unix.symlink "base.tp" (Filename.concat dir "alias.tp");
         let r = Source.compile_file (Filename.concat dir "root.tp") in
-        assert (r.names = ["A"; "left"; "right"])));
+        assert (r.names = ["A"; "left"; "right"]);
+        assert (List.map (fun (m:Source.mapping) ->
+          Filename.basename (Option.get m.file)) r.sourcemap
+          = ["base.tp"; "left.tp"; "right.tp"])));
   test "cyclic imports are rejected, including a symlink back to the root" (fun () ->
     with_fixture ["root.tp", "import \"other.tp\";"; "other.tp", "import \"root.tp\";"]
       (fun dir write ->
@@ -155,16 +172,17 @@ let () =
        "import \"bad\\path\";"; "import \"bad\npath\";"];
     reject_source "import \"base.tp\";");
   test "CLI preserves an existing output when an import or proof fails" (fun () ->
-    with_fixture ["root.tp", "import \"missing.tp\";"; "out.pa", "sentinel"]
+    with_fixture ["root.tp", "import \"missing.tp\";"; "out.pa", "sentinel"; "out.map", "map sentinel"]
       (fun dir write ->
         let root = Filename.concat dir "root.tp" and output = Filename.concat dir "out.pa" in
         let run () =
           let log = Unix.openfile (Filename.concat dir "log") [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
           let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
             Unix.create_process "../bin/main.exe"
-              [|"tinyprover"; "compile"; root; "-o"; output|] Unix.stdin log log) in
+              [|"tinyprover"; "compile"; root; "-o"; output; "--sourcemap"; Filename.concat dir "out.map"|] Unix.stdin log log) in
           assert (snd (Unix.waitpid [] pid) = Unix.WEXITED 1);
-          assert (Source.read_file output = "sentinel") in
+          assert (Source.read_file output = "sentinel");
+          assert (Source.read_file (Filename.concat dir "out.map") = "map sentinel") in
         run ();
         write "root.tp" "axiom A : Type; theorem bad : A := Type;";
         run ()));
