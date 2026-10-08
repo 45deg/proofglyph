@@ -37,7 +37,7 @@ CLI テストは正例・反例22件、決定的な変異入力120件、資源�
 ## 証明した保証
 
 CLI が使う検査器は `Checker.v` の `check_program` です。
-宣言的な型付け規則 `typing` / `valid_program` に対して、健全性と
+宣言的な型付け規則（declarative typing rules）`typing` / `valid_program` に対して、健全性と
 十分な fuel による完全性を証明しています。追加公理・`Admitted` は使っていません。
 
 ```text
@@ -57,15 +57,15 @@ fuel を増やしても結果は変わりません。型が正しくない入力
 
 前提は次のとおりです。
 
-- `wf_signature Σ`：空の署名から順に、それ以前の署名で sort が付く型だけを追加した署名。
+- `wf_signature Σ`：空のシグネチャから順に、それ以前のシグネチャでソートが付く型だけを追加したシグネチャ。
 - `permitted_declarations allow ds`：`allow = false` なら公理宣言を含まない。
-- `valid_program Σ ds Σ'`：各宣言型に sort が付き、証明宣言にはその型を持つ証明項がある。
+- `valid_program Σ ds Σ'`：各宣言型にソートが付き、証明宣言にはその型を持つ証明項がある。
 
 検査成功、正規化の停止性、有限の検査導出、公理の無矛盾性は前提に含めていません。
-型が正しい不透明な公理を許します。署名には型だけを追加し、証明の本体は展開しません。
+型が正しい不透明な公理を許します。シグネチャには型だけを追加し、証明の本体は展開しません。
 
-空の署名は整形式です。`accepted_program_wf` は、受理した宣言列が作る署名も
-整形式であることを保証します。CLI は空の署名から始め、prelude も同じ検査器で検査します。
+空のシグネチャは整形式です。`accepted_program_wf` は、受理した宣言列が作るシグネチャも
+整形式であることを保証します。CLI は空のシグネチャから始め、prelude も同じ検査器で検査します。
 `prelude_and_main_complete` は、有効な prelude と公理禁止の本体について、
 共通の十分大きな fuel で両方を受理できることを証明しています。
 
@@ -82,10 +82,15 @@ declarative_check_complete:
 ```
 
 `wf_context` は各局所変数の型が、それ以前の文脈で `Type` を持つことを要求します。
-検査では目標型 `A` 自身の sort も要求します。推論では `Type : Kind` も扱い、
+検査では目標型 `A` 自身のソートも要求します。推論では `Type : Kind` も扱い、
 返す型は宣言的な型と β 同値であることを保証します。
 
-`Verification.v` は、健全性・完全性・署名の整形式性保存・fuel の単調性について
+`proper_type Σ Γ A` を満たす型を、ここでは適正な型と呼びます。これは、
+ソートを持つ型と `Kind` 自体を含む条件です。`Kind` は型付けできないため、
+適正な型であることと、ソートを持つことは区別します。`Regularity.v` は、
+型付けの結論に現れる型と β 同値な適正な代表型の存在を証明します。
+
+`Verification.v` は、健全性・完全性・シグネチャの整形式性保存・fuel の単調性について
 `Print Assumptions` を実行します。すべて `Closed under the global context` であり、
 ビルド時には `rocq check` で再検査します。
 
@@ -97,9 +102,9 @@ declarative_check_complete:
 | `Substitution.v` | 同時置換・変数の付け替えの代数則 |
 | `Kernel.v` / `Program.v` | 正規化・同値判定の実装と健全性、宣言的な宣言列仕様 |
 | `WellFormed.v` / `TypingSubstitution.v` | 整形式性、弱化、型付き置換、文脈変換 |
-| `Evaluation.v` | 有限の評価導出と正規化器の対応、fuel の境界と単調性 |
-| `Confluence.v` / `Generation.v` | 合流性、正規形・型の一意性、生成補題 |
-| `Preservation.v` / `Regularity.v` | 型保存、正則性、kind の構造 |
+| `Evaluation.v` | 有限の導出を持つ評価関係と正規化器の対応、fuel の境界と単調性 |
+| `Confluence.v` / `Generation.v` | 合流性、正規形・型の一意性、型付けの反転補題（generation lemma） |
+| `Preservation.v` / `Regularity.v` | 型保存（subject reduction）、正則性、カインドの構造 |
 | `Normalization.v` | 強正規化から有限の評価導出への接続 |
 | `Arity.v` / `Reducibility.v` | 型の形による対応、reducibility による強正規化 |
 | `TypedNormalization.v` | 宣言的型付けから強正規化・有限の評価導出への接続 |
@@ -115,7 +120,7 @@ declarative_check_complete:
   抽出コードを手で変更せず、自然数を機械整数に置き換える抽出指示も使いません。
 - 任意に追加した公理の無矛盾性、`.tp` から意図した命題への翻訳、
   既存 OCaml カーネルそのものの正しさは保証しません。
-- 宣言的仕様は変換先の sort を各変換規則で要求しません。
+- 宣言的仕様は変換先のソートを各変換規則で要求しません。
   別の LF 定式化との同値性、既存 OCaml の shift・置換との同値性は未証明です。
 - fuel は再帰の深さです。既存実装の共有ステップ数とは意味が異なり、
   資源不足による拒否が一致するとは限りません。

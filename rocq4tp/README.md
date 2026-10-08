@@ -100,7 +100,7 @@ CLI の型検査用 `--fuel` とは分けています。
 | `translates_distinct` | 変換できるソースの宣言名には重複がない |
 | `translates_policy` | 公理禁止ポリシーが変換の前後で一致 |
 | `translates_scoped` | 各宣言の型・本体は閉じており、先行定数だけを参照 |
-| `compile_sound` | 翻訳関係、宣言的型付け、ポリシー、結果署名の整形式性 |
+| `compile_sound` | 翻訳関係、宣言的型付け、ポリシー、結果シグネチャの整形式性 |
 | `compile_complete` | 翻訳可能で型が正しくポリシーを満たす宣言列は、十分な fuel で受理 |
 | `compile_monotone` | 成功後に fuel を増やしても結果が変わらない |
 | `compile_correct` | ある fuel での成功と、翻訳・ポリシー・型付けの仕様が同値 |
@@ -111,8 +111,8 @@ CLI の型検査用 `--fuel` とは分けています。
 | `encode_pa_injective` | 異なる宣言列が同じバイト列へ符号化されることはない |
 | `pa_canonical_roundtrip` | 復号できる入力を再符号化しても復号結果が変わらない |
 | `compile_pa_sound` / `compile_pa_complete` | `.pa` 出力まで含めた健全性と、十分な fuel による完全性 |
-| `compile_pa_recheck` | 出力したバイト列を同じ fuel・公理ポリシーで再検査すると同じ署名を得る |
-| `check_pa_sound` | 受理したバイト列の復号結果は型付け・ポリシーを満たし、署名も整形式 |
+| `compile_pa_recheck` | 出力したバイト列を同じ fuel・公理ポリシーで再検査すると同じシグネチャを得る |
+| `check_pa_sound` | 受理したバイト列の復号結果は型付け・ポリシーを満たし、シグネチャも整形式 |
 | `compile_pa_monotone` | fuel を増やしても成功した出力は変わらない |
 
 最終定理は次の形です。
@@ -153,7 +153,7 @@ compile_pa fuel allow src = Some (bytes, Σ)
 恒等関数の検査、重複・前方・自己参照、型誤り、公理禁止を Rocq 内で確認します。
 
 `make test` は抽出された関数を実行し、リポジトリの全48個の `.tp` ファイルについて、
-import 展開後の名前解決を既存実装と比較し、宣言列と最終署名を確認します。
+import 展開後の名前解決を既存実装と比較し、宣言列と最終シグネチャを確認します。
 全48件の出力を既存 writer とバイト単位で比較し、Rocq の復号器・型検査器と既存 reader の
 両方で検査します。990件の型付けを要求しない項についても、往復性と writer との一致を確認します。
 `PaExamples.v` と実行テストは十進数の桁境界、先頭0、空白、未知バイト、スタック異常、

@@ -26,7 +26,7 @@ Rocq に定義しました。**閉じた式について、ZFC の証明可能性
   目標型と `proof_type no_universal_set` の一致、fuel 128 での受理を Rocq 内で検証。
 - `russell_export.py`: Russell の導出を、変数範囲・変数変更・仮定の持ち上げの証拠を
   すべて含む LF 項として出力。既存の `export.ml` で `.pa` と Rocq データを生成。
-- `Specification.v`: 完成版の固定署名が満たすべき `correct_presentation` を定義。
+- `Specification.v`: 完成版の固定シグネチャが満たすべき `correct_presentation` を定義。
   `declarative_presentation` からこの契約と証明可能性の同値性を導出済みです。
   `typed_translation_accepted` は証明翻訳の型付けから、十分な fuel すべてでの受理を導きます。
   `Reflection.v` の `concrete_correct_presentation` が、この契約の具体的な実装です。
@@ -50,9 +50,9 @@ Rocq に定義しました。**閉じた式について、ZFC の証明可能性
 - `Translation.v`: すべての構造的な証拠から閉じた型付き pa 項の存在を導出。
   `certificate_translation`、`ZFC_translation` と、十分な fuel すべてでの受理を示す
   `ZFC_accepted` を証明しました。具体例に限定した定理ではありません。
-- `GroundAdequacy.v`: 関数を引数に取らない一階の LF 署名について、正規形の閉じた原子型の項を
+- `GroundAdequacy.v`: 関数を引数に取らない一階の LF シグネチャについて、正規形の閉じた原子型の項を
   定数と適用からなる木として復元する一般定理 `normal_atomic_ground` を証明。
-- `Reflection.v`: 実際の固定署名が一階であることと、83宣言の各意味を検証。
+- `Reflection.v`: 実際の固定シグネチャが一階であることと、83宣言の各意味を検証。
   `typed_proof_recovered` は任意の型付き pa 項を正規化し、`proof_certificate` を復元します。
   `ZFC_pa_iff` により目標の同値性を証明しました。Rocq の新しい公理には依存しません。
 - `proof_certificates.tp`: 8公理、分出・置換インスタンス、等号の反射、含意の恒等証明、
@@ -161,14 +161,14 @@ ZFC_proves φ
 
 ## 検査器の完全性との接続
 
-`Checker.declarative_check_complete` の前提は、署名の整形式性、目標型の sort、
+`Checker.declarative_check_complete` の前提は、シグネチャの整形式性、目標型のソート、
 閉じた証明項の宣言的型付けです。結論は、ある自然数の境界以上のすべての fuel での受理です。
 `Specification.v` の接続定理はこの定理を直接使用し、停止性や公理の無矛盾性、
 古典論理・モデルの存在を追加の前提にしていません。
 ZFC の証明から文の閉性は `provable_sentence` で導きます。
 
-逆方向には、整形式の署名の下で `Checker.check_sound` により型付けを取り出します。
-固定署名の整形式性・目標型の sort は `DeepVerification.v` で証明しました。
+逆方向には、整形式のシグネチャの下で `Checker.check_sound` により型付けを取り出します。
+固定シグネチャの整形式性・目標型のソートは `DeepVerification.v` で証明しました。
 ZFC 証明と任意の型付き証明項との対応は `Translation.v` と `Reflection.v` で証明しました。
 この同値性は Rocq 内の AST に対する定理であり、CLI の入出力全体の形式検証ではありません。
 fuel の結論は Rocq の自然数についてであり、CLI の fuel 上限や実機資源内の成功は保証しません。
