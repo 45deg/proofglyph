@@ -1,6 +1,6 @@
 # 証明ライブラリ
 
-関連する定理を分野ごとの `.tp` モジュールにまとめる。利用するモジュールを直接 `import` すれば、必要な定義と先行する証明も読み込まれる。全分野を読み込む互換用の入口は置かない。
+関連する定理を分野ごとの `.tp` モジュールにまとめています。利用したいモジュールを直接 `import` すれば、必要な定義と先行する証明も自動的に読み込まれます（全分野を一括で読み込む互換用のエントリーポイントは設けていません）。
 
 `examples/` 内のファイルから加算の定理を使う例：
 
@@ -11,7 +11,7 @@ theorem commute_example (a b : Nat) : Prf (Eq (add a b) (add b a))
   := add_comm a b;
 ```
 
-どのモジュールも直接コンパイルして検査できる。
+どのモジュールも直接コンパイルして検査できます。
 
 ```sh
 dune exec bin/main.exe -- compile examples/commons/nat/addition.tp -o /tmp/addition.pa
@@ -29,9 +29,9 @@ dune exec bin/main.exe -- check /tmp/addition.pa
 | [equality.tp](equality.tp) | 型 `U` 上の等式の対称律・推移律・関数による保存。 |
 | [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、135定理。 |
 
-`foundation/` のファイルは `axiom` 宣言、残りは `theorem` 宣言を持つ。`axiom` は記号や定義の方程式を登録するためにも使う。数学的な補題を仮定する宣言は置かない。詳しい意味と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照。
+`foundation/` のファイルは `axiom` 宣言、残りは `theorem` 宣言を持ちます。`axiom` は記号や定義の方程式を登録するためにも使用し、数学的な補題を仮定する宣言は置いていません。各定理の詳細と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照してください。
 
-`import` は同じ実体ファイルを1度だけ読み込む。名前空間は共通なので、型 `U` 上の `Eq`・量化と、自然数上の同名のシグネチャは別々に利用する。自然数の等式には `nat/basic.tp` を使う。
+`import` は同じ実体ファイルを1度だけ読み込みます。名前空間は共通なので、型 `U` 上の `Eq`・量化と、自然数上の同名のシグネチャは別々に利用します。自然数の等式には `nat/basic.tp` を使用してください。
 
 ## 自然数・整数論のモジュール
 
@@ -63,4 +63,4 @@ dune exec bin/main.exe -- check /tmp/addition.pa
 | [fermat.tp](nat/fermat.tp) | 二項展開の合同補題、フェルマーの小定理、和への適用。 |
 | [sqrt_two.tp](nat/sqrt_two.tp) | 平方の偶奇、互いに素な場合の矛盾、無限降下による√2の無理性。 |
 
-自然数の基本的な依存関係は `basic → addition → multiplication` であり、順序や整除性などがその上に続く。証明の正確な依存先は各ファイルの冒頭にある。利用例は [論理の合成](../logic.tp) と [フェルマーの適用](../fermat_application.tp) を参照。
+自然数の基本的な依存関係は `basic → addition → multiplication` であり、順序や整除性などがその上に続きます。各証明の正確な依存関係は各ファイルの冒頭に記載されています。利用例は [論理の合成](../logic.tp) と [フェルマーの適用](../fermat_application.tp) を参照してください。

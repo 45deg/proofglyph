@@ -1,6 +1,6 @@
 # 実装と検証
 
-[仕様 v0.3](spec.md)に対応する実装の構成と検証手順を記す。通常の OCaml 実装、同じ実装を使う Web デモ、独立した Rocq 実装を含む。
+[仕様 v0.3](spec.md) に対応する実装の構成と検証手順をまとめる。通常の OCaml 実装、同じ実装を使う Web デモ、独立した Rocq 実装を含む。
 
 ## モジュール
 
@@ -20,11 +20,11 @@
 
 Dune のライブラリは `tinyprover_core`、`tinyprover_pa`、`tinyprover_tp` に分離する。pa は core に、tp は pa と core に依存し、core と pa は tp に依存しない。ファイル import に必要な `unix` は tp の依存とする。
 
-OCaml API は `Tinyprover_core.Term` / `Kernel`、`Tinyprover_pa.Reader` / `Writer`、`Tinyprover_tp.Source` から利用する。記号列の出力は `Tinyprover_pa.Writer.encode` が担当する。公開 API の動作は[仕様書の第7節](spec.md#7-ocaml-api)を参照。
+OCaml API は `Tinyprover_core.Term` / `Kernel`、`Tinyprover_pa.Reader` / `Writer`、`Tinyprover_tp.Source` から利用する。記号列の出力は `Tinyprover_pa.Writer.encode` が担当する。各 API の詳細は後述の [ソース API とソースマップ](#ソース-api-とソースマップ) および各 `.mli` を参照。
 
 Kernel のシグネチャ型は `.mli` で抽象化する。外部から未検査の定数を注入する操作は公開しない。コンパイラは Kernel の内部文脈や正規化器を操作しない。
 
-シグネチャと文脈はリスト、等価性は完全な β 正規形の構造比較とする。大きなライブラリ向けの共有、キャッシュ、NbE、索引最適化は未実装。
+シグネチャと文脈はリスト、等価性は完全な β 正規形の構造比較とする。大きなライブラリ向けの共有、キャッシュ、NbE、索引最適化は実装していない。
 
 ## 通常実装の検査経路
 
@@ -153,8 +153,8 @@ make -C rocq verify
 make -C rocq test
 ```
 
-ルートの Makefile は pa、tp、calculi、zfc の順で各開発を検証する。個別には `make -C rocq/pa test` などを使う。`ROCQ` / `OCAMLC` で実行ファイルを指定できる。生成した証明データ、Rocq コンパイル結果、抽出コード・CLI は各開発の `_build/` に置く。
+ルートの Makefile は pa、tp、calculi、zfc の順で各サブプロジェクトを検証する。個別には `make -C rocq/pa test` などを使う。`ROCQ` / `OCAMLC` で実行ファイルを指定できる。生成した証明データ、Rocq コンパイル結果、抽出コード・CLI は各ディレクトリの `_build/` に配置する。
 
 `verify` は証明をコンパイルし、主要定理の `Print Assumptions` と `rocq check` による再検査を行う。`test` はこれに加えて抽出 CLI・生成された pa の実行テストや通常実装との比較を行う。形式証明と差分テストは保証が異なり、後者だけで通常実装の正しさは証明されない。
 
-NK・LK と ZFC の同値性は、それぞれ指定した固定シグネチャ上の AST に対する定理である。生成した pa バイト列とその AST の一般的な対応、通常の OCaml 実装自体の正しさ、公理の無矛盾性は保証しない。Rocq のカーネル・抽出機構、OCaml コンパイラ・実行系、I/O は信頼境界に残る。詳しい定理と制限は[仕様書の第9節](spec.md#9-rocq-実装と形式証明)と [Rocq の README](../rocq/README.md)から各開発を参照する。
+NK・LK と ZFC の同値性は、それぞれ指定した固定シグネチャ上の AST に対する定理である。生成した pa バイト列とその AST の一般的な対応、通常の OCaml 実装自体の正しさ、公理の無矛盾性は保証しない。Rocq のカーネル・抽出機構、OCaml コンパイラ・実行系、I/O は信頼境界に残る。詳しい定理と制限は [Rocq の README](../rocq/README.md) を参照。
