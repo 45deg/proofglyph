@@ -77,7 +77,7 @@ make -C rocq test
 
 ## ドキュメントと例
 
-- [仕様 v0.3](docs/spec.md): 型理論、pa言語・tp言語の文法、型付けと等価性の言語仕様。
+- [仕様](docs/spec.md): 型理論、pa言語・tp言語の文法、型付けと等価性の言語仕様。
 - [実装の構成](docs/implementation.md): モジュール分割、検査パイプライン、ソースマップ。
 - [証明カタログ](docs/proofs.md): 収録されている証明例（論理・等式・自然数・整数論）の解説。
 - [算術ライブラリ](examples/commons/README.md): Peano 公理から導出した自然数の演算、整除性、二項定理、素数の無限性、$\sqrt{2}$ の無理性など。
