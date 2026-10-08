@@ -1,5 +1,23 @@
 {
   "proofs": {
+    "入門：恒等関数・依存型・β同値": [{
+      "name": "id",
+      "path": "examples/basics.tp",
+      "line": 3
+    },{
+      "name": "dependent_id",
+      "path": "examples/basics.tp",
+      "line": 7
+    },{
+      "name": "beta",
+      "path": "examples/basics.tp",
+      "line": 15
+    }],
+    "入門：証明済みの含意の合成を使う": [{
+      "name": "composition_example",
+      "path": "examples/logic.tp",
+      "line": 4
+    }],
     "論理：含意の合成 (A → B) → (B → C) → A → C": [{
       "name": "implication_composition",
       "path": "examples/commons/logic/propositional.tp",
@@ -88,6 +106,11 @@
       "path": "examples/commons/equality.tp",
       "line": 4
     }],
+    "自然数：強い帰納法": [{
+      "name": "nat_strong_induction",
+      "path": "examples/commons/nat/induction.tp",
+      "line": 4
+    }],
     "自然数：0 + n = n, n + 0 = n": [{
       "name": "add_zero_left",
       "path": "examples/commons/nat/addition.tp",
@@ -171,6 +194,30 @@
       "name": "cong_pow",
       "path": "examples/commons/nat/congruence.tp",
       "line": 113
+    }],
+    "整数論：除法の原理（商と余りの存在）": [{
+      "name": "division_algorithm",
+      "path": "examples/commons/nat/division.tp",
+      "line": 6
+    }],
+    "整数論：最小の正の証人の存在": [{
+      "name": "least_positive",
+      "path": "examples/commons/nat/division.tp",
+      "line": 69
+    }],
+    "整数論：素因数の存在": [{
+      "name": "prime_factor",
+      "path": "examples/commons/nat/factorization.tp",
+      "line": 26
+    }],
+    "整数論：ユークリッドの補題・平方の整除性": [{
+      "name": "prime_mul_elim",
+      "path": "examples/commons/nat/euclid.tp",
+      "line": 5
+    },{
+      "name": "prime_divides_square",
+      "path": "examples/commons/nat/euclid.tp",
+      "line": 35
     }],
     "整数論：素数 p は C(p,k) を割り切る（0 < k < p）": [{
       "name": "prime_divides_choose",

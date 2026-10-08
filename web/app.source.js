@@ -72,14 +72,20 @@ if (globalThis.tinyprover) {
     }
     example.append(group);
   }
-  addGroup("証明例", "proof", Object.entries(catalog.proofs).flatMap(([name, matches]) => {
+  const subjects = new Map();
+  for (const [name, matches] of Object.entries(catalog.proofs)) {
+    const separator = name.indexOf("：");
+    const subject = separator < 0 ? "証明例" : name.slice(0, separator);
+    const title = separator < 0 ? name : name.slice(separator + 1);
+    if (!subjects.has(subject)) subjects.set(subject, []);
     const paths = [...new Set(matches.map(match => match.path))];
-    return paths.map(path => {
+    for (const path of paths) {
       const index = matches.findIndex(match => match.path === path);
-      const label = paths.length === 1 ? name : `${name}（${matches[index].name}）`;
-      return [label, [name, index]];
-    });
-  }));
+      const label = paths.length === 1 ? title : `${title}（${matches[index].name}）`;
+      subjects.get(subject).push([label, [name, index]]);
+    }
+  }
+  for (const [subject, items] of subjects) addGroup(subject, "proof", items);
   example.disabled = false;
   example.addEventListener("change", () => {
     if (!example.value) return;
