@@ -1,0 +1,17 @@
+-Q ../pa/_build Tinyprover.Pa
+-Q . Tinyprover.Tp
+Surface.v
+Desugar.v
+Resolve.v
+Compile.v
+PaCodec.v
+PaCompile.v
+SurfaceCompile.v
+TpSyntax.v
+TpImports.v
+TpExamples.v
+Examples.v
+PaExamples.v
+DesugarExamples.v
+Verification.v
+Extraction.v

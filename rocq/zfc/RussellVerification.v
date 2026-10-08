@@ -1,0 +1,34 @@
+From Stdlib Require Import List.
+From Tinyprover.Pa Require Import Syntax Program Checker.
+From Tinyprover.Zfc Require Import Russell Encoding.
+From Tinyprover.ZfcDeep Require Import DeepVerification Translation.
+From Tinyprover.ZfcRussell Require Import Artifact.
+Import ListNotations.
+
+(** The same fixed prelude accepts a proof of the Russell example. *)
+Theorem no_universal_set_accepted :
+  exists t bound, forall fuel, bound <= fuel ->
+    check fuel zfc_signature t (proof_type no_universal_set) = true.
+Proof. apply ZFC_accepted; exact no_universal_set_proved. Qed.
+
+Print Assumptions no_universal_set_accepted.
+
+Definition russell_pa_term : term :=
+  match Tinyprover.ZfcRussell.Artifact.proofs with
+  | [Prove _ t] => t
+  | _ => tType
+  end.
+
+Example russell_fixed_prelude :
+  Tinyprover.ZfcRussell.Artifact.prelude = Tinyprover.ZfcDeep.Artifact.prelude.
+Proof. reflexivity. Qed.
+
+Example russell_exact_statement : Tinyprover.ZfcRussell.Artifact.proofs =
+  [Prove (proof_type no_universal_set) russell_pa_term].
+Proof. reflexivity. Qed.
+
+Example russell_pa_accepted :
+  check 128 zfc_signature russell_pa_term (proof_type no_universal_set) = true.
+Proof. vm_compute; reflexivity. Qed.
+
+Print Assumptions russell_pa_accepted.

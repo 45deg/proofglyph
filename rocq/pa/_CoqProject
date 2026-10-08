@@ -1,0 +1,19 @@
+-Q . Tinyprover.Pa
+Syntax.v
+Substitution.v
+Kernel.v
+Program.v
+WellFormed.v
+TypingSubstitution.v
+Evaluation.v
+Confluence.v
+Generation.v
+Preservation.v
+Regularity.v
+Normalization.v
+Arity.v
+Reducibility.v
+TypedNormalization.v
+Checker.v
+Verification.v
+Extraction.v
