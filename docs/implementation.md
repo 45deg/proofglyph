@@ -104,7 +104,7 @@ lexer/parser と `TpImportsImpl.v` の有限ファイル集合上の import 展�
 
 ## Webデモ
 
-`web/browser.ml` は js_of_ocaml を通じて `globalThis.tinyprover` に `examples`、`compileAt`、`compile`、`checkMapped`、`check` を公開する。関数は `{ok, output}` を返し、成功した `compileAt` は対応表の JSON 文字列も返す。検証は実行ごとに新しい Kernel で行い、fuel は既定値を使う。入力中の import は拒否する。
+`web/browser.ml` は js_of_ocaml を通じて `globalThis.tinyprover` に `examples`、`compileAt`、`checkMapped`、`check` を公開する。関数は `{ok, output}` を返し、成功した `compileAt` は対応表の JSON 文字列も返す。検証は実行ごとに新しい Kernel で行い、fuel は既定値を使う。入力中の import は拒否する。
 
 `compileAt` は表示用パスを位置情報に付け、呼び出し時に前回の結果を破棄する。`checkMapped` は直近の成功した `compileAt` の出力と完全一致する場合に対応表を使う。違う場合は `cN` 表示へ戻る。`check` は常に対応表を使わない。
 

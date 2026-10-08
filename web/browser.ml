@@ -10,7 +10,6 @@ open Js_of_ocaml
     Exposes the following API on the global [window.tinyprover] object:
     - [examples]: Bundled example file list (JSON array).
     - [compileAt(path, source)]: Compiles source with virtual file path, returning assembly and sourcemap.
-    - [compile(source)]: Compiles source directly from string.
     - [checkMapped(source)]: Verifies assembly using declaration names if it matches the last compile output.
     - [check(source)]: Verifies assembly without source mapping. *)
 
@@ -62,10 +61,7 @@ let check_mapped source =
     Rejects import statements because the browser environment lacks a filesystem (requires expanded sources). *)
 let compile_at path source =
   last_compiled := None;
-  let declarations = Source.parse_items ~file:path source |> List.map (function
-    | Source.Declaration d -> d
-    | Source.Import (at, _) -> Source.error at "デモでは import を使えません。展開済みのソースを入力してください") in
-  let compiled = Source.compile_declarations declarations in
+  let compiled = Source.compile ~file:path source in
   last_compiled := Some compiled;
   response ~sourcemap:(Source.sourcemap_json compiled) true compiled.assembly
 
@@ -79,7 +75,6 @@ let () =
   Js.export "tinyprover" (Js.Unsafe.obj [|
     "examples", Js.Unsafe.inject (Js.string examples_json);
     "compileAt", Js.Unsafe.inject (Js.wrap_callback (fun path input -> protect (compile_at (Js.to_string path)) input));
-    "compile", Js.Unsafe.inject (Js.wrap_callback (protect (fun source -> response true (Source.compile source).assembly)));
     "checkMapped", Js.Unsafe.inject (Js.wrap_callback (protect check_mapped));
     "check", Js.Unsafe.inject (Js.wrap_callback (protect (check ~mappings:[])))
   |])

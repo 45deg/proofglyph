@@ -89,7 +89,6 @@ let is_name s = String.length s > 0 &&
 
 (** Top-level item in a source file (declaration or import statement). *)
 type 'a parsed_item = Declaration of 'a parsed_declaration | Import of token * string
-type item = expr parsed_item
 
 (** A parser output algebra. Groups retain their names and annotations until
     the chosen builder handles them. This lets the Rocq frontend receive an
@@ -187,13 +186,13 @@ let parse_items ?file source = parse_items_with default_syntax ?file source
 
 (** Parses declarations directly from a string source.
     Direct string parsing rejects import statements, requiring file-based compilation. *)
-let parse_with syntax source =
+let parse_with ?file syntax source =
   List.map (function
     | Declaration d -> d
     | Import(at,_) -> error at "imports require compile_file or load")
-    (parse_items_with syntax source)
+    (parse_items_with syntax ?file source)
 
-let parse source = parse_with default_syntax source
+let parse ?file source = parse_with ?file default_syntax source
 
 (** Reads an entire file into a string in binary mode. *)
 let read_file path =
@@ -332,17 +331,17 @@ let compile_declarations ?(fuel=1_000_000) declarations =
     mappings := {constant; name=d.name; file=d.at.file; line=d.at.line;
       column=d.at.col; start_byte; end_byte} :: !mappings;
     Buffer.add_char output '\n';
-    globals := (d.name,List.length !names)::!globals;
-    names := !names @ [d.name]) declarations;
+    globals := (d.name,constant)::!globals;
+    names := d.name :: !names) declarations;
   let assembly = Buffer.contents output in
   (* Verify precisely the serialized output through the independent assembly reader and kernel *)
   (try Assembly.run (Kernel.create ~fuel ()) assembly
    with Assembly.Error message ->
      raise (Error (annotate_assembly_error (List.rev !mappings) message)));
-  {assembly; names= !names; declarations; sourcemap=List.rev !mappings}
+  {assembly; names=List.rev !names; declarations; sourcemap=List.rev !mappings}
 
 (** Compiles source code from a string into verified assembly and source mappings. *)
-let compile ?fuel source = compile_declarations ?fuel (parse source)
+let compile ?fuel ?file source = compile_declarations ?fuel (parse ?file source)
 
 (** Compiles a file and all its transitive imports into verified assembly and source mappings. *)
 let compile_file ?fuel path = compile_declarations ?fuel (load path)

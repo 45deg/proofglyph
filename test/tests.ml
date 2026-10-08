@@ -128,6 +128,38 @@ let () =
     let k=Kernel.create() in ignore(Kernel.assume k Type);
     rejects(fun () -> ignore(Kernel.prove k (Const 0) Type));
     assert(List.length(Kernel.entries k)=1));
+  test "constant indices and entry order survive registration and failures" (fun () ->
+    let k = Kernel.create () in
+    assert (Kernel.assume k Type = 0);
+    assert (Kernel.assume k (Const 0) = 1);
+    let snapshot = Kernel.entries k in
+    rejects (fun () -> ignore (Kernel.prove k (Const 0) Type));
+    assert (Kernel.prove k (Const 0) (Const 1) = 2);
+    assert (Kernel.assume k (Pi (Const 0, Const 0)) = 3);
+    assert (Kernel.infer k (Const 0) = Type);
+    assert (Kernel.infer k (Const 1) = Const 0);
+    assert (Kernel.infer k (Const 2) = Const 0);
+    assert (Kernel.infer k (Const 3) = Pi (Const 0, Const 0));
+    assert (List.map (fun (e:Kernel.entry) -> e.typ, e.origin) (Kernel.entries k) =
+      [Type, Kernel.Assumption; Const 0, Kernel.Assumption;
+       Const 0, Kernel.Proven; Pi (Const 0, Const 0), Kernel.Assumption]);
+    assert (List.length snapshot = 2);
+    List.iter (fun n -> rejects (fun () -> ignore (Kernel.infer k (Const n))))
+      [-1; min_int; 4; max_int]);
+  test "name resolution preserves binder scope and anonymous depth" (fun () ->
+    let at = (List.hd (Source.parse "axiom A : Type;")).at in
+    let resolve = Source.resolve ["A", 0; "A", 1] at in
+    assert (resolve (Source.Name "A") = Const 0);
+    assert (resolve (Source.Lambda ("A", Source.Name "A", Source.Name "A")) =
+      Lam (Const 0, Var 0));
+    assert (resolve (Source.Lambda ("x", Source.Name "A",
+      Source.Apply (Source.Lambda ("x", Source.Name "A", Source.Name "x"), Source.Name "x"))) =
+      Lam (Const 0, App (Lam (Const 0, Var 0), Var 0)));
+    assert (resolve (Source.Lambda ("x", Source.Name "A",
+      Source.Product (None, Source.Name "A", Source.Name "x"))) =
+      Lam (Const 0, Pi (Const 0, Var 1)));
+    rejects (fun () -> ignore (resolve (Source.Apply (
+      Source.Lambda ("x", Source.Name "A", Source.Name "x"), Source.Name "x")))));
   test "capture avoiding substitution" (fun () ->
     assert(instantiate (Lam(Type,Var 1)) (Var 0) = Lam(Type,Var 1));
     assert(instantiate (Pi(Var 0,Var 2)) (Const 0) = Pi(Const 0,Var 1)));
@@ -165,6 +197,20 @@ let () =
     Fun.protect ~finally:(fun () -> remove dir) (fun () ->
       List.iter (fun (p,s) -> write p s) files;
       f dir write) in
+  test "CLI check prints only a summary while inspect lists constants" (fun () ->
+    with_fixture ["input.pa", "*:\n#0#0>#0$0\\!\n"] (fun dir _ ->
+      let run command =
+        let output = Filename.concat dir "output" in
+        let log = Unix.openfile output [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
+        let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
+          Unix.create_process "../bin/main.exe"
+            [|"tinyprover"; command; Filename.concat dir "input.pa"|] Unix.stdin log log) in
+        assert (snd (Unix.waitpid [] pid) = Unix.WEXITED 0);
+        Source.read_file output in
+      let summary = "Accepted: 2 declarations (1 assumptions).\n" in
+      assert (run "check" = summary);
+      assert (run "inspect" =
+        "c0 [assumption] : Type\nc1 [proven] : (forall ($x0 : c0), c0)\n" ^ summary)));
   test "imports expand at their declaration site, relative to the importing file" (fun () ->
     with_fixture ["base.tp", "axiom A : Type;";
                   "nested dir/proof.tp", "import \"../base.tp\"; theorem id (x : A) : A := x;";

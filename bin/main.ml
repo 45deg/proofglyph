@@ -74,7 +74,7 @@ let () =
          (* Execute target assembly; forbid axioms (:) if --prelude or --no-axioms is active *)
          Assembly.run ~allow_axioms:(not !no_axioms && !prelude=None) k (read path);
          let entries = Kernel.entries k in
-         List.iteri (fun i (e:Kernel.entry) ->
+         if command="inspect" then List.iteri (fun i (e:Kernel.entry) ->
            Printf.printf "c%d [%s] : %s\n" i
              (match e.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
              (Term.pretty e.typ)) entries;

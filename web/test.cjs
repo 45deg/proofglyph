@@ -59,7 +59,8 @@ for (const m of JSON.parse(imported.sourcemap).mappings) {
 }
 for (const {path, source} of examples.filter(entry => entry.path.endsWith('.tp'))) {
   assert.doesNotMatch(source, /^\s*import\s/m, path);
-  assert.equal(api.compile(source).ok, true, `${path} compiles without an import resolver`);
+  assert.equal(api.compileAt(path, source).ok, true, `${path} compiles without an import resolver`);
 }
-assert.match(api.compileAt('examples/a.tp', 'import \"commons/nat/addition.tp\";').output, /デモでは import を使えません/);
+assert.match(api.compileAt('examples/a.tp', 'import \"commons/nat/addition.tp\";').output,
+  /^error: examples\/a\.tp:1:1: imports require compile_file or load$/);
 console.log('Sourcemap names, imported locations, errors and stale-map fallback passed.');
