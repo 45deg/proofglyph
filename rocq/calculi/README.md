@@ -70,7 +70,7 @@ pa の生成だけなら Rocq は不要です。
 ```sh
 make -C rocq/calculi export
 dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pa --prelude rocq/calculi/_build/prelude.pa
-rocq/pa/_build/rocq4pa check rocq/calculi/_build/proofs.pa --prelude rocq/calculi/_build/prelude.pa
+rocq/pa/_build/pa check rocq/calculi/_build/proofs.pa --prelude rocq/calculi/_build/prelude.pa
 ```
 
 生成物は `rocq/calculi/_build/` の `prelude.pa`、`proofs.pa`、`names.txt`、`Artifact.v` です。

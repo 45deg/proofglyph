@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
 From Tinyprover.Pa Require Import Syntax Substitution WellFormed TypingSubstitution
-  Kernel Evaluation Confluence Generation Preservation Regularity.
+  EvaluationSpec Confluence Generation Preservation Regularity.
 Import ListNotations.
 
 Inductive arity : Type := base | arrow (a b : arity).

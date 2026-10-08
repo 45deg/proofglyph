@@ -223,41 +223,41 @@ fuel は時間・メモリの完全な上限ではない。構文解析、shift�
 
 `rocq/` は通常の OCaml 実装と独立した定義・証明・抽出実装を含む。通常の Dune ビルドに Rocq は不要。`make -C rocq verify` は各開発の証明コンパイルと `rocq check`、`make -C rocq test` は抽出実装・生成物の実行テストも行う。構成と実行方法は [Rocq の README](../rocq/README.md)を参照する。
 
-### 9.1 pa 検査器（rocq4pa）
+### 9.1 pa 検査器（pa）
 
-`rocq/pa/Checker.v` の検査器を OCaml に抽出する。既存の `Tinyprover_core.Kernel` は呼ばない。整形式のシグネチャについて、`check_program_sound` は受理した宣言列の宣言的な妥当性を、`declarative_program_complete` は公理ポリシーを満たす妥当な宣言列が十分な fuel で受理されることを保証する。`program_correct` は両者の同値性を表す。型保存・合流性・型付き項の強正規化も Rocq 内で証明している。
+`rocq/pa/CheckerImpl.v` の検査器を OCaml に抽出する。既存の `Tinyprover_core.Kernel` は呼ばない。整形式のシグネチャについて、`check_program_sound` は受理した宣言列の宣言的な妥当性を、`declarative_program_complete` は公理ポリシーを満たす妥当な宣言列が十分な fuel で受理されることを保証する。`program_correct` は両者の同値性を表す。型保存・合流性・型付き項の強正規化も Rocq 内で証明している。
 
 ```text
-rocq4pa check FILE [--prelude FILE] [--no-axioms] [--fuel N]
+pa check FILE [--prelude FILE] [--no-axioms] [--fuel N]
 ```
 
-prelude を空のシグネチャから検査し、本体では新しい前提を禁止する。型エラー・公理禁止・fuel 不足は共通の検査失敗として報告する。字句・スタックエラーにはバイト位置を付ける。手書きの pa パーサー、I/O、CLI と Rocq 内の AST の対応は未検証。[保証と制限](../rocq/pa/README.md)を参照する。
+prelude を空のシグネチャから検査し、本体では新しい前提を禁止する。型エラー・公理禁止・fuel 不足は共通の検査失敗として報告する。字句・スタックエラーは共通の診断とし、index 上限の事前検査にはバイト位置を付ける。共通の抽出復号器を使い、`decode_pa_correct` は任意バイト列の復号と独立した字句・スタック仕様の同値性を保証する。I/O・資源制限の事前検査・CLI は未検証。[保証と制限](../rocq/pa/README.md)を参照する。
 
-### 9.2 tp 変換器（rocq4tp）
+### 9.2 tp 変換器（tp）
 
 `.tp` の字句解析・構文解析・有限ファイル集合上の import 展開、糖衣展開、名前解決、宣言変換、pa codec を Rocq で実装し、抽出コードを CLI で使用する。ファイル I/O、`realpath`、依存表の収集は OCaml が担当する。
 
 糖衣を保持した AST からの展開、独立した翻訳仕様に対する名前解決・宣言変換の健全性・完全性、宣言名・種類・数・スコープの保存を証明している。`pa_roundtrip` は宣言列の符号化・復号の往復性を保証する。`compile_surface_pa_sound` / `compile_surface_pa_complete` は糖衣 AST から pa 出力までの保証、`compile_surface_pa_recheck` は同じ fuel と公理ポリシーで出力を再検査できることを保証する。
 
 ```text
-rocq4tp check SOURCE.tp [--no-axioms] [--fuel N]
-rocq4tp compile SOURCE.tp [-o OUTPUT.pa] [--no-axioms] [--fuel N]
-rocq4tp check-pa INPUT.pa [--no-axioms] [--fuel N]
+tp check SOURCE.tp [--no-axioms] [--fuel N]
+tp compile SOURCE.tp [-o OUTPUT.pa] [--no-axioms] [--fuel N]
+tp check-pa INPUT.pa [--no-axioms] [--fuel N]
 ```
 
 `compile` は空白なしの pa を出力し、`check-pa` は抽出した復号器と検査器を使う。`--no-axioms` は import 先も含むすべての前提を禁止する。prelude と sourcemap は未対応。構文エラーはファイル名付きで、行・列は保持しない。入力・名前解決・型付け・公理ポリシー・fuel 不足による検査拒否は共通の診断となる。読み込み・解析失敗は別途報告する。検査前の失敗では出力先を変更しないが、書き込み中の I/O 障害に対する原子的更新は保証しない。
 
-lexer/parser と独立した文法との一般的な同値性、import 展開の一般的な正しさは未証明。名前付き言語自身の型付け・置換・α 同値との対応、および既存 OCaml 実装との一般的な同値性も未証明。詳細は [rocq4tp の README](../rocq/tp/README.md)を参照する。
+`lex_tp_correct` / `parse_tp_correct` は独立した字句・文法仕様との同値性、`load_tp_correct` は有限ファイル表上の import 展開仕様との同値性を保証する。規定の解析・import 用 fuel の十分性も証明した。`compile_files_correct` と `compile_files_pa_sound` / `compile_files_pa_complete` / `compile_files_pa_recheck` はファイルのバイト列・ホストのパス解決結果から出力までを接続する。ホスト I/O・実体パスの同一性・依存表の収集は信頼境界に残る。名前付き言語自身の型付け・置換・α 同値との対応、および既存 OCaml 実装との一般的な同値性も未証明。詳細は [tp の README](../rocq/tp/README.md)を参照する。
 
 ### 9.3 実装ごとの資源制限
 
 | 実装 | fuel の意味・既定値 | CLI の範囲 | pa の index 上限 |
 | --- | --- | --- | --- |
 | 通常 OCaml | 全検査で共有する消費ステップ数。1,000,000 | 正の OCaml `int` | OCaml `int` |
-| rocq4pa | 再帰の深さ。2048 | 1〜100000 | 100000 |
-| rocq4tp | 型検査の再帰の深さ。2048 | 1〜100000 | codec は Rocq の自然数を扱い、固定の数値上限を設けない |
+| pa | 再帰の深さ。2048 | 1〜100000 | 100000 |
+| tp | 型検査の再帰の深さ。2048 | 1〜100000 | codec は Rocq の自然数を扱い、固定の数値上限を設けない |
 
-Rocq 版の fuel は、通常実装の共有ステップ数とは異なる。rocq4pa の prelude と本体には同じ深さの値を渡し、消費ステップ数を共有する方式は使わない。rocq4tp の解析・import 用の内部 fuel は入力から計算し、型検査の指定値と分ける。
+Rocq 版の fuel は、通常実装の共有ステップ数とは異なる。pa の prelude と本体には同じ深さの値を渡し、消費ステップ数を共有する方式は使わない。tp の解析・import 用の内部 fuel は入力から計算し、型検査の指定値と分ける。
 
 両 Rocq CLI の終了コードは成功0、検査・入力・I/O・資源エラー1、使用法エラー2。十分な fuel の定理は Rocq の自然数を対象とし、CLI 上限や実機の時間・メモリ内での成功を保証しない。一度の拒否は fuel 不足でも起きるため、型誤りの証明にはならない。
 

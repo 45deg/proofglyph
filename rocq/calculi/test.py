@@ -5,7 +5,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'rocq/calculi/_build'
-CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/rocq4pa']
+CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/pa']
 
 EXPECTED = '''
 Index zero succ Formula Atom Bottom Top Imp Conj Disj Neg Context nil cons

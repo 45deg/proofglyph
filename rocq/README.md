@@ -38,9 +38,24 @@ make -C rocq/zfc test
 
 `ROCQ=/path/to/bin/rocq` と `OCAMLC=/path/to/bin/ocamlc` でツールを指定できます。
 生成された `.v`、コンパイル結果、抽出コード、pa証明は各ディレクトリの `_build/` に置きます。
-抽出した実行ファイルの名前は `rocq4pa`・`rocq4tp` を維持しています。
+抽出した実行ファイルの名前は `pa`・`tp` です。通常の CLI とは別のビルド先に置きます。
 
 ```sh
-rocq/pa/_build/rocq4pa check examples/identity.pa
-rocq/tp/_build/rocq4tp check examples/basics.tp
+rocq/pa/_build/pa check examples/identity.pa
+rocq/tp/_build/tp check examples/basics.tp
 ```
+
+## モジュールの境界
+
+pa・tp の開発は、言語仕様・実装・対応証明を分けています。
+言語仕様はアルゴリズムや検査器に依存せず、実装は仕様と他の実装だけに依存します。
+対応証明が両者を接続します。既存の入口モジュールは分離した定義を再エクスポートします。
+
+| 層 | pa | tp |
+| --- | --- | --- |
+| 言語仕様・性質 | `Syntax`、`Program`、整形式性・置換・型保存・合流性・強正規化、`EvaluationSpec`、`CheckerSpec`、`CodecSpec` | `Surface`、`DesugarSpec`、`ResolveSpec`、`CompileSpec`、`TpSyntaxSpec`、`TpImportsSpec`、`FileSpec` |
+| 実装 | `KernelImpl`、`CheckerImpl`、`CodecImpl` | `DesugarImpl`、`ResolveImpl`、`CompileImpl`、`TpSyntaxImpl`、`TpImportsImpl`、`PaCompileImpl`、`SurfaceCompileImpl`、`FileImpl` |
+| 対応証明 | `Kernel`、`Evaluation`、`Checker`、`CodecCorrectness`、`Codec`、`ConfluenceCorrectness`、`PreservationCorrectness` | `Desugar`、`Resolve`、`Compile`、`TpSyntax`、`TpImports`、`PaCompile`、`SurfaceCompile`、`FileCompile` |
+
+`make test` は `test_layers.py` で依存の境界も検査します。
+通常の OCaml CLI・Web は従来の実装を使います。

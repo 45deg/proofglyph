@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parent
-CLI = ROOT / "_build" / "rocq4tp"
+CLI = ROOT / "_build" / "tp"
 
 
 def run(args, code=0):
@@ -17,7 +17,7 @@ examples = sorted((ROOT.parent.parent / "examples").rglob("*.tp"))
 assert examples, "no example sources found"
 subprocess.run([str(ROOT / "_build" / "test_frontend"), *map(str, examples)], check=True)
 run([], 2)
-with tempfile.TemporaryDirectory(prefix="rocq4tp-") as tmp:
+with tempfile.TemporaryDirectory(prefix="tp-") as tmp:
     directory = Path(tmp)
     base = directory / "base.tp"
     base.write_text("axiom A : Type;\n")

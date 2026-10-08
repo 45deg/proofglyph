@@ -1,5 +1,5 @@
 From Stdlib Require Import List Arith.Wf_nat.
-From Tinyprover.Pa Require Import Syntax Substitution Kernel Evaluation Confluence Preservation.
+From Tinyprover.Pa Require Import Syntax Substitution EvaluationSpec Confluence Preservation.
 
 (** Accessibility is oriented towards reducts. It includes reductions inside
     annotations and under binders, just like [normal]. *)

@@ -1,7 +1,7 @@
-# rocq4pa
+# pa
 
 tinyprover の `.pa` を独立に再検査する、Rocq で実装・証明した型検査器です。
-Gallina の検査器を OCaml に抽出し、専用 CLI から実行します。既存の
+Gallina の復号器と検査器を OCaml に抽出し、専用 CLI から実行します。既存の
 `Tinyprover_core.Kernel` は呼び出しません。
 
 ## ビルドと実行
@@ -12,14 +12,14 @@ Rocq の導入は [公式手順](https://rocq-prover.org/docs/using-opam) を参
 
 ```sh
 make -C rocq/pa
-rocq/pa/_build/rocq4pa check examples/identity.pa
+rocq/pa/_build/pa check examples/identity.pa
 
 dune exec bin/main.exe -- compile examples/fermat_application.tp -o /tmp/fermat.pa
-rocq/pa/_build/rocq4pa check /tmp/fermat.pa
+rocq/pa/_build/pa check /tmp/fermat.pa
 
 # prelude の後では新しい公理を禁止
-rocq/pa/_build/rocq4pa check /tmp/proof.pa --prelude /tmp/prelude.pa
-rocq/pa/_build/rocq4pa check /tmp/proof.pa --no-axioms
+rocq/pa/_build/pa check /tmp/proof.pa --prelude /tmp/prelude.pa
+rocq/pa/_build/pa check /tmp/proof.pa --no-axioms
 
 # Rocq 内の証明、抽出した CLI と既存実装の照合
 make -C rocq/pa test
@@ -100,22 +100,26 @@ declarative_check_complete:
 | --- | --- |
 | `Syntax.v` | 項、shift、置換、β 同値、宣言的型付け |
 | `Substitution.v` | 同時置換・変数の付け替えの代数則 |
-| `Kernel.v` / `Program.v` | 正規化・同値判定の実装と健全性、宣言的な宣言列仕様 |
+| `KernelImpl.v` / `Kernel.v` | 正規化・同値判定の実装／健全性 |
+| `Program.v` | 宣言的な宣言列仕様 |
 | `WellFormed.v` / `TypingSubstitution.v` | 整形式性、弱化、型付き置換、文脈変換 |
-| `Evaluation.v` | 有限の導出を持つ評価関係と正規化器の対応、fuel の境界と単調性 |
+| `EvaluationSpec.v` / `Evaluation.v` | 有限の評価関係／正規化器との対応、fuel の境界と単調性 |
 | `Confluence.v` / `Generation.v` | 合流性、正規形・型の一意性、型付けの反転補題（generation lemma） |
 | `Preservation.v` / `Regularity.v` | 型保存（subject reduction）、正則性、カインドの構造 |
 | `Normalization.v` | 強正規化から有限の評価導出への接続 |
 | `Arity.v` / `Reducibility.v` | 型の形による対応、reducibility による強正規化 |
 | `TypedNormalization.v` | 宣言的型付けから強正規化・有限の評価導出への接続 |
-| `Checker.v` | 現行検査器、健全性、宣言的完全性、fuel の単調性 |
+| `CheckerSpec.v` / `CheckerImpl.v` / `Checker.v` | 有限の型推論関係／検査器／健全性・完全性・fuel の単調性 |
+| `CodecSpec.v` / `CodecImpl.v` / `CodecCorrectness.v` / `Codec.v` | pa の字句・スタック仕様／codec／任意入力との対応／符号化の往復性 |
+| `ConfluenceCorrectness.v` / `PreservationCorrectness.v` | 言語理論と実行アルゴリズムの接続 |
 | `Verification.v` | 最終定理の仮定確認 |
-| `Extraction.v` / `main.ml` | OCaml 抽出、手書きパーサーと CLI |
+| `Extraction.v` / `main.ml` | OCaml 抽出、I/O・資源制限・CLI |
 
 ## 信頼境界と制限
 
-- 定理の対象は Rocq 内の AST と宣言列です。手書きのバイトパーサー、I/O、CLI が
-  それらを正しく構成することは形式検証していません。
+- `decode_pa_correct` は任意バイト列の復号と、独立した字句・スタック実行仕様
+  `pa_decodes` の同値性を保証します。`lex_pa_correct` はバイト長由来 fuel の十分性も含みます。
+  CLI は tp と共通の抽出復号器を使います。I/O・index 上限の事前検査・CLI は未検証です。
 - Rocq のカーネル・抽出機構、OCaml コンパイラと実行系を信頼します。
   抽出コードを手で変更せず、自然数を機械整数に置き換える抽出指示も使いません。
 - 任意に追加した公理の無矛盾性、`.tp` から意図した命題への翻訳、

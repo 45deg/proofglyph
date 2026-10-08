@@ -5,7 +5,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'rocq/zfc/_build'
-CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/rocq4pa']
+CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/pa']
 
 
 def run(command, expected=0):

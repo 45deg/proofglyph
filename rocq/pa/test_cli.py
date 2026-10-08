@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CHECKER = ROOT / "rocq/pa/_build/rocq4pa"
+CHECKER = ROOT / "rocq/pa/_build/pa"
 ORIGINAL = ROOT / "_build/default/bin/main.exe"
 
 
@@ -47,7 +47,7 @@ def main():
         # Eta is absent: P f is not P (fun x => f x).
         ("*:#0#0>:#0#0>*>:#2#1@:#2#0#1$0@\\@#3!", False),
     ]
-    with tempfile.TemporaryDirectory(prefix="rocq4pa-test-") as directory:
+    with tempfile.TemporaryDirectory(prefix="pa-test-") as directory:
         tmp = pathlib.Path(directory)
         assembly = tmp / "input.pa"
         for text, accepted in cases:

@@ -1,6 +1,6 @@
 # tinyprover
 
-名前付きの λΠ ソース（tp言語）を、空白不要の記号言語（pa言語）にコンパイルする OCaml 製の小さな証明検査器です。Kernel は de Bruijn index、`Type/Kind`、Π、λ、適用、不透明な定数を扱います。
+空白不要の記号言語（pa言語）で記述した証明を検査する、OCaml 製の小さな証明検査器です。pa言語が証明の記述・検査の中心で、tp言語は名前付きの λΠ 構文からpa言語を生成するための補助言語です。Kernel は de Bruijn index、`Type/Kind`、Π、λ、適用、不透明な定数を扱います。
 
 型の比較には β 同値を使います。`def` と `theorem` は同じ検査を受け、登録後の本体は展開しません。LF 系の計算であり、CoC、暗黙引数、穴、タクティクスは提供しません。
 
@@ -56,7 +56,7 @@ import "commons/nat/addition.tp";
 ## Webデモ
 
 `web/` に、ブラウザ上で動作するデモがあります。
-コンパイラと Kernel を js_of_ocaml で JavaScript に変換しており、入力のコンパイル・検査はブラウザ内で行います。証明例のソースは JavaScript に同梱し、カタログは配信元から読み込みます。
+pa言語の記号列を直接入力・編集して検査できます。tp言語からpa言語を生成する補助機能もあります。コンパイラと Kernel を js_of_ocaml で JavaScript に変換しており、入力のコンパイル・検査はブラウザ内で行います。証明例のソースは JavaScript に同梱し、カタログは配信元から読み込みます。
 
 ```sh
 opam install js_of_ocaml js_of_ocaml-compiler
@@ -67,7 +67,7 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory _build/default/web
 [http://127.0.0.1:8765](http://127.0.0.1:8765) を開くと利用できます。
 ビルド成果物（`index.html`, `app.js`, `browser.bc.js`, `catalog.json`）は静的ホスティングでそのまま配信可能です。
 
-- **3ペイン表示**: tp言語（ソース）、pa言語（記号列）、検査結果を並べて表示・編集できます。
+- **3ペイン表示**: pa言語（記号列）、検査結果、補助言語tpのソースを並べて表示します。pa言語とtp言語の入力は編集できます。
 - **証明例の読み込み**: [証明カタログ](docs/proofs.md#実装した証明) の証明例を、入門・論理・等式・自然数・整数論に分けたドロップダウンから選択できます。恒等関数や依存型の入門例から、強い帰納法・除法の原理・ユークリッドの補題まで収録しています。依存関係はインライン展開されているため、単一ファイルとしてそのまま検査できます。
 - **ソースマップ連携**: コンパイル時の sourcemap により、検査結果の定数を元の宣言名で表示し、型エラー時には対応する行・列・宣言名を報告します。
 - **構文リファレンス**: 画面下部に tp言語と pa言語の構文一覧およびコード対応例を表示します。
@@ -103,21 +103,21 @@ node web/test.cjs
 
 | 開発 | 保証・用途 |
 | --- | --- |
-| [rocq4pa](rocq/pa/README.md) | 宣言的型付けに対する検査器の健全性・十分な fuel による完全性を証明し、OCaml に抽出して `.pa` を独立に再検査 |
-| [rocq4tp](rocq/tp/README.md) | 糖衣 AST の展開・名前解決・宣言変換から `.pa` 出力までの健全性・完全性、codec の往復性、出力の再検査を証明 |
+| [pa](rocq/pa/README.md) | 宣言的型付けに対する検査器の健全性・十分な fuel による完全性を証明し、OCaml に抽出して `.pa` を独立に再検査 |
+| [tp](rocq/tp/README.md) | バイト列・有限ファイル表から `.pa` 出力までの健全性・完全性、解析・import の仕様との対応、codec の往復性・出力再検査を証明 |
 | [命題論理 NK・LK](rocq/calculi/README.md) | 固定シグネチャ上で導出と LF 証明項・AST 検査器の受理との対応を証明。LK のカット除去も証明 |
 | [ZFC](rocq/zfc/README.md) | 閉じた式と固定シグネチャについて、独立した ZFC 証明体系と AST 検査器に受理される pa 証明項の存在の同値性を証明 |
 
 ```sh
 make -C rocq verify
 make -C rocq test
-rocq/pa/_build/rocq4pa check examples/identity.pa
-rocq/tp/_build/rocq4tp check examples/basics.tp
+rocq/pa/_build/pa check examples/identity.pa
+rocq/tp/_build/tp check examples/basics.tp
 ```
 
 Rocq 版の実行には Rocq・標準ライブラリ、OCaml、Dune、Make が必要で、実行テストには Python 3 も使います。両 CLI の既定 fuel は2048、指定範囲は1〜100000です。fuel は再帰の深さであり、通常 CLI の検査ステップ数とは異なります。
 
-rocq4tp は字句解析・構文解析・import 展開にも Rocq 抽出コードを使いますが、文法・import 仕様との一般的な対応は未証明です。rocq4pa の手書きパーサー、Rocq の抽出機構と OCaml 実行系なども信頼境界に残ります。証明した範囲と制限は[仕様書の第9節](docs/spec.md#9-rocq-実装と形式証明)および各開発の README を参照してください。
+tp の字句解析・構文解析・import 展開と独立仕様の対応、pa の任意バイト列の復号と字句・スタック仕様の対応も証明しています。ファイル I/O・実体パスの解決、Rocq の抽出機構と OCaml 実行系などは信頼境界に残ります。証明した範囲と制限は[仕様書の第9節](docs/spec.md#9-rocq-実装と形式証明)および各開発の README を参照してください。
 
 ## エディタ
 

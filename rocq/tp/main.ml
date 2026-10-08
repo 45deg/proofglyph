@@ -1,7 +1,7 @@
 (* Lexing, parsing, import graph expansion and compilation are extracted from
    Rocq. Host file I/O and canonical path resolution remain trusted. *)
 let usage () =
-  prerr_endline "Usage: rocq4tp (check|check-pa|compile) FILE [--no-axioms] [--fuel N]\n       compile also accepts [-o FILE]; default output is stdout";
+  prerr_endline "Usage: tp (check|check-pa|compile) FILE [--no-axioms] [--fuel N]\n       compile also accepts [-o FILE]; default output is stdout";
   exit 2
 
 let reject () =
@@ -42,12 +42,12 @@ let run () =
     | None -> reject ()
     | Some signature -> Printf.printf "Accepted %d declarations\n" (List.length signature))
   else (
-    let ds = Adapter.load_raw Sys.argv.(2) in
+    let entry, inputs, resolve = Adapter.load_inputs Sys.argv.(2) in
     if command = "compile" then (
-      match Frontend.compile_surface_pa fuel !allow ds with
+      match Frontend.compile_files_pa fuel !allow resolve inputs entry with
       | None -> reject ()
       | Some (bytes, _) -> write_output !output (Adapter.string_of_chars bytes))
-    else match Frontend.compile_surface fuel !allow ds with
+    else match Frontend.compile_files fuel !allow resolve inputs entry with
       | None -> reject ()
       | Some (checked, _) -> Printf.printf "Accepted %d declarations\n" (List.length checked))
 

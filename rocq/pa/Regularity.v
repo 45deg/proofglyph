@@ -1,6 +1,6 @@
 From Stdlib Require Import List PeanoNat Compare_dec Lia.
 From Tinyprover.Pa Require Import Syntax Substitution WellFormed TypingSubstitution
-  Kernel Evaluation Confluence Generation Preservation.
+  EvaluationSpec Confluence Generation Preservation.
 Import ListNotations.
 
 Lemma typing_signature_extension sg ctx t a extra : typing sg ctx t a ->

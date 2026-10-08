@@ -13,3 +13,8 @@ Print Assumptions accepted_program_wf.
 Print Assumptions prelude_and_main_sound.
 Print Assumptions prelude_and_main_complete.
 Print Assumptions program_monotone.
+
+From Tinyprover.Pa Require Import Codec.
+Print Assumptions lex_pa_correct.
+Print Assumptions decode_pa_correct.
+Print Assumptions pa_roundtrip.

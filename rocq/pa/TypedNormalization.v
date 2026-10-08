@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Kernel WellFormed Evaluation Confluence
+From Tinyprover.Pa Require Import Syntax WellFormed EvaluationSpec Confluence
   Regularity Arity Normalization Reducibility.
 
 (** No termination or algorithmic-typing premise: this is strong normalization

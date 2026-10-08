@@ -2,7 +2,7 @@
 ROCQ ?= rocq
 OCAMLC ?= ocamlc
 
-.PHONY: all verify test
+.PHONY: all verify test check-layers
 all: verify
 
 verify test:
@@ -10,3 +10,8 @@ verify test:
 	$(MAKE) -C tp $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C calculi $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C zfc $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
+
+check-layers:
+	python3 test_layers.py
+
+test: check-layers

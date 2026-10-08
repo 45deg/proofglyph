@@ -53,33 +53,41 @@ let parse_raw source =
     | F.TpImport _ -> raise (Source.Error "imports require load_raw"))
     (parse_items source)
 
-let load_raw path =
+let load_inputs path =
   let canonical path =
     try Unix.realpath path with
     | Unix.Unix_error (e, _, _) -> raise (Source.Error (path ^ ": " ^ Unix.error_message e))
     | Invalid_argument msg -> raise (Source.Error (path ^ ": " ^ msg)) in
-  let files = Hashtbl.create 16 in
+  let files = Hashtbl.create 16 and targets = Hashtbl.create 16 in
   let rec discover path =
     if not (Hashtbl.mem files path) then (
-      (* Register before walking dependencies so discovery terminates on cycles.
-         The extracted traversal decides whether the graph is acceptable. *)
-      Hashtbl.add files path [];
-      let items = parse_items ~file:path (Source.read_file path) in
-      let items = List.map (function
-        | F.TpDeclaration d -> F.TpDeclaration d
+      (* Mark before following edges, and retain the exact bytes parsed here.
+         The extracted pipeline reparses this immutable snapshot. *)
+      let source = Source.read_file path in
+      Hashtbl.add files path source;
+      List.iter (function
+        | F.TpDeclaration _ -> ()
         | F.TpImport p ->
-            let target = string_of_chars p in
-            let target = canonical (if Filename.is_relative target then
-              Filename.concat (Filename.dirname path) target else target) in
-            discover target;
-            F.TpImport (chars target)) items in
-      Hashtbl.replace files path items) in
+            let spelling = string_of_chars p in
+            let target = canonical (if Filename.is_relative spelling then
+              Filename.concat (Filename.dirname path) spelling else spelling) in
+            Hashtbl.replace targets (path, spelling) target;
+            discover target)
+        (parse_items ~file:path source)) in
   let entry = canonical path in
   discover entry;
-  let table = Hashtbl.fold (fun path items acc -> (chars path, items) :: acc) files [] in
-  match F.load_tp table (chars entry) with
-  | Some ds -> ds
-  | None -> raise (Source.Error (entry ^ ": import cycle or exhausted import traversal budget"))
+  let inputs = Hashtbl.fold (fun path source acc -> (chars path, chars source) :: acc) files [] in
+  let resolve origin spelling =
+    Option.map chars (Hashtbl.find_opt targets (string_of_chars origin, string_of_chars spelling)) in
+  chars entry, inputs, resolve
+
+let load_raw path =
+  let entry, inputs, resolve = load_inputs path in
+  match F.prepare_files resolve inputs with
+  | None -> raise (Source.Error (path ^ ": invalid syntax or unresolved import"))
+  | Some files -> match F.load_tp files entry with
+    | Some ds -> ds
+    | None -> raise (Source.Error (path ^ ": import cycle or missing dependency"))
 
 let nat_of_int n =
   if n < 0 then invalid_arg "negative natural";

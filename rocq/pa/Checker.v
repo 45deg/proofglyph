@@ -1,39 +1,7 @@
 From Stdlib Require Import List Bool Lia.
-From Tinyprover.Pa Require Import Syntax Kernel Program WellFormed Evaluation
-  Substitution TypingSubstitution Confluence Generation Preservation Regularity
-  Arity TypedNormalization.
+From Tinyprover.Pa Require Export CheckerImpl CheckerSpec.
+From Tinyprover.Pa Require Import WellFormed Kernel Evaluation Substitution TypingSubstitution Arity ConfluenceCorrectness PreservationCorrectness Confluence Generation Preservation Regularity TypedNormalization.
 Import ListNotations.
-
-(** Lambda inference uses the simultaneously established validity of the
-    inferred body type. [Kind] has no sort, so it cannot be a Pi codomain. *)
-Fixpoint infer fuel sg ctx t : option term :=
-  match fuel with
-  | 0 => None
-  | S n => match t with
-    | tType => Some tKind
-    | tKind => None
-    | tVar i => a <- nth_error ctx i ;; Some (shift (S i) 0 a)
-    | tConst i => nth_error sg i
-    | tPi a b =>
-      aty <- infer n sg ctx a ;;
-      if equal n aty tType then
-        bt <- infer n sg (a :: ctx) b ;; as_sort n bt
-      else None
-    | tLam a b =>
-      aty <- infer n sg ctx a ;;
-      if equal n aty tType then
-        bt <- infer n sg (a :: ctx) b ;;
-        match bt with tKind => None | _ => Some (tPi a bt) end
-      else None
-    | tApp f x =>
-      ft <- infer n sg ctx f ;; p <- normal n ft ;;
-      match p with
-      | tPi a b => xt <- infer n sg ctx x ;;
-        if equal n xt a then Some (instantiate b x) else None
-      | _ => None
-      end
-    end
-  end.
 
 Theorem infer_sound fuel sg ctx t a : wf_signature sg -> wf_context sg ctx ->
   infer fuel sg ctx t = Some a ->
@@ -86,24 +54,6 @@ Proof.
         destruct PI as [k [A [B [KS C]]]]; exists k; split; [|exact KS].
         rewrite <- (instantiate_sort k x KS); eapply typing_instantiate; eauto.
 Qed.
-
-Inductive synthesizes (sg : list term) : list term -> term -> term -> Prop :=
-| ds_type : forall ctx, synthesizes sg ctx tType tKind
-| ds_var : forall ctx n a, nth_error ctx n = Some a ->
-    synthesizes sg ctx (tVar n) (shift (S n) 0 a)
-| ds_const : forall ctx n a, nth_error sg n = Some a -> synthesizes sg ctx (tConst n) a
-| ds_pi : forall ctx a b aty bt s,
-    synthesizes sg ctx a aty -> evaluates aty tType ->
-    synthesizes sg (a :: ctx) b bt -> evaluates bt s -> is_sort s ->
-    synthesizes sg ctx (tPi a b) s
-| ds_lam : forall ctx a b aty bt,
-    synthesizes sg ctx a aty -> evaluates aty tType ->
-    synthesizes sg (a :: ctx) b bt -> bt <> tKind ->
-    synthesizes sg ctx (tLam a b) (tPi a bt)
-| ds_app : forall ctx f x ft a b xt u,
-    synthesizes sg ctx f ft -> evaluates ft (tPi a b) ->
-    synthesizes sg ctx x xt -> evaluates xt u -> evaluates a u ->
-    synthesizes sg ctx (tApp f x) (instantiate b x).
 
 Theorem infer_complete sg ctx t a : synthesizes sg ctx t a ->
   eventually (fun fuel => infer fuel sg ctx t = Some a).
@@ -222,13 +172,6 @@ Proof.
   destruct (infer_complete _ _ _ _ B) as [n N]; exists b, n; auto.
 Qed.
 
-Definition check fuel sg t a : bool :=
-  match infer fuel sg [] a, infer fuel sg [] t with
-  | Some aty, Some actual =>
-    match as_sort fuel aty with Some _ => equal fuel actual a | None => false end
-  | _, _ => false
-  end.
-
 Theorem check_sound fuel sg t a : wf_signature sg ->
   check fuel sg t a = true -> typing sg [] t a /\ sorted_type sg [] a.
 Proof.
@@ -266,22 +209,6 @@ Proof.
   repeat match goal with H : _ /\ _ |- _ => destruct H end.
   unfold check; rewrite_successes; reflexivity.
 Qed.
-
-Definition check_declaration fuel (allow : bool) sg d :=
-  match d with
-  | Assume a => if allow then
-      match infer fuel sg [] a with
-      | Some aty => match as_sort fuel aty with Some _ => true | None => false end
-      | None => false end else false
-  | Prove a t => check fuel sg t a
-  end.
-
-Fixpoint check_program fuel allow sg ds : option (list term) :=
-  match ds with
-  | [] => Some sg
-  | d :: rest => if check_declaration fuel allow sg d then
-      check_program fuel allow (sg ++ [declared_type d]) rest else None
-  end.
 
 Theorem check_declaration_sound fuel allow sg d : wf_signature sg ->
   check_declaration fuel allow sg d = true -> valid_declaration sg d.

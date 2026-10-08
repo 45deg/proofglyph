@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Substitution Kernel Evaluation.
+From Tinyprover.Pa Require Import Syntax Substitution EvaluationSpec.
 
 Inductive parallel : term -> term -> Prop :=
 | par_type : parallel tType tType
@@ -169,20 +169,8 @@ Theorem convertible_evaluations_agree a b u v :
 Proof.
   intros C A B.
   apply normal_forms_unique; eauto using evaluates_normal_form.
-  destruct (normalization_iff a u) as [NA _].
-  destruct (NA A) as [fa EA].
-  destruct (normalization_iff b v) as [NB _].
-  destruct (NB B) as [fb EB].
-  eapply cv_trans; [apply cv_sym; eapply normal_sound; exact EA|].
-  eapply cv_trans; [exact C|eapply normal_sound; exact EB].
-Qed.
-
-Theorem equal_complete_from_convertibility a b u v :
-  conv a b -> evaluates a u -> evaluates b v ->
-  eventually (fun fuel => equal fuel a b = true).
-Proof.
-  intros C A B; pose proof (convertible_evaluations_agree _ _ _ _ C A B); subst.
-  eapply equal_complete; eauto.
+  eapply cv_trans; [apply cv_sym; eapply evaluation_conv; exact A|].
+  eapply cv_trans; [exact C|eapply evaluation_conv; exact B].
 Qed.
 
 Lemma parallel_conv a b : parallel a b -> conv a b.

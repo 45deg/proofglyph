@@ -1,5 +1,5 @@
-(* The byte parser and I/O are handwritten and remain in the trusted boundary.
-   Type checking is performed exclusively by the Rocq-extracted Checker. *)
+(* Byte decoding and type checking use the shared Rocq-extracted implementation.
+   I/O and the bounded-index resource guard remain host operations. *)
 open Checker
 
 exception Input_error of string
@@ -17,51 +17,25 @@ let nat_of_int n =
 
 let parse source =
   let size = String.length source in
-  let stack = ref [] in
-  let declarations = ref [] in
-  let push t = stack := t :: !stack in
-  let binary offset make = match !stack with
-    | b :: a :: rest -> stack := make a b :: rest
-    | _ -> error offset "stack underflow"
+  let rec bound_indices offset =
+    if offset < size then
+      if source.[offset] = '$' || source.[offset] = '#' then (
+        let pos = ref (offset + 1) and value = ref 0 in
+        while !pos < size && source.[!pos] >= '0' && source.[!pos] <= '9' do
+          let digit = Char.code source.[!pos] - Char.code '0' in
+          if !value > (index_limit - digit) / 10 then
+            error offset "index exceeds pa resource limit (100000)";
+          value := !value * 10 + digit;
+          incr pos
+        done;
+        bound_indices !pos)
+      else bound_indices (offset + 1)
   in
-  let number offset =
-    let pos = ref (offset + 1) in
-    let value = ref 0 in
-    while !pos < size && source.[!pos] >= '0' && source.[!pos] <= '9' do
-      let digit = Char.code source.[!pos] - Char.code '0' in
-      if !value > (index_limit - digit) / 10 then
-        error offset "index exceeds rocq4pa resource limit (100000)";
-      value := !value * 10 + digit;
-      incr pos
-    done;
-    if !pos = offset + 1 then error offset "expected decimal index";
-    nat_of_int !value, !pos
-  in
-  let rec scan offset =
-    if offset < size then begin
-      let next = ref (offset + 1) in
-      (match source.[offset] with
-      | ' ' | '\t' | '\r' | '\n' -> ()
-      | '*' -> push TType
-      | '^' -> push TKind
-      | '$' -> let n, pos = number offset in push (TVar n); next := pos
-      | '#' -> let n, pos = number offset in push (TConst n); next := pos
-      | '>' -> binary offset (fun a b -> TPi (a, b))
-      | '\\' -> binary offset (fun a b -> TLam (a, b))
-      | '@' -> binary offset (fun a b -> TApp (a, b))
-      | ':' -> (match !stack with
-          | [a] -> declarations := Assume a :: !declarations; stack := []
-          | _ -> error offset "assumption requires exactly one stack item")
-      | '!' -> (match !stack with
-          | [proof; a] -> declarations := Prove (a, proof) :: !declarations; stack := []
-          | _ -> error offset "proof registration requires exactly two stack items")
-      | c -> error offset (Printf.sprintf "unknown instruction %C" c));
-      scan !next
-    end
-  in
-  scan 0;
-  if !stack <> [] then error size "unfinished stack at end of file";
-  List.rev !declarations
+  bound_indices 0;
+  let bytes = List.init size (String.get source) in
+  match decode_pa bytes with
+  | Some declarations -> declarations
+  | None -> raise (Input_error "invalid pa byte syntax or stack")
 
 let read_file path =
   let channel = open_in_bin path in
@@ -69,7 +43,7 @@ let read_file path =
     (fun () -> really_input_string channel (in_channel_length channel))
 
 let usage () =
-  prerr_endline "Usage: rocq4pa check FILE [--prelude FILE] [--no-axioms] [--fuel N]";
+  prerr_endline "Usage: pa check FILE [--prelude FILE] [--no-axioms] [--fuel N]";
   exit 2
 
 let run () =

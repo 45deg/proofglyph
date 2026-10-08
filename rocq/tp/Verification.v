@@ -37,3 +37,22 @@ Print Assumptions desugar_kinds.
 Print Assumptions compile_surface_pa_sound.
 Print Assumptions compile_surface_pa_complete.
 Print Assumptions compile_surface_pa_recheck.
+
+From Tinyprover.Tp Require Import TpImports.
+Print Assumptions load_tp_correct.
+Print Assumptions imports_complete.
+
+From Tinyprover.Tp Require Import TpSyntax FileCompile.
+Print Assumptions lex_tp_correct.
+Print Assumptions parse_tp_correct.
+Print Assumptions parse_tp_unique.
+Print Assumptions syntax_complete.
+Print Assumptions items_parser_complete.
+Print Assumptions prepare_files_correct.
+Print Assumptions compile_files_pa_sound.
+Print Assumptions compile_files_pa_complete.
+Print Assumptions compile_files_pa_recheck.
+
+Print Assumptions compile_files_sound.
+Print Assumptions compile_files_complete.
+Print Assumptions compile_files_correct.

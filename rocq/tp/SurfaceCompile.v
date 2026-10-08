@@ -3,8 +3,7 @@ From Tinyprover.Pa Require Import Syntax Program WellFormed.
 From Tinyprover.Tp Require Import Surface Desugar Compile PaCodec PaCompile.
 Import ListNotations.
 
-Definition compile_surface fuel allow raw := compile fuel allow (desugar_program raw).
-Definition compile_surface_pa fuel allow raw := compile_pa fuel allow (desugar_program raw).
+From Tinyprover.Tp Require Export SurfaceCompileImpl.
 
 Theorem compile_surface_pa_sound fuel allow raw bytes sg :
   compile_surface_pa fuel allow raw = Some (bytes, sg) ->

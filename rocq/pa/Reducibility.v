@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Substitution Kernel Evaluation Confluence
+From Tinyprover.Pa Require Import Syntax Substitution EvaluationSpec Confluence
   Preservation Normalization Arity.
 Import ListNotations.
 

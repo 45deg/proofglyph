@@ -3,17 +3,7 @@ From Tinyprover.Pa Require Import Syntax Program WellFormed Checker.
 From Tinyprover.Tp Require Import Surface Compile PaCodec.
 Import ListNotations.
 
-Definition compile_pa fuel allow src : option (string * list term) :=
-  match compile fuel allow src with
-  | Some (ds, sg) => Some (encode_pa ds, sg)
-  | None => None
-  end.
-
-Definition check_pa fuel allow bytes : option (list term) :=
-  match decode_pa bytes with
-  | Some ds => check_program fuel allow [] ds
-  | None => None
-  end.
+From Tinyprover.Tp Require Export PaCompileImpl.
 
 Theorem compile_pa_sound fuel allow src bytes sg :
   compile_pa fuel allow src = Some (bytes, sg) ->

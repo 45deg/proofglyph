@@ -36,7 +36,6 @@
 | 整数論 | 整除性の推移律・和・積への保存 | [divides_trans](../examples/commons/nat/divisibility.tp), [divides_add](../examples/commons/nat/divisibility.tp), [divides_mul_right](../examples/commons/nat/divisibility.tp), [divides_mul_left](../examples/commons/nat/divisibility.tp) | `nat/divisibility.tp` |
 | 整数論 | 合同式の加算・乗算・累乗による保存 | [cong_add](../examples/commons/nat/congruence.tp), [cong_mul](../examples/commons/nat/congruence.tp), [cong_pow](../examples/commons/nat/congruence.tp) | `nat/congruence.tp` |
 | 整数論 | 除法の原理（商と余りの存在） | [division_algorithm](../examples/commons/nat/division.tp) | `nat/division.tp` |
-| 整数論 | 最小の正の証人の存在 | [least_positive](../examples/commons/nat/division.tp) | `nat/division.tp` |
 | 整数論 | 素因数の存在 | [prime_factor](../examples/commons/nat/factorization.tp) | `nat/factorization.tp` |
 | 整数論 | ユークリッドの補題・平方の整除性 | [prime_mul_elim](../examples/commons/nat/euclid.tp), [prime_divides_square](../examples/commons/nat/euclid.tp) | `nat/euclid.tp` |
 | 整数論 | 素数 `p` は `C(p,k)` を割り切る（`0 < k < p`） | [prime_divides_choose](../examples/commons/nat/prime_binomial.tp) | `nat/prime_binomial.tp` |

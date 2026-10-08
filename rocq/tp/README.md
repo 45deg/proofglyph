@@ -1,25 +1,24 @@
-# rocq4tp
+# tp
 
-tinyprover の名前付き AST から、`rocq4pa` の核心言語への変換と `.pa` バイト列の
-符号化・復号を Rocq で実装・証明します。変換器と codec を OCaml に抽出し、
-既存の Rocq 製型検査器へ接続しています。
+tinyprover の `.tp` バイト列と有限ファイル表から、`.pa` 出力までを Rocq で実装・証明します。
+解析器・変換器を OCaml に抽出し、pa 側の共通 codec・型検査器へ接続しています。
 
 糖衣展開に加え、`.tp` の字句解析・構文解析・有限ファイル集合上の import 展開も
 Rocq で実装し、抽出したコードを CLI で使います。ファイル I/O と canonical なパスの
-解決は OCaml が担当します。既存の保証は糖衣 AST から `.pa` 出力・再検査までで、
-lexer/parser と独立した文法との同値性、import 展開の一般的な正しさは未証明です。
+解決は OCaml が担当します。独立した字句・文法・import 展開の仕様との同値性と、
+解析・import 用の内部 fuel の十分性を証明しています。
 
 ## ビルドと実行
 
-親プロジェクトと同じ OCaml・Dune、および `rocq4pa` と同じ Rocq・標準ライブラリ、
+親プロジェクトと同じ OCaml・Dune、および `pa` と同じ Rocq・標準ライブラリ、
 Make、テスト用の Python 3 が必要です。追加パッケージは不要です。
 
 ```sh
 make -C rocq/tp
-rocq/tp/_build/rocq4tp check examples/basics.tp
-rocq/tp/_build/rocq4tp check examples/fermat_application.tp
-rocq/tp/_build/rocq4tp compile examples/basics.tp -o /tmp/basics.pa
-rocq/tp/_build/rocq4tp check-pa /tmp/basics.pa
+rocq/tp/_build/tp check examples/basics.tp
+rocq/tp/_build/tp check examples/fermat_application.tp
+rocq/tp/_build/tp compile examples/basics.tp -o /tmp/basics.pa
+rocq/tp/_build/tp check-pa /tmp/basics.pa
 make -C rocq/tp test
 ```
 
@@ -48,7 +47,7 @@ check-pa INPUT.pa [--no-axioms] [--fuel N]
 ```text
 .tp ファイル
   → adapter.ml                 OCaml：ファイル I/O・realpath・依存ファイルの収集
-  → parse_tp                   Rocq 抽出：字句解析・構文解析、糖衣 AST
+  → prepare_files / parse_tp    Rocq 抽出：保存したバイト列の解析・canonical ファイル表
   → load_tp                    Rocq 抽出：import グラフの展開
   → desugar_program             Rocq 抽出：糖衣展開
   → lower                       Rocq 抽出：名前解決・宣言変換
@@ -64,7 +63,7 @@ CLI の実行経路は既存の `Source.lex`、parser、import loader、`Source.
 `Source.compile`、OCaml カーネルを呼びません。
 それらを含むライブラリにはリンクしますが、既存の名前解決を使うのは差分テストだけです。
 
-`Desugar.v` の `raw_expr` は矢印、適用、`forall`、`fun` を区別し、`parameters` は
+`DesugarSpec.v` の `raw_expr` は矢印、適用、`forall`、`fun` を区別し、`parameters` は
 `(x y : A)` のグループと型注釈を保持します。グループは少なくとも1つの名前を持ちます。
 `desugar` は矢印を匿名 Π に、`forall` / `fun` を名前付き Π / λ の列に変換します。
 型注釈の内部にある糖衣も再帰的に展開します。`expands` / `expands_parameters` は、
@@ -75,17 +74,20 @@ CLI の実行経路は既存の `Source.lex`、parser、import loader、`Source.
 シャドーイングがある場合もこの逐次束縛規則を保ち、`split_parameter_group` が
 グループを分けた表記との一致を保証します。
 
-`TpSyntax.v` の `lex_tp` / `parse_tp` は ASCII 識別子、予約語、行コメント、
+`TpSyntaxImpl.v` の `lex_tp` / `parse_tp` は ASCII 識別子、予約語、行コメント、
 エスケープなしの import パスを扱う再帰下降 parser です。適用は左結合、矢印は
 右結合で、適用が優先します。宣言の引数は型に `RForall`、本体に `RLambda` を
 組み立て、グループは展開せず保持します。引数なしでは `PNil` を使います。
-解析用の内部 fuel は入力長から計算し、型検査の `--fuel` とは独立です。
+字句解析の fuel はバイト長 + 1、構文解析はトークン数 × 4 + 1 とし、型検査の `--fuel` とは独立です。
 
-`TpImports.v` の `load_tp` は canonical なファイル名と item 列の有限表を受け取り、
+`TpImportsImpl.v` の `load_tp` は canonical なファイル名と item 列の有限表を受け取り、
 宣言位置で深さ優先に展開します。active 列で循環を拒否し、読み込み済み列で
 ダイヤモンド依存を重複排除します。表に存在しない依存も拒否します。
-OCaml は各ファイルを一度解析し、相対パスを実体ファイルのディレクトリから解決して
-表を用意します。循環判定は抽出された関数が行います。
+OCaml は各ファイルのバイト列を保存し、抽出解析器で依存先を発見します。相対パスを
+実体ファイルのディレクトリから解決し、パス対応表を用意します。`prepare_files` は保存した
+バイト列を再解析して canonical なファイル表を構築します。循環判定は抽出された関数が行います。
+import の宣言列走査は構造再帰で、ファイルに入る深さだけを fuel で制限します。
+`import_budget` はファイル表の長さ + 1 です。
 構文エラーは対象ファイル名付きの共通診断で、現在は行・列を保持しません。
 複数のエラーがある場合、依存表の収集時の読み込み・解析エラーが先に報告されることがあります。
 
@@ -97,7 +99,7 @@ OCaml は各ファイルを一度解析し、相対パスを実体ファイル�
 型注釈は binder の導入前、本体は導入後の環境で解決します。
 グローバル名は登録順に並べ、その位置が定数番号になります。
 
-`Compile.v` は重複名を拒否し、宣言の型・本体をそれ以前のグローバル環境で解決してから
+`CompileImpl.v` は重複名を拒否し、宣言の型・本体をそれ以前のグローバル環境で解決してから
 名前を追加します。そのため未知名、自己参照、前方参照を拒否します。
 `None` の本体は `Assume`、`Some` の本体は `Prove` に変換します。
 `def` と `theorem` は既存の AST の段階ですでに同じ構造であり、検査後も定数は不透明です。
@@ -106,7 +108,7 @@ OCaml は各ファイルを一度解析し、相対パスを実体ファイル�
 宣言列の翻訳関係 `translates` を帰納的に定義しています。
 これらは成功した実装関数や型検査器によって定義した関係ではありません。
 
-`PaCodec.v` は命令列、十進数の読み書き、バイト列の字句解析、スタック機械を定義します。
+pa 側の `CodecSpec.v` / `CodecImpl.v` は命令列、十進数の読み書き、バイト列の字句解析、スタック機械を定義します。
 `$` / `#` の直後には1桁以上の十進数字が必要で、連続する数字を最長一致で読みます。
 先頭0を許し、空白・タブ・CR・LF はトークン間だけで無視します。
 未知のバイト、スタック不足、登録時の余分な項、EOF の残りスタックは拒否します。
@@ -114,7 +116,7 @@ OCaml は各ファイルを一度解析し、相対パスを実体ファイル�
 `check_pa` は型検査で拒否します。
 
 codec は Rocq の自然数全体を扱います。既存 OCaml reader の機械整数上限や
-`rocq4pa` CLI の index 上限100000と同じ数値制限は設けていません。
+`pa` CLI の index 上限100000と同じ数値制限は設けていません。
 巨大な番号の実行は時間・メモリ制限を受けます。字句解析の内部 fuel は入力のバイト長で与え、
 CLI の型検査用 `--fuel` とは分けています。
 
@@ -122,6 +124,15 @@ CLI の型検査用 `--fuel` とは分けています。
 
 | 定理 | 保証 |
 | --- | --- |
+| `lex_tp_correct` / `parse_tp_correct` | バイト列の字句解析・構文解析と独立仕様が同値。規定の内部 fuel で十分 |
+| `syntax_complete` / `items_parser_complete` | 項・引数グループ・宣言列の文法から、消費トークン数に基づく fuel の境界を導出 |
+| `parse_tp_unique` | バイト列に対する解析結果が一意 |
+| `load_tp_correct` / `imports_complete` | 有限ファイル表の深さ優先展開仕様との同値性、ファイル数由来 fuel の十分性 |
+| `prepare_files_correct` | バイト列とホストのパス解決結果から、仕様どおりの canonical ファイル表を構築 |
+| `compile_files_correct` | ある型検査 fuel での成功と、解析・import・展開・翻訳・ポリシー・型付けの仕様が同値 |
+| `compile_files_pa_sound` / `compile_files_pa_complete` | ファイルのバイト列から pa 出力までの健全性・十分な型検査 fuel による完全性 |
+| `compile_files_pa_recheck` | 全経路で生成した pa を同じ fuel・ポリシーで再検査可能 |
+| `decode_pa_correct` | 任意 pa バイト列の復号と独立した字句・スタック仕様が同値 |
 | `desugar_correct` / `desugar_parameters_correct` | 糖衣展開と独立した展開仕様が同値 |
 | `expansion_unique` | 展開結果が一意 |
 | `split_parameter_group` | 複数名のグループと逐次グループの展開結果が一致 |
@@ -186,7 +197,7 @@ compile_pa fuel allow src = Some (bytes, Σ)
 `compile_surface_pa_complete` はこの展開関係・翻訳関係・型付け・ポリシーから、
 十分な fuel での成功を導きます。
 
-証明は `rocq4pa` の健全性・宣言的完全性・fuel 単調性を再利用しています。
+証明は `pa` の健全性・宣言的完全性・fuel 単調性を再利用しています。
 追加公理・`Admitted` は使いません。`Verification.v` の公開定理の仮定確認は、
 すべて `Closed under the global context` になります。
 
@@ -214,23 +225,28 @@ import 後の糖衣展開と名前解決を既存実装と比較し、宣言列�
 実行テストでは parser がグループを保持すること、明示的な `forall` / `fun`、
 同じグループ内の重複名、入れ子の型注釈についても既存の展開結果と比較します。
 
-## 信頼境界と次の段階
+## 信頼境界と制限
 
-- `.tp` 翻訳に関する定理の入力は糖衣を保持した AST です。識別子の字句規則、
-  文法・結合・優先順位、宣言の引数を型と本体の AST に配置する parser の処理、
-  import 順序、ファイルの同一性、位置情報は未検証です。
-  lexer/parser と import 展開は Rocq 実装に移行しましたが、一般的な正しさの定理はまだありません。
-  AST ができた後の複数引数・矢印・Π・λ の展開は検証対象に含まれます。
-- `.pa` の符号化・復号の往復性は証明しています。任意入力に対する独立した
-  `.pa` 文法との同値性や、既存 OCaml reader/writer との一般的な同値性は未証明です。
-- 名前付き言語自身の型付け・置換・α 同値を別に定式化した証明はまだありません。
-  現在は宣言的な翻訳関係と核心言語の型付けを組み合わせています。
-- Rocq のカーネル・抽出機構、OCaml コンパイラ・実行系、ファイル I/O を信頼します。
+- ファイル全体の定理の入力は、canonical なファイル ID とバイト列の有限表、入口 ID、
+  ホストが供給するパス解決関数です。`prepare_files` は表内の全ファイルを解析するため、
+  使われないファイルでも不正な構文があれば拒否します。CLI の表は入口から発見した依存先だけです。
+- `parsed_files` は字句・文法仕様とパス解決結果、`imports_program` は宣言位置での
+  深さ優先展開・重複排除・循環拒否を表します。依存表の収集、I/O、`realpath`、
+  実体ファイルと供給されたバイト列・ID の対応、位置情報は信頼境界に残ります。
+- pa codec の任意入力との対応と往復性を証明しています。
+  既存 OCaml reader/writer との一般的な同値性は未証明です。
+- 名前付き言語自身の型付け・置換・α 同値は独立には定式化していません。
+  宣言的な翻訳関係と核心言語の型付けを組み合わせています。
+- Rocq のカーネル・抽出機構、OCaml コンパイラ・実行系を信頼します。
   自然数を機械整数へ置き換える抽出指示は使いません。
-- fuel の既定値は2048、CLI の指定範囲は1〜100000です。十分な fuel の定理は
+- 型検査 fuel の既定値は2048、CLI の指定範囲は1〜100000です。十分な fuel の定理は
   任意の自然数に対するもので、CLI 上限や実機の時間・メモリ内での成功を保証しません。
   1回の拒否は型誤りの証明にはなりません。
-- 公理の無矛盾性、既存 OCaml コンパイラ・カーネル自体の正しさは保証しません。
+- 公理の無矛盾性、通常の OCaml コンパイラ・Kernel 自体の正しさは保証しません。
 
-次は独立した `.tp` 文法との対応、解析・import 用 fuel の十分性、
-有限のファイル集合上の import 展開の仕様との対応を証明します。
+通常 CLI・Web の標準実装への切り替えは、この開発の対象に含めません。
+
+`FileSpec.v`・`FileImpl.v`・`FileCompile.v` は全経路の仕様・実装・対応証明です。
+CLI の `check` / `compile` はそれぞれ `compile_files` / `compile_files_pa` を使います。
+`FileExamples.v` はバイト列からの成功、公理禁止、fuel 不足、未解決パス、欠落・循環、
+未使用の不正ファイルと空入力を Rocq 内で確認します。

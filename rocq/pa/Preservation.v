@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Substitution WellFormed TypingSubstitution Confluence Generation Kernel Evaluation.
+From Tinyprover.Pa Require Import Syntax Substitution WellFormed TypingSubstitution Confluence Generation EvaluationSpec.
 Import ListNotations.
 
 (** One beta step, including all annotations and binder bodies. *)
@@ -140,11 +140,4 @@ Proof.
       * eapply (steps_congruence (fun f => tApp f x)); eauto using par_app, parallel_refl.
       * eapply (steps_congruence (tApp (tLam a b))); eauto using par_app, parallel_refl.
     + econstructor; [apply par_beta; apply parallel_refl|exact IHevaluates3].
-Qed.
-
-Theorem normalization_preserves_type fuel sg ctx t u typ : wf_signature sg ->
-  typing sg ctx t typ -> normal fuel t = Some u -> typing sg ctx u typ.
-Proof.
-  intros W T E; eapply subject_reduction_parallel_steps; [exact W| |exact T].
-  apply evaluates_steps; eapply normal_evaluates; exact E.
 Qed.

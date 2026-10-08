@@ -99,7 +99,7 @@ make -C rocq/zfc test
 全理論の生成物は `rocq/zfc/_build/deep/`、従来の3公理の生成物は `rocq/zfc/_build/`。`prelude.pa` を先に読み込み、`proofs.pa` 内では `:` を禁止します。
 
 ```sh
-rocq/pa/_build/rocq4pa check rocq/zfc/_build/deep/proofs.pa --prelude rocq/zfc/_build/deep/prelude.pa
+rocq/pa/_build/pa check rocq/zfc/_build/deep/proofs.pa --prelude rocq/zfc/_build/deep/prelude.pa
 ```
 
 `make test` は Rocq のコンパイルと `rocq check`、OCaml 版・Rocq 抽出版の両方での
@@ -126,7 +126,7 @@ R ∈ U なので、分出の所属条件を R に適用すると R ∈ R ↔ R 
 
 ```sh
 make -C rocq/zfc test
-rocq/pa/_build/rocq4pa check rocq/zfc/_build/russell/proofs.pa --prelude rocq/zfc/_build/russell/prelude.pa
+rocq/pa/_build/pa check rocq/zfc/_build/russell/proofs.pa --prelude rocq/zfc/_build/russell/prelude.pa
 _build/default/bin/main.exe check rocq/zfc/_build/russell/proofs.pa --prelude rocq/zfc/_build/russell/prelude.pa
 ```
 

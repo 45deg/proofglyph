@@ -91,10 +91,10 @@ dune exec bin/main.exe -- check /tmp/fermat.pa
 
 `Source.parse_items_with` / `Source.parse_with` / `Source.load_with` は、出力 AST の構築方法を
 `syntax` レコードで受け取る。既存 API は `default_syntax` を使い、従来の名前付き AST を返す。
-`rocq/tp/adapter.ml` の `raw_syntax` は引数グループと糖衣を保持する AST を作り、既存 parser と抽出 parser の差分テストに使う。Rocq 版 CLI は `rocq/tp/TpSyntax.v` の独立した
-lexer/parser と `TpImports.v` の有限ファイル集合上の import 展開を抽出して使う。
-ファイル I/O・`realpath`・依存表の収集は OCaml に残る。解析・import の一般的な
-正しさの定理はまだなく、計算例と既存実装との比較で検査する。
+`rocq/tp/adapter.ml` の `raw_syntax` は引数グループと糖衣を保持する AST を作り、既存 parser と抽出 parser の差分テストに使う。Rocq 版 CLI は `rocq/tp/TpSyntaxImpl.v` の独立した
+lexer/parser と `TpImportsImpl.v` の有限ファイル集合上の import 展開を抽出して使う。
+ファイル I/O・`realpath`・依存表の収集は OCaml に残る。解析・import の独立仕様との
+同値性と内部 fuel の十分性を証明し、計算例と既存実装との比較でも検査する。
 
 `Source.compiled.sourcemap` は宣言ごとの定数番号・名前・ソース位置・出力バイト範囲を保持し、`Source.sourcemap_json result` で JSON に直列化する。範囲はエンコード時に記録され、記号列の再検査に成功した場合のみ結果を返す。
 
@@ -127,26 +127,26 @@ node web/test.cjs
 
 | ディレクトリ | 実装・証明の構成 |
 | --- | --- |
-| `rocq/pa/` | AST、宣言的型付け、置換・型保存・合流性・強正規化、`Checker.v` の健全性・完全性、OCaml 抽出と手書き CLI |
-| `rocq/tp/` | 糖衣 AST・展開、名前解決・宣言変換、pa codec、独立した lexer/parser・import 展開、抽出コードと I/O アダプター |
+| `rocq/pa/` | AST、宣言的型付け、置換・型保存・合流性・強正規化、`CheckerImpl.v` とその健全性・完全性、OCaml 抽出と手書き CLI |
+| `rocq/tp/` | 糖衣 AST・展開、名前解決・宣言変換、pa 側の共通 codec、独立した lexer/parser・import 展開、抽出コードと I/O アダプター |
 | `rocq/calculi/` | 独立した NK・LK、固定 LF シグネチャとの対応、LK のカット除去、直接 AST からの pa 出力と再検査 |
 | `rocq/zfc/` | 一階論理・ZFC の証明体系、式の符号化、固定シグネチャとの翻訳・復元、生成証明と Russell の例の再検査 |
 
-`rocq4pa` は `Checker.v` の抽出検査器を使い、通常の OCaml Kernel を呼ばない。手書きパーサーが pa の宣言列を構築して検査器へ渡す。保証の対象は Rocq 内の AST と宣言列で、手書きパーサーや CLI の正しさは未検証。
+`pa` は `Checker.v` の抽出検査器を使い、通常の OCaml Kernel を呼ばない。pa 側の共通抽出 codec が宣言列を構築する。任意バイト列の復号と独立した字句・スタック仕様の対応を証明している。I/O・CLI・index 上限の事前検査は未検証。
 
-`rocq4tp` の実行経路は次のとおり。
+`tp` の実行経路は次のとおり。
 
 ```text
 .tp → adapter.ml（I/O・realpath・依存表収集）
-    → parse_tp / load_tp（抽出 parser・import 展開）
+    → prepare_files / parse_tp / load_tp（抽出 parser・パス対応表適用・import 展開）
     → desugar_program → lower → check_program → encode_pa
 
 .pa → decode_pa → check_program
 ```
 
-CLI は通常実装の lexer/parser・import loader・名前解決・Kernel を呼ばない。`adapter.ml` に残る通常実装の AST 変換・`raw_syntax` は差分テスト用である。糖衣 AST から pa 出力・再検査までは形式証明があるが、独立した文法との対応と import 展開の一般的な正しさは未証明。
+CLI は通常実装の lexer/parser・import loader・名前解決・Kernel を呼ばない。`adapter.ml` に残る通常実装の AST 変換・`raw_syntax` は差分テスト用である。字句・文法・import の独立仕様との対応と内部 fuel の十分性、保存したバイト列から pa 出力・再検査までの形式証明がある。全経路は `FileSpec` / `FileImpl` / `FileCompile` に分ける。言語理論は実装に依存せず、実装は対応証明に依存しない。`rocq/test_layers.py` がこの境界を検査する。
 
-Rocq 版の fuel は再帰の深さで、両 CLI の既定値は2048、指定範囲は1〜100000。rocq4pa は入力 index も100000以下に制限する。rocq4tp の codec は Rocq の自然数を扱う。抽出では自然数を機械整数に置き換えない。十分な fuel による完全性は CLI 上限や実機資源内での成功を保証しない。
+Rocq 版の fuel は再帰の深さで、両 CLI の既定値は2048、指定範囲は1〜100000。pa は入力 index も100000以下に制限する。tp の codec は Rocq の自然数を扱う。抽出では自然数を機械整数に置き換えない。十分な fuel による完全性は CLI 上限や実機資源内での成功を保証しない。
 
 ```sh
 make -C rocq verify
