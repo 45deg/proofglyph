@@ -1,0 +1,28 @@
+From Rocq4tp Require Import Resolve Compile PaCodec PaCompile.
+
+Print Assumptions resolve_correct.
+Print Assumptions resolves_unique.
+Print Assumptions resolves_extend_globals.
+Print Assumptions resolve_scoped.
+Print Assumptions lower_correct.
+Print Assumptions translates_unique.
+Print Assumptions translates_kinds.
+Print Assumptions translates_length.
+Print Assumptions translates_distinct.
+Print Assumptions translates_policy.
+Print Assumptions translates_scoped.
+Print Assumptions compile_sound.
+Print Assumptions compile_complete.
+Print Assumptions compile_monotone.
+Print Assumptions compile_correct.
+Print Assumptions lex_instructions_roundtrip.
+Print Assumptions term_code_correct.
+Print Assumptions program_code_correct.
+Print Assumptions pa_roundtrip.
+Print Assumptions encode_pa_injective.
+Print Assumptions pa_canonical_roundtrip.
+Print Assumptions compile_pa_sound.
+Print Assumptions compile_pa_complete.
+Print Assumptions compile_pa_recheck.
+Print Assumptions check_pa_sound.
+Print Assumptions compile_pa_monotone.
