@@ -1,5 +1,4 @@
-(* Unverified input boundary. Reuse the lexer, parser and import loader with an
-   algebra that preserves sugar. Desugaring itself runs in extracted Rocq code. *)
+(* Host I/O boundary and reference AST adapters used by differential tests. *)
 module Source = Tinyprover_tp.Source
 module F = Frontend
 
@@ -39,8 +38,48 @@ let raw_syntax : F.raw_expr Source.syntax = {
 let raw_declaration (d : F.raw_expr Source.parsed_declaration) =
   { F.raw_name = chars d.name; raw_type = d.typ; raw_body = d.body }
 
-let parse_raw source = Source.parse_with raw_syntax source |> List.map raw_declaration
-let load_raw path = Source.load_with raw_syntax path |> List.map raw_declaration
+(* Parsing and graph expansion run in extracted code. Only byte I/O and
+   canonical path resolution are host operations. The old algebra above is
+   retained for differential tests. *)
+let parse_items ?file source =
+  match F.parse_tp (chars source) with
+  | Some items -> items
+  | None -> raise (Source.Error ((match file with None -> "" | Some p -> p ^ ": ") ^
+      "invalid .tp syntax or lexical input"))
+
+let parse_raw source =
+  List.map (function
+    | F.TpDeclaration d -> d
+    | F.TpImport _ -> raise (Source.Error "imports require load_raw"))
+    (parse_items source)
+
+let load_raw path =
+  let canonical path =
+    try Unix.realpath path with
+    | Unix.Unix_error (e, _, _) -> raise (Source.Error (path ^ ": " ^ Unix.error_message e))
+    | Invalid_argument msg -> raise (Source.Error (path ^ ": " ^ msg)) in
+  let files = Hashtbl.create 16 in
+  let rec discover path =
+    if not (Hashtbl.mem files path) then (
+      (* Register before walking dependencies so discovery terminates on cycles.
+         The extracted traversal decides whether the graph is acceptable. *)
+      Hashtbl.add files path [];
+      let items = parse_items ~file:path (Source.read_file path) in
+      let items = List.map (function
+        | F.TpDeclaration d -> F.TpDeclaration d
+        | F.TpImport p ->
+            let target = string_of_chars p in
+            let target = canonical (if Filename.is_relative target then
+              Filename.concat (Filename.dirname path) target else target) in
+            discover target;
+            F.TpImport (chars target)) items in
+      Hashtbl.replace files path items) in
+  let entry = canonical path in
+  discover entry;
+  let table = Hashtbl.fold (fun path items acc -> (chars path, items) :: acc) files [] in
+  match F.load_tp table (chars entry) with
+  | Some ds -> ds
+  | None -> raise (Source.Error (entry ^ ": import cycle or exhausted import traversal budget"))
 
 let nat_of_int n =
   if n < 0 then invalid_arg "negative natural";

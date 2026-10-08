@@ -7,6 +7,9 @@ Compile.v
 PaCodec.v
 PaCompile.v
 SurfaceCompile.v
+TpSyntax.v
+TpImports.v
+TpExamples.v
 Examples.v
 PaExamples.v
 DesugarExamples.v

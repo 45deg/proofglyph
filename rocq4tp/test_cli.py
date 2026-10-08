@@ -1,4 +1,4 @@
-"""Exercise the extracted frontend, including the existing import loader boundary."""
+"""Exercise the extracted frontend, including extracted parsing and import graph expansion."""
 from pathlib import Path
 import subprocess
 import tempfile
@@ -26,6 +26,18 @@ with tempfile.TemporaryDirectory(prefix="rocq4tp-") as tmp:
     right.write_text('import "./base.tp"; theorem right (x : A) : A := x;\n')
     entry.write_text('import "left.tp"; import "right.tp";\n')
     assert run(["check", entry]).stdout.strip() == "Accepted 3 declarations"
+    # Canonical identity includes symlinks; imports use the real file's directory.
+    alias = directory / "alias.tp"
+    alias.symlink_to(base)
+    right.write_text('import "alias.tp"; theorem right (x : A) : A := x;\n')
+    assert run(["check", entry]).stdout.strip() == "Accepted 3 declarations"
+    nested = directory / "nested"
+    nested.mkdir()
+    (nested / "base.tp").write_text("axiom B : Type;\n")
+    (nested / "module.tp").write_text('import "base.tp";\n')
+    (directory / "module-link.tp").symlink_to(nested / "module.tp")
+    assert run(["check", directory / "module-link.tp"]).stdout.strip() == "Accepted 1 declarations"
+    assert run(["compile", directory / "module-link.tp"]).stdout == "*:"
     encoded = run(["compile", entry]).stdout
     assembly = directory / "entry.pa"
     run(["compile", entry, "-o", assembly])
@@ -47,6 +59,20 @@ with tempfile.TemporaryDirectory(prefix="rocq4tp-") as tmp:
     entry.write_text('import "entry.tp";\n')
     run(["check", entry], 1)
     entry.write_text('import "absent.tp";\n')
+    run(["check", entry], 1)
+    # Rejection must preserve previously compiled output for frontend failures.
+    for source in ('import "entry.tp";', 'import "absent.tp";',
+                   'import "";', 'axiom A : Type?;', 'def f : Type;'):
+        entry.write_text(source)
+        run(["compile", entry, "-o", assembly], 1)
+        assert assembly.read_text() == encoded, "frontend rejection overwrote output"
+    malformed = directory / "malformed.tp"
+    malformed.write_text("axiom A : ;")
+    entry.write_text('import "malformed.tp";')
+    assert str(malformed.resolve()) in run(["check", entry], 1).stderr
+    entry.write_text('theorem early (x : A) : A := x; import "base.tp";')
+    run(["check", entry], 1)
+    entry.write_text('import "base.tp"; axiom A : Type;')
     run(["check", entry], 1)
     entry.write_text("axiom missing : ;\n")
     run(["check", entry], 1)

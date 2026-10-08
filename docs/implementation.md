@@ -67,7 +67,10 @@ Dune と OCaml 標準ライブラリ（`Unix.realpath` を使うため `unix` �
 `Source.parse_items_with` / `Source.parse_with` / `Source.load_with` は、出力 AST の構築方法を
 `syntax` レコードで受け取る。既存 API は `default_syntax` を使い、従来の名前付き AST を返す。
 `rocq4tp` は引数グループと糖衣を保持する構築方法を渡し、Rocq から抽出した `desugar_program`
-で展開する。parser と import loader は共有し、これら自体の形式検証はまだ行っていない。
+で展開する。この構築方法は差分テストに使う。Rocq 版 CLI は `rocq4tp/TpSyntax.v` の独立した
+lexer/parser と `TpImports.v` の有限ファイル集合上の import 展開を抽出して使う。
+ファイル I/O・`realpath`・依存表の収集は OCaml に残る。解析・import の一般的な
+正しさの定理はまだなく、計算例と既存実装との比較で検査する。
 
 `Source.compiled.sourcemap` は宣言ごとの定数番号・名前・ソース位置・出力バイト範囲を保持し、`Source.sourcemap_json result` で JSON に直列化する。範囲はエンコード時に記録され、記号列の再検査に成功した場合のみ結果を返す。
 

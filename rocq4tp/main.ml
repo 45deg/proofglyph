@@ -1,5 +1,5 @@
-(* .tp parsing/imports and I/O remain unverified. Desugaring, name resolution, .pa byte
-   encoding/decoding and type checking are extracted from Rocq. *)
+(* Lexing, parsing, import graph expansion and compilation are extracted from
+   Rocq. Host file I/O and canonical path resolution remain trusted. *)
 let usage () =
   prerr_endline "Usage: rocq4tp (check|check-pa|compile) FILE [--no-axioms] [--fuel N]\n       compile also accepts [-o FILE]; default output is stdout";
   exit 2

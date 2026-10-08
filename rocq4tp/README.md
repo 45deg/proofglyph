@@ -4,9 +4,10 @@ tinyprover の名前付き AST から、`rocq4pa` の核心言語への変換と
 符号化・復号を Rocq で実装・証明します。変換器と codec を OCaml に抽出し、
 既存の Rocq 製型検査器へ接続しています。
 
-現在は段階3（糖衣構文を保持した AST から `.pa` 出力・再検査までの検証）です。
-糖衣展開も Rocq から抽出した実装を使います。`.tp` の字句解析・構文解析・import は
-既存の OCaml 実装を使うため、`.tp` のバイト列からの正しさは、まだ証明していません。
+糖衣展開に加え、`.tp` の字句解析・構文解析・有限ファイル集合上の import 展開も
+Rocq で実装し、抽出したコードを CLI で使います。ファイル I/O と canonical なパスの
+解決は OCaml が担当します。既存の保証は糖衣 AST から `.pa` 出力・再検査までで、
+lexer/parser と独立した文法との同値性、import 展開の一般的な正しさは未証明です。
 
 ## ビルドと実行
 
@@ -46,8 +47,9 @@ check-pa INPUT.pa [--no-axioms] [--fuel N]
 
 ```text
 .tp ファイル
-  → Source.load_with            既存 OCaml：解析・import
-  → adapter.ml の raw_syntax    手書き：糖衣・引数グループを保持した AST
+  → adapter.ml                 OCaml：ファイル I/O・realpath・依存ファイルの収集
+  → parse_tp                   Rocq 抽出：字句解析・構文解析、糖衣 AST
+  → load_tp                    Rocq 抽出：import グラフの展開
   → desugar_program             Rocq 抽出：糖衣展開
   → lower                       Rocq 抽出：名前解決・宣言変換
   → Rocq4pa.check_program        Rocq 抽出：型検査
@@ -58,7 +60,8 @@ check-pa INPUT.pa [--no-axioms] [--fuel N]
   → Rocq4pa.check_program        Rocq 抽出：型検査
 ```
 
-CLI の実行経路は既存の `Source.resolve`、`Source.compile`、OCaml カーネルを呼びません。
+CLI の実行経路は既存の `Source.lex`、parser、import loader、`Source.resolve`、
+`Source.compile`、OCaml カーネルを呼びません。
 それらを含むライブラリにはリンクしますが、既存の名前解決を使うのは差分テストだけです。
 
 `Desugar.v` の `raw_expr` は矢印、適用、`forall`、`fun` を区別し、`parameters` は
@@ -72,11 +75,22 @@ CLI の実行経路は既存の `Source.resolve`、`Source.compile`、OCaml カ�
 シャドーイングがある場合もこの逐次束縛規則を保ち、`split_parameter_group` が
 グループを分けた表記との一致を保証します。
 
-OCaml parser は出力先を指定する `syntax` を受け取る構成です。Rocq 版 CLI では
-グループを保持する `raw_syntax` を渡し、通常の OCaml CLI と Web は従来の展開を行う
-`default_syntax` を使います。`parse_items` / `parse` / `load` の既存 API は維持しています。
-宣言の引数は parser が型に `RForall`、本体に `RLambda` を組み立て、その内部の展開を
-Rocq が行います。引数なしの宣言には空の引数列を許し、展開結果は元の式と同じです。
+`TpSyntax.v` の `lex_tp` / `parse_tp` は ASCII 識別子、予約語、行コメント、
+エスケープなしの import パスを扱う再帰下降 parser です。適用は左結合、矢印は
+右結合で、適用が優先します。宣言の引数は型に `RForall`、本体に `RLambda` を
+組み立て、グループは展開せず保持します。引数なしでは `PNil` を使います。
+解析用の内部 fuel は入力長から計算し、型検査の `--fuel` とは独立です。
+
+`TpImports.v` の `load_tp` は canonical なファイル名と item 列の有限表を受け取り、
+宣言位置で深さ優先に展開します。active 列で循環を拒否し、読み込み済み列で
+ダイヤモンド依存を重複排除します。表に存在しない依存も拒否します。
+OCaml は各ファイルを一度解析し、相対パスを実体ファイルのディレクトリから解決して
+表を用意します。循環判定は抽出された関数が行います。
+構文エラーは対象ファイル名付きの共通診断で、現在は行・列を保持しません。
+複数のエラーがある場合、依存表の収集時の読み込み・解析エラーが先に報告されることがあります。
+
+通常の OCaml CLI / Web とその `Source` API は変更していません。
+`adapter.ml` の `raw_syntax` は既存 parser との比較テストにだけ使います。
 
 `Surface.v` の項は `Source.expr` に対応します。矢印は `Product None` で、
 匿名 binder も de Bruijn の深さに数えます。局所変数を先に探し、最も内側の名前を優先します。
@@ -188,6 +202,9 @@ import 後の糖衣展開と名前解決を既存実装と比較し、宣言列�
 両方で検査します。990件の型付けを要求しない項についても、往復性と writer との一致を確認します。
 `PaExamples.v` と実行テストは十進数の桁境界、先頭0、空白、未知バイト、スタック異常、
 構文上は正しいが型が不正な宣言、検査失敗時の出力ファイル保持を含みます。
+`TpExamples.v` で結合・優先順位、グループ、予約語、空パス、ダイヤモンド依存、
+宣言位置、循環・欠落を計算によって確認します。実行テストには不正な字句・文法、
+コメント、CRLF、シンボリックリンクと拒否時の出力保持も含めています。
 さらに束縛の境界例、不正名、型誤り、公理禁止、fuel 不足を確認し、CLI の
 ダイヤモンド import、循環、欠落、構文エラー、オプション、終了コードを検査します。
 差分テストは既存実装との一致を確認するもので、既存実装の正しさの証明ではありません。
@@ -201,7 +218,8 @@ import 後の糖衣展開と名前解決を既存実装と比較し、宣言列�
 
 - `.tp` 翻訳に関する定理の入力は糖衣を保持した AST です。識別子の字句規則、
   文法・結合・優先順位、宣言の引数を型と本体の AST に配置する parser の処理、
-  import 順序、ファイルの同一性、位置情報、AST アダプターは未検証です。
+  import 順序、ファイルの同一性、位置情報は未検証です。
+  lexer/parser と import 展開は Rocq 実装に移行しましたが、一般的な正しさの定理はまだありません。
   AST ができた後の複数引数・矢印・Π・λ の展開は検証対象に含まれます。
 - `.pa` の符号化・復号の往復性は証明しています。任意入力に対する独立した
   `.pa` 文法との同値性や、既存 OCaml reader/writer との一般的な同値性は未証明です。
@@ -214,5 +232,5 @@ import 後の糖衣展開と名前解決を既存実装と比較し、宣言列�
   1回の拒否は型誤りの証明にはなりません。
 - 公理の無矛盾性、既存 OCaml コンパイラ・カーネル自体の正しさは保証しません。
 
-次は `.tp` lexer/parser の文法との対応、有限のファイル集合上の
-import 展開へと保証を広げます。
+次は独立した `.tp` 文法との対応、解析・import 用 fuel の十分性、
+有限のファイル集合上の import 展開の仕様との対応を証明します。

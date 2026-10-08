@@ -84,6 +84,35 @@ let codec_fixtures () =
     if Adapter.string_of_chars bytes <> expected then failwith "generated raw term writer mismatch") terms;
   Printf.printf "Codec fixtures and %d raw term cases passed\n" (List.length terms)
 
+let tp_parser_fixtures () =
+  let valid = [""; " // comment without newline";
+    "axiom _x0' : Type;\r\n// comment\naxiom B : _x0' -> Type;";
+    "axiom f : A B C -> D -> E;";
+    "axiom f : forall (x y : A) (z : B x), C z;";
+    "def f : A := fun (x : A) => (fun (y : A) => x) x;";
+    "axiom f (g : forall (x : A), B x) : Type;";
+    "axiom f : A -> fun (x : B) => x;"] in
+  List.iter (fun source ->
+    let reference = S.parse_with Adapter.raw_syntax source |> List.map Adapter.raw_declaration in
+    if Adapter.parse_raw source <> reference then failwith ("parser AST mismatch: " ^ source)) valid;
+  let invalid = ["axiom"; "axiom A"; "axiom A :"; "axiom A : Type";
+    "axiom A : Type;;"; "axiom A : Type := Type;";
+    "def f : A;"; "axiom Type : Type;"; "axiom import : Type;";
+    "axiom 0A : Type;"; "axiom A : 0;"; "axiom A : Type?;";
+    "axiom A () : Type;"; "axiom A (x : ) : Type;";
+    "axiom A : forall, Type;"; "axiom A : fun => Type;";
+    "axiom A : (Type;"; "axiom A : Type);";
+    "axiom A : Type /;"; "axiom A : Type - > Type;";
+    "import \"\";"; "import \"missing"; "import \"a\\b\";";
+    "import \"a\nb\";"; "import \"a\rb\";"; "import A;";
+    "axiom 日本語 : Type;"; "axiom A : Type;\000"] in
+  List.iter (fun source ->
+    if F.parse_tp (Adapter.chars source) <> None then
+      failwith ("malformed tp accepted: " ^ String.escaped source)) invalid;
+  if F.parse_tp (Adapter.chars "import \"a//b.tp\";") <>
+    Some [F.TpImport (Adapter.chars "a//b.tp")] then failwith "comment inside import path";
+  Printf.printf "TP parser precedence, groups, comments and rejection fixtures passed\n"
+
 let fixtures = [
   "dependent arrow", "axiom A : Type; axiom B : A -> Type; def f (x : A) : B x -> B x := fun (y : B x) => y;";
   "shadowing", "axiom A : Type; def f (x : A) (x : A) : A := x;";
@@ -98,6 +127,7 @@ let fixtures = [
 
 let () =
   codec_fixtures ();
+  tp_parser_fixtures ();
   (match Adapter.parse_raw "axiom A : Type; def k (x y : A) : A := x;" with
    | [_; { F.raw_type = F.RForall (F.PGroup (x, [y], F.RName a, F.PNil), _);
            raw_body = Some (F.RLambda (F.PGroup (x', [y'], F.RName a', F.PNil), _)); _ }] ->
