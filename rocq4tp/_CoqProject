@@ -1,11 +1,14 @@
 -Q ../rocq4pa/_build Rocq4pa
 -Q . Rocq4tp
 Surface.v
+Desugar.v
 Resolve.v
 Compile.v
 PaCodec.v
 PaCompile.v
+SurfaceCompile.v
 Examples.v
 PaExamples.v
+DesugarExamples.v
 Verification.v
 Extraction.v

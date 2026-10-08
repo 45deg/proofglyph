@@ -1,4 +1,5 @@
 From Rocq4tp Require Import Resolve Compile PaCodec PaCompile.
+From Rocq4tp Require Import Desugar SurfaceCompile.
 
 Print Assumptions resolve_correct.
 Print Assumptions resolves_unique.
@@ -26,3 +27,13 @@ Print Assumptions compile_pa_complete.
 Print Assumptions compile_pa_recheck.
 Print Assumptions check_pa_sound.
 Print Assumptions compile_pa_monotone.
+Print Assumptions desugar_correct.
+Print Assumptions desugar_parameters_correct.
+Print Assumptions expansion_unique.
+Print Assumptions split_parameter_group.
+Print Assumptions desugar_program_correct.
+Print Assumptions desugar_names.
+Print Assumptions desugar_kinds.
+Print Assumptions compile_surface_pa_sound.
+Print Assumptions compile_surface_pa_complete.
+Print Assumptions compile_surface_pa_recheck.

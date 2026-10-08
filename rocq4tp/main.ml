@@ -1,4 +1,4 @@
-(* .tp parsing/imports and I/O remain unverified. Name resolution, .pa byte
+(* .tp parsing/imports and I/O remain unverified. Desugaring, name resolution, .pa byte
    encoding/decoding and type checking are extracted from Rocq. *)
 let usage () =
   prerr_endline "Usage: rocq4tp (check|check-pa|compile) FILE [--no-axioms] [--fuel N]\n       compile also accepts [-o FILE]; default output is stdout";
@@ -42,12 +42,12 @@ let run () =
     | None -> reject ()
     | Some signature -> Printf.printf "Accepted %d declarations\n" (List.length signature))
   else (
-    let ds = Adapter.Source.load Sys.argv.(2) |> Adapter.declarations in
+    let ds = Adapter.load_raw Sys.argv.(2) in
     if command = "compile" then (
-      match Frontend.compile_pa fuel !allow ds with
+      match Frontend.compile_surface_pa fuel !allow ds with
       | None -> reject ()
       | Some (bytes, _) -> write_output !output (Adapter.string_of_chars bytes))
-    else match Frontend.compile fuel !allow ds with
+    else match Frontend.compile_surface fuel !allow ds with
       | None -> reject ()
       | Some (checked, _) -> Printf.printf "Accepted %d declarations\n" (List.length checked))
 

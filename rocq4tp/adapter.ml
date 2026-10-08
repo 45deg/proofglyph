@@ -1,5 +1,5 @@
-(* Unverified input boundary. Reuse the existing lexer, parser, desugaring and
-   import loader, but never Source.resolve, Source.compile or the OCaml kernel. *)
+(* Unverified input boundary. Reuse the lexer, parser and import loader with an
+   algebra that preserves sugar. Desugaring itself runs in extracted Rocq code. *)
 module Source = Tinyprover_tp.Source
 module F = Frontend
 
@@ -20,6 +20,27 @@ let declaration (d : Source.declaration) =
     decl_body = Option.map expression d.body }
 
 let declarations ds = List.map declaration ds
+
+let rec parameters = function
+  | [] -> F.PNil
+  | (first :: others, typ) :: rest ->
+      F.PGroup (chars first, List.map chars others, typ, parameters rest)
+  | ([], _) :: _ -> invalid_arg "parser produced an empty parameter group"
+
+let raw_syntax : F.raw_expr Source.syntax = {
+  name_expr = (fun n -> F.RName (chars n));
+  universe_expr = F.RType; top_expr = F.RKind;
+  apply_expr = (fun f x -> F.RApply (f, x));
+  arrow_expr = (fun a b -> F.RArrow (a, b));
+  forall_expr = (fun ps b -> F.RForall (parameters ps, b));
+  lambda_expr = (fun ps b -> F.RLambda (parameters ps, b));
+}
+
+let raw_declaration (d : F.raw_expr Source.parsed_declaration) =
+  { F.raw_name = chars d.name; raw_type = d.typ; raw_body = d.body }
+
+let parse_raw source = Source.parse_with raw_syntax source |> List.map raw_declaration
+let load_raw path = Source.load_with raw_syntax path |> List.map raw_declaration
 
 let nat_of_int n =
   if n < 0 then invalid_arg "negative natural";

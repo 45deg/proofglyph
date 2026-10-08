@@ -64,6 +64,11 @@ Dune と OCaml 標準ライブラリ（`Unix.realpath` を使うため `unix` �
 
 読み込み済み宣言は `Source.compile_declarations` でも検査できる。import の状態は1回の読み込みに閉じ、作業ディレクトリや Kernel の規則は変更しない。
 
+`Source.parse_items_with` / `Source.parse_with` / `Source.load_with` は、出力 AST の構築方法を
+`syntax` レコードで受け取る。既存 API は `default_syntax` を使い、従来の名前付き AST を返す。
+`rocq4tp` は引数グループと糖衣を保持する構築方法を渡し、Rocq から抽出した `desugar_program`
+で展開する。parser と import loader は共有し、これら自体の形式検証はまだ行っていない。
+
 `Source.compiled.sourcemap` は宣言ごとの定数番号・名前・ソース位置・出力バイト範囲を保持し、`Source.sourcemap_json result` で JSON に直列化する。範囲はエンコード時に記録され、記号列の再検査に成功した場合のみ結果を返す。
 
 `Source.annotate_assembly_error` は宣言のバイト範囲に含まれる診断に元位置と宣言名を添える。範囲外の診断はそのまま返し、コンパイル時の型エラーにも適用する。

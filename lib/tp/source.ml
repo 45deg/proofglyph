@@ -29,12 +29,13 @@ type expr =
   | Lambda of string * expr * expr     (** Lambda abstraction [fun (x:A) => b]. *)
 
 (** AST for a top-level declaration. *)
-type declaration = {
+type 'a parsed_declaration = {
   name : string;          (** Declared identifier name. *)
-  typ : expr;             (** Declared type expression. *)
-  body : expr option;     (** Definition or proof term, or [None] for [axiom]. *)
+  typ : 'a;               (** Declared type expression. *)
+  body : 'a option;       (** Definition or proof term, or [None] for [axiom]. *)
   at : token;             (** Token pointing to the declaration keyword (for diagnostics). *)
 }
+type declaration = expr parsed_declaration
 
 (** Formats and raises an [Error] with file and line:column coordinates. *)
 let error t msg =
@@ -87,12 +88,34 @@ let is_name s = String.length s > 0 &&
   not (List.mem s reserved)
 
 (** Top-level item in a source file (declaration or import statement). *)
-type item = Declaration of declaration | Import of token * string
+type 'a parsed_item = Declaration of 'a parsed_declaration | Import of token * string
+type item = expr parsed_item
 
-(** Recursive descent parser converting tokens into top-level items.
-    Desugars multi-variable parameters like [(x y : A)] into sequential bindings
-    and lifts declaration parameters into outer Pi (for types) and Lam (for bodies). *)
-let parse_items ?file source =
+(** A parser output algebra. Groups retain their names and annotations until
+    the chosen builder handles them. This lets the Rocq frontend receive an
+    unexpanded AST without duplicating the token parser or import loader. *)
+type 'a syntax = {
+  name_expr : string -> 'a;
+  universe_expr : 'a;
+  top_expr : 'a;
+  apply_expr : 'a -> 'a -> 'a;
+  arrow_expr : 'a -> 'a -> 'a;
+  forall_expr : (string list * 'a) list -> 'a -> 'a;
+  lambda_expr : (string list * 'a) list -> 'a -> 'a;
+}
+
+let default_syntax =
+  let flatten ps = List.concat_map (fun (ns, a) -> List.map (fun x -> x, a) ns) ps in
+  { name_expr = (fun x -> Name x); universe_expr = Universe; top_expr = Top;
+    apply_expr = (fun f x -> Apply (f, x));
+    arrow_expr = (fun a b -> Product (None, a, b));
+    forall_expr = (fun ps b -> List.fold_right (fun (x, a) b -> Product (Some x, a, b)) (flatten ps) b);
+    lambda_expr = (fun ps b -> List.fold_right (fun (x, a) b -> Lambda (x, a, b)) (flatten ps) b) }
+
+(** Recursive descent parser converting tokens into top-level items using the
+    supplied syntax builders. The default builders expand grouped parameters;
+    alternative builders can retain them for a verified desugaring pass. *)
+let parse_items_with syntax ?file source =
   let tokens = lex ?file source in
   let pos = ref 0 in
   let peek () = tokens.(!pos) in
@@ -106,15 +129,15 @@ let parse_items ?file source =
       let ps = parameters () in
       if ps=[] then error (peek ()) "forall requires a parameter";
       expect ","; let body = term () in
-      List.fold_right (fun (x,a) b -> Product(Some x,a,b)) ps body)
+      syntax.forall_expr ps body)
     else if accept "fun" then (
       let ps = parameters () in
       if ps=[] then error (peek ()) "fun requires a parameter";
       expect "=>"; let body = term () in
-      List.fold_right (fun (x,a) b -> Lambda(x,a,b)) ps body)
+      syntax.lambda_expr ps body)
     else (
       let a = application () in
-      if accept "->" then Product(None,a,term ()) else a)
+      if accept "->" then syntax.arrow_expr a (term ()) else a)
   and parameters () =
     if accept "(" then (
       let first = name () in
@@ -122,18 +145,18 @@ let parse_items ?file source =
         else List.rev acc in
       let ns = names [first] in expect ":";
       let a = term () in expect ")";
-      List.map (fun x -> x,a) ns @ parameters ())
+      (ns, a) :: parameters ())
     else []
   and application () =
     let rec more f =
       let s = (peek ()).text in
       if s="(" || s="Type" || s="Kind" || is_name s then
-        let x = atom () in more (Apply(f,x)) else f
+        let x = atom () in more (syntax.apply_expr f x) else f
     in more (atom ())
   and atom () =
-    if accept "Type" then Universe else if accept "Kind" then Top
+    if accept "Type" then syntax.universe_expr else if accept "Kind" then syntax.top_expr
     else if accept "(" then (let t = term () in expect ")"; t)
-    else Name (name ())
+    else syntax.name_expr (name ())
   in
   let rec declarations acc =
     if (peek ()).text="<eof>" then List.rev acc else (
@@ -154,19 +177,23 @@ let parse_items ?file source =
       expect ":"; let result = term () in
       let body = if at.text="axiom" then None else (
         expect ":="; let b = term () in
-        Some (List.fold_right (fun (x,a) b -> Lambda(x,a,b)) ps b)) in
+        Some (syntax.lambda_expr ps b)) in
       expect ";";
-      let typ = List.fold_right (fun (x,a) b -> Product(Some x,a,b)) ps result in
+      let typ = syntax.forall_expr ps result in
       declarations (Declaration {name=n;typ;body;at}::acc)))
   in declarations []
 
+let parse_items ?file source = parse_items_with default_syntax ?file source
+
 (** Parses declarations directly from a string source.
     Direct string parsing rejects import statements, requiring file-based compilation. *)
-let parse source =
+let parse_with syntax source =
   List.map (function
     | Declaration d -> d
     | Import(at,_) -> error at "imports require compile_file or load")
-    (parse_items source)
+    (parse_items_with syntax source)
+
+let parse source = parse_with default_syntax source
 
 (** Reads an entire file into a string in binary mode. *)
 let read_file path =
@@ -179,7 +206,7 @@ let read_file path =
     - Relative imports are resolved relative to the importing file's directory.
     - Detects cyclic dependencies and reports an error with the import cycle.
     - Does not modify the process working directory. *)
-let load path =
+let load_with syntax path =
   let seen = Hashtbl.create 16 in
   let rec visit active at path =
     let report msg = match at with
@@ -197,10 +224,12 @@ let load path =
             let target = if Filename.is_relative p then
               Filename.concat (Filename.dirname canonical) p else p in
             visit (canonical::active) (Some t) target)
-        (parse_items ~file:canonical source) in
+        (parse_items_with syntax ~file:canonical source) in
       Hashtbl.add seen canonical ();
       declarations)
   in visit [] None path
+
+let load path = load_with default_syntax path
 
 (** Resolves names in expression [expr] into kernel terms [Term.t].
     - Scopes local variables from innermost outward to de Bruijn indices ([Term.Var i]).

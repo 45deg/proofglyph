@@ -4,10 +4,9 @@ tinyprover の名前付き AST から、`rocq4pa` の核心言語への変換と
 符号化・復号を Rocq で実装・証明します。変換器と codec を OCaml に抽出し、
 既存の Rocq 製型検査器へ接続しています。
 
-現在は段階2（糖衣構文展開後の AST から `.pa` 出力・再検査までの検証）です。
-CLI は既存の `.tp` ファイルを読み込めますが、`.tp` の字句解析・構文解析・
-糖衣構文展開・import は既存の OCaml 実装を使います。`.tp` のバイト列からの
-正しさは、まだ証明していません。
+現在は段階3（糖衣構文を保持した AST から `.pa` 出力・再検査までの検証）です。
+糖衣展開も Rocq から抽出した実装を使います。`.tp` の字句解析・構文解析・import は
+既存の OCaml 実装を使うため、`.tp` のバイト列からの正しさは、まだ証明していません。
 
 ## ビルドと実行
 
@@ -47,8 +46,9 @@ check-pa INPUT.pa [--no-axioms] [--fuel N]
 
 ```text
 .tp ファイル
-  → Source.load                 既存 OCaml：解析・糖衣展開・import
-  → adapter.ml                  手書き：名前付き AST の構造的な変換
+  → Source.load_with            既存 OCaml：解析・import
+  → adapter.ml の raw_syntax    手書き：糖衣・引数グループを保持した AST
+  → desugar_program             Rocq 抽出：糖衣展開
   → lower                       Rocq 抽出：名前解決・宣言変換
   → Rocq4pa.check_program        Rocq 抽出：型検査
   → encode_pa                   Rocq 抽出：.pa バイト列
@@ -60,6 +60,23 @@ check-pa INPUT.pa [--no-axioms] [--fuel N]
 
 CLI の実行経路は既存の `Source.resolve`、`Source.compile`、OCaml カーネルを呼びません。
 それらを含むライブラリにはリンクしますが、既存の名前解決を使うのは差分テストだけです。
+
+`Desugar.v` の `raw_expr` は矢印、適用、`forall`、`fun` を区別し、`parameters` は
+`(x y : A)` のグループと型注釈を保持します。グループは少なくとも1つの名前を持ちます。
+`desugar` は矢印を匿名 Π に、`forall` / `fun` を名前付き Π / λ の列に変換します。
+型注釈の内部にある糖衣も再帰的に展開します。`expands` / `expands_parameters` は、
+この変換の独立した帰納的仕様です。
+
+`(x y : A)` は `(x : A) (y : A)` に展開し、型注釈を各位置にコピーします。
+名前解決はその後で行うため、2個目の型注釈は1個目の binder がある環境で解決されます。
+シャドーイングがある場合もこの逐次束縛規則を保ち、`split_parameter_group` が
+グループを分けた表記との一致を保証します。
+
+OCaml parser は出力先を指定する `syntax` を受け取る構成です。Rocq 版 CLI では
+グループを保持する `raw_syntax` を渡し、通常の OCaml CLI と Web は従来の展開を行う
+`default_syntax` を使います。`parse_items` / `parse` / `load` の既存 API は維持しています。
+宣言の引数は parser が型に `RForall`、本体に `RLambda` を組み立て、その内部の展開を
+Rocq が行います。引数なしの宣言には空の引数列を許し、展開結果は元の式と同じです。
 
 `Surface.v` の項は `Source.expr` に対応します。矢印は `Product None` で、
 匿名 binder も de Bruijn の深さに数えます。局所変数を先に探し、最も内側の名前を優先します。
@@ -91,6 +108,11 @@ CLI の型検査用 `--fuel` とは分けています。
 
 | 定理 | 保証 |
 | --- | --- |
+| `desugar_correct` / `desugar_parameters_correct` | 糖衣展開と独立した展開仕様が同値 |
+| `expansion_unique` | 展開結果が一意 |
+| `split_parameter_group` | 複数名のグループと逐次グループの展開結果が一致 |
+| `desugar_program_correct` | 宣言列全体の展開と仕様が同値 |
+| `desugar_names` / `desugar_kinds` | 宣言名と公理／証明の種類を順序どおり保存 |
 | `resolve_correct` | 名前解決の成功と宣言的な翻訳関係が同値 |
 | `resolves_unique` | 項の翻訳結果が一意 |
 | `resolve_scoped` | 局所変数・定数の番号が環境の範囲内 |
@@ -114,6 +136,8 @@ CLI の型検査用 `--fuel` とは分けています。
 | `compile_pa_recheck` | 出力したバイト列を同じ fuel・公理ポリシーで再検査すると同じシグネチャを得る |
 | `check_pa_sound` | 受理したバイト列の復号結果は型付け・ポリシーを満たし、シグネチャも整形式 |
 | `compile_pa_monotone` | fuel を増やしても成功した出力は変わらない |
+| `compile_surface_pa_sound` / `compile_surface_pa_complete` | 糖衣を保持した AST から `.pa` までの健全性・十分な fuel による完全性 |
+| `compile_surface_pa_recheck` | 糖衣を保持した AST から生成した出力も、同じ fuel で再検査できる |
 
 最終定理は次の形です。
 
@@ -143,6 +167,11 @@ compile_pa fuel allow src = Some (bytes, Σ)
 入力の空白や先頭0は符号化時に保存しません。そのため往復性は宣言列について示し、
 任意の入力バイト列そのものを復元する等式は主張しません。
 
+`compile_surface_pa_sound` は、糖衣を保持した入力 `raw` からの成功に対して、
+上記の `src` と `ds` が存在し、さらに `expands_program raw src` が成立することを示します。
+`compile_surface_pa_complete` はこの展開関係・翻訳関係・型付け・ポリシーから、
+十分な fuel での成功を導きます。
+
 証明は `rocq4pa` の健全性・宣言的完全性・fuel 単調性を再利用しています。
 追加公理・`Admitted` は使いません。`Verification.v` の公開定理の仮定確認は、
 すべて `Closed under the global context` になります。
@@ -153,7 +182,8 @@ compile_pa fuel allow src = Some (bytes, Σ)
 恒等関数の検査、重複・前方・自己参照、型誤り、公理禁止を Rocq 内で確認します。
 
 `make test` は抽出された関数を実行し、リポジトリの全48個の `.tp` ファイルについて、
-import 展開後の名前解決を既存実装と比較し、宣言列と最終シグネチャを確認します。
+import 後の糖衣展開と名前解決を既存実装と比較し、宣言列と最終シグネチャを確認します。
+グループを保持した AST からの `compile_surface_pa` の結果も照合します。
 全48件の出力を既存 writer とバイト単位で比較し、Rocq の復号器・型検査器と既存 reader の
 両方で検査します。990件の型付けを要求しない項についても、往復性と writer との一致を確認します。
 `PaExamples.v` と実行テストは十進数の桁境界、先頭0、空白、未知バイト、スタック異常、
@@ -162,10 +192,17 @@ import 展開後の名前解決を既存実装と比較し、宣言列と最終�
 ダイヤモンド import、循環、欠落、構文エラー、オプション、終了コードを検査します。
 差分テストは既存実装との一致を確認するもので、既存実装の正しさの証明ではありません。
 
+`DesugarExamples.v` はグループの逐次展開、型注釈でのシャドーイング、匿名矢印の深さ、
+型注釈内の糖衣、引数なし、`.pa` までの接続を Rocq 内で確認します。
+実行テストでは parser がグループを保持すること、明示的な `forall` / `fun`、
+同じグループ内の重複名、入れ子の型注釈についても既存の展開結果と比較します。
+
 ## 信頼境界と次の段階
 
-- `.tp` 翻訳に関する定理の入力は糖衣展開後の AST です。識別子の字句規則、複数引数の逐次展開、
+- `.tp` 翻訳に関する定理の入力は糖衣を保持した AST です。識別子の字句規則、
+  文法・結合・優先順位、宣言の引数を型と本体の AST に配置する parser の処理、
   import 順序、ファイルの同一性、位置情報、AST アダプターは未検証です。
+  AST ができた後の複数引数・矢印・Π・λ の展開は検証対象に含まれます。
 - `.pa` の符号化・復号の往復性は証明しています。任意入力に対する独立した
   `.pa` 文法との同値性や、既存 OCaml reader/writer との一般的な同値性は未証明です。
 - 名前付き言語自身の型付け・置換・α 同値を別に定式化した証明はまだありません。
@@ -177,5 +214,5 @@ import 展開後の名前解決を既存実装と比較し、宣言列と最終�
   1回の拒否は型誤りの証明にはなりません。
 - 公理の無矛盾性、既存 OCaml コンパイラ・カーネル自体の正しさは保証しません。
 
-次は表層 AST・糖衣展開・`.tp` lexer/parser の文法との対応、有限のファイル集合上の
+次は `.tp` lexer/parser の文法との対応、有限のファイル集合上の
 import 展開へと保証を広げます。

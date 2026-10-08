@@ -11,12 +11,13 @@ export:
 
 verify: export
 	$(MAKE) -C ../rocq4pa verify ROCQ=$(ROCQ)
-	cp Calculi.v Encoding.v Verification.v $(BUILD)/
+	cp Calculi.v Encoding.v Verification.v Derivations.v $(BUILD)/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Calculi.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Encoding.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Artifact.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Verification.v
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Calculi.Calculi Calculi.Encoding Calculi.Verification
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Derivations.v
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Calculi.Calculi Calculi.Encoding Calculi.Verification Calculi.Derivations
 
 test: verify
 	$(MAKE) -C ../rocq4pa all ROCQ=$(ROCQ)

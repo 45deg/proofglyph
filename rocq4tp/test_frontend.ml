@@ -91,14 +91,25 @@ let fixtures = [
   "grouped parameter scope", "axiom A : Type; axiom B : A -> Type; def f (x : A) (x y : B x) : B x := y;";
   "underscore name", "axiom A : Type; def f (_ : A) : A := _;";
   "beta conversion", "axiom A : Type; axiom a : A; def f : (fun (x : A) => A) a := a;";
+  "nested annotation sugar", "axiom A : Type; def f (g : A -> A) (x : A) : A := g x;";
+  "grouped forall and lambda", "axiom A : Type; def k : forall (x y : A), A := fun (x y : A) => x;";
+  "repeated names in group", "axiom A : Type; def f (x x : A) : A := x;";
 ]
 
 let () =
   codec_fixtures ();
+  (match Adapter.parse_raw "axiom A : Type; def k (x y : A) : A := x;" with
+   | [_; { F.raw_type = F.RForall (F.PGroup (x, [y], F.RName a, F.PNil), _);
+           raw_body = Some (F.RLambda (F.PGroup (x', [y'], F.RName a', F.PNil), _)); _ }] ->
+       if (x, y, a) <> (Adapter.chars "x", Adapter.chars "y", Adapter.chars "A") ||
+          (x', y', a') <> (x, y, a) then failwith "raw parameter spelling/order lost"
+   | _ -> failwith "parser expanded raw parameter groups");
   (* These two shadowing examples are intentionally not well typed, but their
      AST translations must still agree before the checker rejects them. *)
   List.iter (fun (label, source) ->
     let ds = S.parse source in
+    if F.desugar_program (Adapter.parse_raw source) <> Adapter.declarations ds then
+      failwith (label ^ ": extracted desugaring mismatch");
     if F.lower [] (Adapter.declarations ds) <> Some (reference ds) then
       failwith (label ^ ": translation mismatch")) fixtures;
   List.iter (fun (label, source) -> compare label (S.parse source))
@@ -119,5 +130,11 @@ let () =
   if F.compile fuel false axiom <> None then failwith "axiom policy ignored";
   if F.compile F.O true axiom <> None then failwith "zero fuel accepted";
   if F.compile fuel false [] <> Some ([], []) then failwith "empty program rejected";
-  Array.iteri (fun i path -> if i > 0 then compare path (S.load path)) Sys.argv;
+  Array.iteri (fun i path -> if i > 0 then (
+    let ds = S.load path and raw = Adapter.load_raw path in
+    if F.desugar_program raw <> Adapter.declarations ds then failwith (path ^ ": imported desugaring mismatch");
+    let expected = reference ds in
+    if F.compile_surface_pa fuel true raw <> Some (F.encode_pa expected, List.map F.declared_type expected) then
+      failwith (path ^ ": surface compilation mismatch");
+    compare path ds)) Sys.argv;
   Printf.printf "Frontend fixtures and %d imported .tp files passed\n" (Array.length Sys.argv - 1)

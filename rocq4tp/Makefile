@@ -2,7 +2,7 @@ ROCQ ?= rocq
 OCAMLC ?= ocamlc
 BUILD := _build
 FLAGS := -Q ../../rocq4pa/_build Rocq4pa -Q . Rocq4tp
-VFILES := Surface.v Resolve.v Compile.v PaCodec.v PaCompile.v Examples.v PaExamples.v Verification.v Extraction.v
+VFILES := Surface.v Desugar.v Resolve.v Compile.v PaCodec.v PaCompile.v SurfaceCompile.v Examples.v PaExamples.v DesugarExamples.v Verification.v Extraction.v
 LIBROOT := ../../_build/default/lib
 LIBFLAGS := -I +unix -I $(LIBROOT)/core/.tinyprover_core.objs/byte -I $(LIBROOT)/pa/.tinyprover_pa.objs/byte -I $(LIBROOT)/tp/.tinyprover_tp.objs/byte
 LIBS := unix.cma $(LIBROOT)/core/tinyprover_core.cma $(LIBROOT)/pa/tinyprover_pa.cma $(LIBROOT)/tp/tinyprover_tp.cma
@@ -15,15 +15,18 @@ verify:
 	mkdir -p $(BUILD)
 	cp $(VFILES) $(BUILD)/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Surface.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Desugar.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Resolve.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Compile.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) PaCodec.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) PaCompile.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) SurfaceCompile.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Examples.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) PaExamples.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) DesugarExamples.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Verification.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Extraction.v
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Rocq4tp.Verification Rocq4tp.Examples Rocq4tp.PaExamples
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Rocq4tp.Verification Rocq4tp.Examples Rocq4tp.PaExamples Rocq4tp.DesugarExamples
 
 extracted: verify
 	cd .. && dune build lib/tp/tinyprover_tp.cma
