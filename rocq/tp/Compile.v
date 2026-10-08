@@ -47,12 +47,11 @@ Proof.
   unfold compile; destruct (lower [] src) eqn:L; [|discriminate].
   destruct (check_program fuel allow [] l) eqn:C; intros H; inversion H; subst.
   assert (W : wf_signature []) by constructor.
+  destruct (proj1 (program_correct allow [] ds sg W) (ex_intro _ fuel C)) as [P V].
   split; [apply lower_sound; exact L|].
-  split; [eapply check_program_sound; eauto|].
-  split.
-  - destruct (proj1 (program_correct allow [] ds sg W) (ex_intro _ fuel C)) as [P _].
-    exact P.
-  - eapply accepted_program_wf; eauto.
+  split; [exact V|].
+  split; [exact P|].
+  eapply valid_program_preserves_wf; eauto.
 Qed.
 
 Theorem compile_complete allow src ds sg :

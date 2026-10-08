@@ -55,6 +55,15 @@ Proof.
     + eapply expand_items_with_sound; [intros; eapply IH; eassumption|exact E].
 Qed.
 
+(** A distinct active stack drawn from the table cannot exhaust the budget. *)
+Lemma import_fuel_positive (files : tp_files) active fuel :
+  NoDup active -> incl active (map fst files) ->
+  List.length files < fuel + List.length active -> 0 < fuel.
+Proof.
+  intros ND IN LE.
+  pose proof (NoDup_incl_length ND IN) as B; rewrite length_map in B; lia.
+Qed.
+
 (** The active stack has distinct keys from the finite table. Thus entering
     another new file always leaves enough depth at budget 1 + table length. *)
 Theorem imports_complete files :
@@ -70,12 +79,12 @@ Proof.
   apply imports_ind.
   - intros active seen path A S ND IN fuel LE.
     assert (POS : 0 < fuel).
-    { pose proof (NoDup_incl_length ND IN) as B; rewrite length_map in B; lia. }
+    { eapply import_fuel_positive; eassumption. }
     destruct fuel; [lia|]; cbn [visit_tp].
     rewrite (proj2 (contains_file_false _ _) A), (proj2 (contains_file_correct _ _) S); reflexivity.
   - intros active seen path items ds done A S F E IH ND IN fuel LE.
     assert (POS : 0 < fuel).
-    { pose proof (NoDup_incl_length ND IN) as B; rewrite length_map in B; lia. }
+    { eapply import_fuel_positive; eassumption. }
     destruct fuel; [lia|]; cbn [visit_tp].
     rewrite (proj2 (contains_file_false _ _) A), (proj2 (contains_file_false _ _) S).
     rewrite (proj2 (lookup_file_correct _ _ _) F).

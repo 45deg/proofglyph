@@ -119,315 +119,22 @@ Proof.
   unfold lf; lf_constant 37; lf_context g; lf_context d; lf_finish.
 Qed.
 
-(** Each LF rule is checked against the actual exported signature. *)
-Lemma encoded_in_here a g :
-  lf (member_type a (a :: g)) (rule_app 15 [(encode a); (encode_context g)]).
-Proof.
-  unfold lf in *.
-  lf_constant 15; lf_formula a; lf_context g; lf_finish.
-Qed.
-
-Lemma encoded_in_there a b g p0 :
-  lf (member_type a g) p0 ->
-  lf (member_type a (b :: g)) (rule_app 16 [(encode a); (encode b); (encode_context g); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 16; lf_formula a; lf_formula b; lf_context g; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_perm_nil  :
-  lf (permutation_type [] []) (rule_app 18 []).
-Proof.
-  unfold lf in *.
-  lf_constant 18; lf_finish.
-Qed.
-
-Lemma encoded_perm_cons a g h p0 :
-  lf (permutation_type g h) p0 ->
-  lf (permutation_type (a :: g) (a :: h)) (rule_app 19 [(encode a); (encode_context g); (encode_context h); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 19; lf_formula a; lf_context g; lf_context h; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_perm_swap b a g :
-  lf (permutation_type (b :: a :: g) (a :: b :: g)) (rule_app 20 [(encode b); (encode a); (encode_context g)]).
-Proof.
-  unfold lf in *.
-  lf_constant 20; lf_formula b; lf_formula a; lf_context g; lf_finish.
-Qed.
-
-Lemma encoded_perm_trans g h d p0 p1 :
-  lf (permutation_type g h) p0 ->
-  lf (permutation_type h d) p1 ->
-  lf (permutation_type g d) (rule_app 21 [(encode_context g); (encode_context h); (encode_context d); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 21; lf_context g; lf_context h; lf_context d; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_nk_assume g a p0 :
-  lf (member_type a g) p0 ->
-  lf (NK_code g a) (rule_app 23 [(encode_context g); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 23; lf_context g; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_top g :
-  lf (NK_code g Top) (rule_app 24 [(encode_context g)]).
-Proof.
-  unfold lf in *.
-  lf_constant 24; lf_context g; lf_finish.
-Qed.
-
-Lemma encoded_nk_bottom g a p0 :
-  lf (NK_code g Bottom) p0 ->
-  lf (NK_code g a) (rule_app 25 [(encode_context g); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 25; lf_context g; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_imp_intro g a b p0 :
-  lf (NK_code (a :: g) b) p0 ->
-  lf (NK_code g (Imp a b)) (rule_app 26 [(encode_context g); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 26; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_imp_elim g a b p0 p1 :
-  lf (NK_code g (Imp a b)) p0 ->
-  lf (NK_code g a) p1 ->
-  lf (NK_code g b) (rule_app 27 [(encode_context g); (encode a); (encode b); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 27; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_nk_conj_intro g a b p0 p1 :
-  lf (NK_code g a) p0 ->
-  lf (NK_code g b) p1 ->
-  lf (NK_code g (Conj a b)) (rule_app 28 [(encode_context g); (encode a); (encode b); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 28; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_nk_conj_left g a b p0 :
-  lf (NK_code g (Conj a b)) p0 ->
-  lf (NK_code g a) (rule_app 29 [(encode_context g); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 29; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_conj_right g a b p0 :
-  lf (NK_code g (Conj a b)) p0 ->
-  lf (NK_code g b) (rule_app 30 [(encode_context g); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 30; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_disj_left g a b p0 :
-  lf (NK_code g a) p0 ->
-  lf (NK_code g (Disj a b)) (rule_app 31 [(encode_context g); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 31; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_disj_right g a b p0 :
-  lf (NK_code g b) p0 ->
-  lf (NK_code g (Disj a b)) (rule_app 32 [(encode_context g); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 32; lf_context g; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_disj_elim g a b c p0 p1 p2 :
-  lf (NK_code g (Disj a b)) p0 ->
-  lf (NK_code (a :: g) c) p1 ->
-  lf (NK_code (b :: g) c) p2 ->
-  lf (NK_code g c) (rule_app 33 [(encode_context g); (encode a); (encode b); (encode c); p0; p1; p2]).
-Proof.
-  intros P0 P1 P2; unfold lf in *.
-  lf_constant 33; lf_context g; lf_formula a; lf_formula b; lf_formula c; lf_argument P0; lf_argument P1; lf_argument P2; lf_finish.
-Qed.
-
-Lemma encoded_nk_neg_intro g a p0 :
-  lf (NK_code (a :: g) Bottom) p0 ->
-  lf (NK_code g (Neg a)) (rule_app 34 [(encode_context g); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 34; lf_context g; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_nk_neg_elim g a p0 p1 :
-  lf (NK_code g (Neg a)) p0 ->
-  lf (NK_code g a) p1 ->
-  lf (NK_code g Bottom) (rule_app 35 [(encode_context g); (encode a); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 35; lf_context g; lf_formula a; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_nk_classical g a p0 :
-  lf (NK_code (Neg a :: g) Bottom) p0 ->
-  lf (NK_code g a) (rule_app 36 [(encode_context g); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 36; lf_context g; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_identity a :
-  lf (LK_code [a] [a]) (rule_app 38 [(encode a)]).
-Proof.
-  unfold lf in *.
-  lf_constant 38; lf_formula a; lf_finish.
-Qed.
-
-Lemma encoded_lk_bottom g d :
-  lf (LK_code (Bottom :: g) d) (rule_app 39 [(encode_context g); (encode_context d)]).
-Proof.
-  unfold lf in *.
-  lf_constant 39; lf_context g; lf_context d; lf_finish.
-Qed.
-
-Lemma encoded_lk_top g d :
-  lf (LK_code g (Top :: d)) (rule_app 40 [(encode_context g); (encode_context d)]).
-Proof.
-  unfold lf in *.
-  lf_constant 40; lf_context g; lf_context d; lf_finish.
-Qed.
-
-Lemma encoded_lk_weak_left g d a p0 :
-  lf (LK_code g d) p0 ->
-  lf (LK_code (a :: g) d) (rule_app 41 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 41; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_weak_right g d a p0 :
-  lf (LK_code g d) p0 ->
-  lf (LK_code g (a :: d)) (rule_app 42 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 42; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_contract_left g d a p0 :
-  lf (LK_code (a :: a :: g) d) p0 ->
-  lf (LK_code (a :: g) d) (rule_app 43 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 43; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_contract_right g d a p0 :
-  lf (LK_code g (a :: a :: d)) p0 ->
-  lf (LK_code g (a :: d)) (rule_app 44 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 44; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_exchange_left g h d p0 p1 :
-  lf (permutation_type g h) p0 ->
-  lf (LK_code g d) p1 ->
-  lf (LK_code h d) (rule_app 45 [(encode_context g); (encode_context h); (encode_context d); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 45; lf_context g; lf_context h; lf_context d; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_lk_exchange_right g h d p0 p1 :
-  lf (permutation_type d h) p0 ->
-  lf (LK_code g d) p1 ->
-  lf (LK_code g h) (rule_app 46 [(encode_context g); (encode_context h); (encode_context d); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 46; lf_context g; lf_context h; lf_context d; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_lk_imp_right g d a b p0 :
-  lf (LK_code (a :: g) (b :: d)) p0 ->
-  lf (LK_code g (Imp a b :: d)) (rule_app 47 [(encode_context g); (encode_context d); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 47; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_imp_left g d a b p0 p1 :
-  lf (LK_code g (a :: d)) p0 ->
-  lf (LK_code (b :: g) d) p1 ->
-  lf (LK_code (Imp a b :: g) d) (rule_app 48 [(encode_context g); (encode_context d); (encode a); (encode b); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 48; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_lk_conj_left g d a b p0 :
-  lf (LK_code (a :: b :: g) d) p0 ->
-  lf (LK_code (Conj a b :: g) d) (rule_app 49 [(encode_context g); (encode_context d); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 49; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_conj_right g d a b p0 p1 :
-  lf (LK_code g (a :: d)) p0 ->
-  lf (LK_code g (b :: d)) p1 ->
-  lf (LK_code g (Conj a b :: d)) (rule_app 50 [(encode_context g); (encode_context d); (encode a); (encode b); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 50; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_lk_disj_left g d a b p0 p1 :
-  lf (LK_code (a :: g) d) p0 ->
-  lf (LK_code (b :: g) d) p1 ->
-  lf (LK_code (Disj a b :: g) d) (rule_app 51 [(encode_context g); (encode_context d); (encode a); (encode b); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 51; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
-
-Lemma encoded_lk_disj_right g d a b p0 :
-  lf (LK_code g (a :: b :: d)) p0 ->
-  lf (LK_code g (Disj a b :: d)) (rule_app 52 [(encode_context g); (encode_context d); (encode a); (encode b); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 52; lf_context g; lf_context d; lf_formula a; lf_formula b; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_neg_left g d a p0 :
-  lf (LK_code g (a :: d)) p0 ->
-  lf (LK_code (Neg a :: g) d) (rule_app 53 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 53; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_neg_right g d a p0 :
-  lf (LK_code (a :: g) d) p0 ->
-  lf (LK_code g (Neg a :: d)) (rule_app 54 [(encode_context g); (encode_context d); (encode a); p0]).
-Proof.
-  intros P0; unfold lf in *.
-  lf_constant 54; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_finish.
-Qed.
-
-Lemma encoded_lk_cut g d a p0 p1 :
-  lf (LK_code g (a :: d)) p0 ->
-  lf (LK_code (a :: g) d) p1 ->
-  lf (LK_code g d) (rule_app 55 [(encode_context g); (encode_context d); (encode a); p0; p1]).
-Proof.
-  intros P0 P1; unfold lf in *.
-  lf_constant 55; lf_context g; lf_context d; lf_formula a; lf_argument P0; lf_argument P1; lf_finish.
-Qed.
+(** Apply a checked signature entry to encoded data, then to the available
+    LF evidence. Every application still constructs a kernel-checked ty_app. *)
+Ltac lf_rule k args :=
+  unfold lf in *; lf_constant k;
+  let rec data xs := lazymatch xs with
+    | [] => idtac
+    | encode ?a :: ?rest => lf_formula a; data rest
+    | encode_context ?g :: ?rest => lf_context g; data rest
+    end in data args;
+  unfold member_type, permutation_type, NK_code, LK_code, nk_type, lk_type,
+    code_binary in *; cbn [encode encode_context] in *; unfold code_binary in *;
+  repeat match goal with
+  | F : typing fixed_signature [] _ (tPi ?a _) |- _ =>
+    match goal with X : typing fixed_signature [] _ a |- _ => lf_argument X end
+  end;
+  match goal with F : typing fixed_signature [] ?t _ |- _ => exists t; lf_finish end.
 
 (** Prop-valued source derivations give existence of closed LF evidence;
     no elimination of a Rocq proof into computational data is assumed. *)
@@ -436,19 +143,19 @@ Theorem membership_has_lf_evidence a g :
 Proof.
   induction g as [|b g IH]; simpl; [contradiction|].
   intros [E|H].
-  - subst b; eexists; apply encoded_in_here.
-  - destruct (IH H) as [p P]; eexists; apply encoded_in_there; exact P.
+  - subst b; lf_rule 15 [encode a; encode_context g].
+  - destruct (IH H) as [p P]; lf_rule 16 [encode a; encode b; encode_context g].
 Qed.
 
 Theorem permutation_has_lf_evidence g h :
   Permutation g h -> exists p, lf (permutation_type g h) p.
 Proof.
-  intros H; induction H.
-  - eexists; apply encoded_perm_nil.
-  - destruct IHPermutation as [p P]; eexists; apply encoded_perm_cons; exact P.
-  - eexists; apply encoded_perm_swap.
-  - destruct IHPermutation1 as [p P], IHPermutation2 as [q Q].
-    eexists; apply encoded_perm_trans; eassumption.
+  intros H; induction H as [|a g h PERM IH|a b g|g h d GH IHGH HD IHHD].
+  - lf_rule 18 (@nil term).
+  - destruct IH as [p P]; lf_rule 19 [encode a; encode_context g; encode_context h].
+  - lf_rule 20 [encode b; encode a; encode_context g].
+  - destruct IHGH as [p P], IHHD as [q Q].
+    lf_rule 21 [encode_context g; encode_context h; encode_context d].
 Qed.
 
 Theorem NK_has_lf_derivation g a :
@@ -459,20 +166,20 @@ Proof.
     | IH : exists p, lf _ p |- _ => destruct IH as [? ?]
     end.
   - destruct (membership_has_lf_evidence _ _ H) as [p P].
-    eexists; apply encoded_nk_assume; exact P.
-  - eexists; apply encoded_nk_top.
-  - eexists; eapply encoded_nk_bottom; eassumption.
-  - eexists; eapply encoded_nk_imp_intro; eassumption.
-  - eexists; eapply encoded_nk_imp_elim; eassumption.
-  - eexists; eapply encoded_nk_conj_intro; eassumption.
-  - eexists; eapply encoded_nk_conj_left; eassumption.
-  - eexists; eapply encoded_nk_conj_right; eassumption.
-  - eexists; eapply encoded_nk_disj_left; eassumption.
-  - eexists; eapply encoded_nk_disj_right; eassumption.
-  - eexists; eapply encoded_nk_disj_elim; eassumption.
-  - eexists; eapply encoded_nk_neg_intro; eassumption.
-  - eexists; eapply encoded_nk_neg_elim; eassumption.
-  - eexists; eapply encoded_nk_classical; eassumption.
+    lf_rule 23 [encode_context g; encode a].
+  - lf_rule 24 [encode_context g].
+  - lf_rule 25 [encode_context g; encode a].
+  - lf_rule 26 [encode_context g; encode a; encode b].
+  - lf_rule 27 [encode_context g; encode a; encode b].
+  - lf_rule 28 [encode_context g; encode a; encode b].
+  - lf_rule 29 [encode_context g; encode a; encode b].
+  - lf_rule 30 [encode_context g; encode a; encode b].
+  - lf_rule 31 [encode_context g; encode a; encode b].
+  - lf_rule 32 [encode_context g; encode a; encode b].
+  - lf_rule 33 [encode_context g; encode a; encode b; encode c].
+  - lf_rule 34 [encode_context g; encode a].
+  - lf_rule 35 [encode_context g; encode a].
+  - lf_rule 36 [encode_context g; encode a].
 Qed.
 
 Theorem LK_has_lf_derivation g d :
@@ -482,26 +189,26 @@ Proof.
     repeat match goal with
     | IH : exists p, lf _ p |- _ => destruct IH as [? ?]
     end.
-  - eexists; apply encoded_lk_identity.
-  - eexists; apply encoded_lk_bottom.
-  - eexists; apply encoded_lk_top.
-  - eexists; eapply encoded_lk_weak_left; eassumption.
-  - eexists; eapply encoded_lk_weak_right; eassumption.
-  - eexists; eapply encoded_lk_contract_left; eassumption.
-  - eexists; eapply encoded_lk_contract_right; eassumption.
+  - lf_rule 38 [encode a].
+  - lf_rule 39 [encode_context g; encode_context d].
+  - lf_rule 40 [encode_context g; encode_context d].
+  - lf_rule 41 [encode_context g; encode_context d; encode a].
+  - lf_rule 42 [encode_context g; encode_context d; encode a].
+  - lf_rule 43 [encode_context g; encode_context d; encode a].
+  - lf_rule 44 [encode_context g; encode_context d; encode a].
   - destruct (permutation_has_lf_evidence _ _ H) as [p P].
-    eexists; eapply encoded_lk_exchange_left; eassumption.
+    lf_rule 45 [encode_context g; encode_context h; encode_context d].
   - destruct (permutation_has_lf_evidence _ _ H) as [p P].
-    eexists; eapply encoded_lk_exchange_right; eassumption.
-  - eexists; eapply encoded_lk_imp_right; eassumption.
-  - eexists; eapply encoded_lk_imp_left; eassumption.
-  - eexists; eapply encoded_lk_conj_left; eassumption.
-  - eexists; eapply encoded_lk_conj_right; eassumption.
-  - eexists; eapply encoded_lk_disj_left; eassumption.
-  - eexists; eapply encoded_lk_disj_right; eassumption.
-  - eexists; eapply encoded_lk_neg_left; eassumption.
-  - eexists; eapply encoded_lk_neg_right; eassumption.
-  - eexists; eapply encoded_lk_cut; eassumption.
+    lf_rule 46 [encode_context g; encode_context h; encode_context d].
+  - lf_rule 47 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 48 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 49 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 50 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 51 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 52 [encode_context g; encode_context d; encode a; encode b].
+  - lf_rule 53 [encode_context g; encode_context d; encode a].
+  - lf_rule 54 [encode_context g; encode_context d; encode a].
+  - lf_rule 55 [encode_context g; encode_context d; encode a].
 Qed.
 
 (** The evidence can be installed as a proof declaration without adding any

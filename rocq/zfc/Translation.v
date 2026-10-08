@@ -53,11 +53,12 @@ Proof. intros K A; eapply arguments_sound; [exact A|apply ty_const; exact K]. Qe
 
 Ltac reduce_codes :=
   repeat (progress (cbn [instantiate subst shift Nat.eqb Nat.ltb Nat.leb Nat.pred Nat.add]; autorewrite with codes)).
-Ltac use_constant k xs :=
+Ltac use_constant k data :=
+  let xs := open_constr:(List.app data (_ : list term)) in
   let entry := eval cbv [nth_error zfc_signature map prelude declared_type] in
     (nth_error zfc_signature k) in
   lazymatch entry with Some ?ty =>
-    exists (apps (tConst k) xs); eapply (constant_application k ty xs);
+    eexists (apps (tConst k) xs); eapply (constant_application k ty xs);
     [reflexivity|reduce_codes]
   end.
 
@@ -85,9 +86,35 @@ Proof.
 Qed.
 
 Ltac type_arguments :=
-  repeat (apply args_cons; [first [assumption | apply formula_code_typed | apply index_code_typed
-    | apply map_code_typed | apply context_code_typed]|reduce_codes]);
-  reduce_codes; apply args_nil.
+  reduce_codes;
+  first [solve [apply args_nil]
+  | multimatch goal with H : typing zfc_signature [] _ _ |- _ =>
+      eapply args_cons; [exact H|type_arguments] end
+  | solve [eapply args_cons; [eapply formula_code_typed|type_arguments]]
+  | solve [eapply args_cons; [eapply index_code_typed|type_arguments]]
+  | solve [eapply args_cons; [eapply map_code_typed|type_arguments]]
+  | solve [eapply args_cons; [eapply context_code_typed|type_arguments]]].
+
+(** Collect witnesses once; signature application infers each evidence argument
+    from its required type rather than naming witnesses in every rule case. *)
+Ltac unpack_translations :=
+  repeat match goal with H : exists t, typing zfc_signature [] t _ |- _ =>
+    destruct H as [? ?] end.
+Ltac collect_translation lemma :=
+  repeat match goal with H : _ |- _ =>
+    let E := fresh "translated" in
+    eassert (E : exists t, typing zfc_signature [] t _) by (eapply lemma; exact H);
+    clear H; destruct E as [? ?]
+  end.
+
+(** Search only the contiguous signature block for the source judgment.
+    Each candidate must finish the entire kernel-checked typing derivation. *)
+Ltac translation_rules lo hi :=
+  first [solve [use_constant lo (@nil term); type_arguments]
+  | lazymatch eval compute in (lo <? hi) with
+    | true => let next := eval compute in (S lo) in translation_rules next hi
+    | false => fail "no applicable LF rule in signature block"
+    end].
 
 Lemma lt_translation x n : x < n -> exists t, typing zfc_signature [] t (lt_type x n).
 Proof.
@@ -118,114 +145,53 @@ Qed.
 
 Lemma maps_translation r i j : maps r i j -> exists t, typing zfc_signature [] t (maps_type r i j).
 Proof.
-  intros H; induction H.
-  - use_constant 27 [encode_index i]; type_arguments.
-  - use_constant 28 [encode_index x]; type_arguments.
-  - use_constant 29 [encode_index x; encode_index i]; type_arguments.
-  - use_constant 30 [encode_map r]; type_arguments.
-  - destruct IHmaps as [t T]. use_constant 31 [encode_map r; encode_index i; encode_index j; t]; type_arguments.
-  - exists (tConst 32); apply ty_const; reflexivity.
-  - use_constant 33 [encode_index i]; type_arguments.
-  - exists (tConst 34); apply ty_const; reflexivity.
-  - exists (tConst 35); apply ty_const; reflexivity.
-  - use_constant 36 [encode_index i]; type_arguments.
-  - exists (tConst 37); apply ty_const; reflexivity.
-  - exists (tConst 38); apply ty_const; reflexivity.
-  - use_constant 39 [encode_index i]; type_arguments.
-  - exists (tConst 40); apply ty_const; reflexivity.
-  - exists (tConst 41); apply ty_const; reflexivity.
-  - use_constant 42 [encode_index i]; type_arguments.
+  intros H; induction H; unpack_translations;
+    translation_rules 27 42.
 Qed.
 
 Lemma renames_translation r p q : renames r p q ->
   exists t, typing zfc_signature [] t (rename_type (encode_map r) (encode p) (encode q)).
 Proof.
-  intros H; induction H.
-  - use_constant 44 [encode_map r]; type_arguments.
-  - destruct (maps_translation _ _ _ H) as [a A], (maps_translation _ _ _ H0) as [b B].
-    use_constant 45 [encode_map r; encode_index x; encode_index y; encode_index u; encode_index v; a; b]; type_arguments.
-  - destruct (maps_translation _ _ _ H) as [a A], (maps_translation _ _ _ H0) as [b B].
-    use_constant 46 [encode_map r; encode_index x; encode_index y; encode_index u; encode_index v; a; b]; type_arguments.
-  - destruct IHrenames1 as [a A], IHrenames2 as [b B].
-    use_constant 47 [encode_map r; encode p; encode q; encode u; encode v; a; b]; type_arguments.
-  - destruct IHrenames as [a A].
-    use_constant 48 [encode_map r; encode p; encode q; a]; type_arguments.
+  intros H; induction H; unpack_translations; collect_translation maps_translation;
+    translation_rules 44 48.
 Qed.
 
 Lemma closes_translation n p q : closes n p q ->
   exists t, typing zfc_signature [] t (close_type (encode_index n) (encode p) (encode q)).
 Proof.
-  intros H; induction H.
-  - use_constant 50 [encode p]; type_arguments.
-  - destruct IHcloses as [t T].
-    use_constant 51 [encode_index n; encode p; encode q; t]; type_arguments.
+  intros H; induction H; unpack_translations;
+    translation_rules 50 51.
 Qed.
 Lemma in_translation p g : In p g -> exists t, typing zfc_signature [] t (in_type p g).
 Proof.
   induction g as [|q g IH]; intros H; [contradiction|].
   destruct H as [E|H].
-  - subst q; use_constant 56 [encode p; encode_context g]; type_arguments.
-  - destruct (IH H) as [t T]. use_constant 57 [encode p; encode q; encode_context g; t]; type_arguments.
+  - subst q; translation_rules 56 56.
+  - destruct (IH H) as [t T]. translation_rules 57 57.
 Qed.
 Lemma lifts_translation g h : lifts g h -> exists t, typing zfc_signature [] t (lifts_type g h).
 Proof.
-  intros H; induction H.
-  - exists (tConst 59); apply ty_const; reflexivity.
-  - destruct (renames_translation _ _ _ H) as [a A], IHlifts as [b B].
-    use_constant 60 [encode p; encode q; encode_context g; encode_context h; a; b]; type_arguments.
+  intros H; induction H; unpack_translations; collect_translation renames_translation;
+    translation_rules 59 60.
 Qed.
 
 Theorem axiom_translation p : axiom_certificate p ->
   exists t, typing zfc_signature [] t (zax (encode p)).
 Proof.
-  intros H; destruct H.
-  - exists (tConst 62); apply ty_const; reflexivity.
-  - exists (tConst 63); apply ty_const; reflexivity.
-  - exists (tConst 64); apply ty_const; reflexivity.
-  - exists (tConst 65); apply ty_const; reflexivity.
-  - exists (tConst 66); apply ty_const; reflexivity.
-  - exists (tConst 67); apply ty_const; reflexivity.
-  - exists (tConst 68); apply ty_const; reflexivity.
-  - exists (tConst 69); apply ty_const; reflexivity.
-  - destruct (scope_translation phi (S n) H) as [a A],
-      (renames_translation _ _ _ H0) as [b B], (closes_translation _ _ _ H1) as [c C].
-    use_constant 70 [encode_index n; encode phi; encode renamed; encode result; a; b; c]; type_arguments.
-  - destruct (scope_translation theta (S (S n)) H) as [a A],
-      (renames_translation _ _ _ H0) as [b B], (renames_translation _ _ _ H1) as [c C],
-      (renames_translation _ _ _ H2) as [d D], (closes_translation _ _ _ H3) as [e E].
-    use_constant 71 [encode_index n; encode theta; encode value; encode unique; encode image; encode result;
-      a; b; c; d; e]; type_arguments.
+  intros H; destruct H; unpack_translations;
+    collect_translation scope_translation; collect_translation renames_translation;
+    collect_translation closes_translation;
+    translation_rules 62 71.
 Qed.
 
 Theorem certificate_translation n g p : proof_certificate n g p ->
   exists t, typing zfc_signature [] t (derives_type n g p).
 Proof.
-  intros H; induction H.
-  - destruct (scope_translation p n H) as [a A], (in_translation p g H0) as [b B].
-    use_constant 73 [encode_index n; encode_context g; encode p; a; b]; type_arguments.
-  - destruct (axiom_translation p H) as [a A].
-    use_constant 74 [encode_index n; encode_context g; encode p; a]; type_arguments.
-  - destruct (scope_translation p n H) as [a A], IHproof_certificate as [b B].
-    use_constant 75 [encode_index n; encode_context g; encode p; encode q; a; b]; type_arguments.
-  - destruct IHproof_certificate1 as [a A], IHproof_certificate2 as [b B].
-    use_constant 76 [encode_index n; encode_context g; encode p; encode q; a; b]; type_arguments.
-  - destruct (scope_translation p n H) as [a A], IHproof_certificate as [b B].
-    use_constant 77 [encode_index n; encode_context g; encode p; a; b]; type_arguments.
-  - destruct (scope_translation p n H) as [a A], IHproof_certificate as [b B].
-    use_constant 78 [encode_index n; encode_context g; encode p; a; b]; type_arguments.
-  - destruct (lifts_translation g h H) as [a A], IHproof_certificate as [b B].
-    use_constant 79 [encode_index n; encode_context g; encode_context h; encode p; a; b]; type_arguments.
-  - destruct (lt_translation x n H) as [a A], (renames_translation _ _ _ H0) as [b B],
-      IHproof_certificate as [c C].
-    use_constant 80 [encode_index n; encode_context g; encode p; encode q; encode_index x; a; b; c]; type_arguments.
-  - destruct (lt_translation x n H) as [a A].
-    use_constant 81 [encode_index n; encode_context g; encode_index x; a]; type_arguments.
-  - destruct (scope_translation p (S n) H) as [a A],
-      (lt_translation x n H0) as [b B], (lt_translation y n H1) as [c C],
-      (renames_translation _ _ _ H2) as [d D], (renames_translation _ _ _ H3) as [e E],
-      IHproof_certificate1 as [f F], IHproof_certificate2 as [h Hh].
-    use_constant 82 [encode_index n; encode_context g; encode p; encode px; encode py; encode_index x; encode_index y;
-      a; b; c; d; e; f; h]; type_arguments.
+  intros H; induction H; unpack_translations;
+    collect_translation scope_translation; collect_translation in_translation;
+    collect_translation axiom_translation; collect_translation lifts_translation;
+    collect_translation lt_translation; collect_translation renames_translation;
+    translation_rules 73 82.
 Qed.
 
 Corollary ZFC_translation p : ZFC_proves p -> exists t, typing zfc_signature [] t (proof_type p).

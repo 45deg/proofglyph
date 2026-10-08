@@ -75,53 +75,37 @@ Proof.
   - intros [x H] N; apply (N x); exact H.
 Qed.
 
+(** Expand logical encodings uniformly, including below quantifiers. *)
+Ltac semantic_connectives :=
+  repeat first [progress (cbn [holds Neg extend]) | progress (setoid_rewrite holds_iff)
+    | progress (setoid_rewrite holds_and)
+    | progress (setoid_rewrite holds_exists)].
+
 Theorem extensionality_meaning env : holds env extensionality <->
   forall a b, (forall x, member x a <-> member x b) -> a = b.
-Proof.
-  unfold extensionality; cbn [holds].
-  setoid_rewrite holds_iff; cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold extensionality; semantic_connectives; reflexivity. Qed.
 Theorem empty_set_meaning env : holds env empty_set <->
   exists a, forall x, ~ member x a.
-Proof. unfold empty_set; rewrite holds_exists; cbn [holds Neg extend]; reflexivity. Qed.
+Proof. unfold empty_set; semantic_connectives; reflexivity. Qed.
 Theorem pairing_meaning env : holds env pairing <->
   forall a b, exists p, forall x, member x p <-> x = a \/ x = b.
-Proof.
-  unfold pairing; cbn [holds]. setoid_rewrite holds_exists; cbn [holds].
-  setoid_rewrite holds_iff; setoid_rewrite holds_or; cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold pairing; semantic_connectives; setoid_rewrite holds_or; semantic_connectives; reflexivity. Qed.
 Theorem union_meaning env : holds env union <->
   forall a, exists b, forall x, member x b <-> exists y, member y a /\ member x y.
-Proof.
-  unfold union; cbn [holds]. setoid_rewrite holds_exists; cbn [holds].
-  setoid_rewrite holds_iff; setoid_rewrite holds_exists; setoid_rewrite holds_and;
-    cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold union; semantic_connectives; reflexivity. Qed.
 Theorem power_set_meaning env : holds env power_set <->
   forall a, exists b, forall x, member x b <-> forall z, member z x -> member z a.
-Proof.
-  unfold power_set; cbn [holds]. setoid_rewrite holds_exists; cbn [holds].
-  setoid_rewrite holds_iff; cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold power_set; semantic_connectives; reflexivity. Qed.
 
 Theorem infinity_meaning env : holds env infinity <->
   exists i, (exists e, member e i /\ forall z, ~ member z e) /\
     forall x, member x i -> exists y, member y i /\
       forall z, member z y <-> member z x \/ z = x.
-Proof.
-  unfold infinity; rewrite holds_exists; setoid_rewrite holds_and;
-    setoid_rewrite holds_exists; setoid_rewrite holds_and; cbn [holds].
-  setoid_rewrite holds_exists; setoid_rewrite holds_and; cbn [holds].
-  setoid_rewrite holds_iff; setoid_rewrite holds_or; cbn [holds Neg extend]; reflexivity.
-Qed.
+Proof. unfold infinity; semantic_connectives; setoid_rewrite holds_or; semantic_connectives; reflexivity. Qed.
 Theorem foundation_meaning env : holds env foundation <->
   forall a, (exists x, member x a) -> exists x,
     member x a /\ forall y, ~ (member y x /\ member y a).
-Proof.
-  unfold foundation; cbn [holds]; setoid_rewrite holds_exists;
-    setoid_rewrite holds_and; cbn [holds Neg]; setoid_rewrite holds_and;
-    cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold foundation; semantic_connectives; reflexivity. Qed.
 Theorem choice_meaning env : holds env choice <->
   forall a,
     ((forall x, member x a -> exists y, member y x) /\
@@ -130,12 +114,7 @@ Theorem choice_meaning env : holds env choice <->
     exists c, forall x, member x a -> exists y,
       (member y x /\ member y c) /\
       forall z, member z x /\ member z c -> z = y.
-Proof.
-  unfold choice; cbn [holds]; setoid_rewrite holds_and; cbn [holds];
-    setoid_rewrite holds_exists; setoid_rewrite holds_and; cbn [holds];
-    setoid_rewrite holds_exists; setoid_rewrite holds_and;
-    cbn [holds Neg]; setoid_rewrite holds_and; cbn [holds extend]; reflexivity.
-Qed.
+Proof. unfold choice; semantic_connectives; reflexivity. Qed.
 
 Theorem separation_body_meaning env phi :
   holds env (Forall (Exists (Forall

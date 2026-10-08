@@ -51,25 +51,18 @@ Theorem lex_pa_sound fuel bytes code :
   lex_pa fuel bytes = Some code -> pa_lexes bytes code.
 Proof.
   revert bytes code; induction fuel as [|fuel IH]; intros [|c rest] code H;
-    cbn [lex_pa] in H.
-  - inversion H; constructor.
-  - discriminate.
-  - inversion H; constructor.
-  - destruct (fixed_byte c) as [i|] eqn:F.
-    + destruct (lex_pa fuel rest) eqn:L; inversion H; subst.
-      eapply pa_lex_fixed; [exact F|apply IH; exact L].
-    + destruct (Ascii.eqb c "$"%char) eqn:V.
-      * apply Ascii.eqb_eq in V; subst c.
-        destruct (read_number rest) as [[n suffix]|] eqn:N; [|discriminate].
-        destruct (lex_pa fuel suffix) eqn:L; inversion H; subst.
-        eapply pa_lex_var; [apply read_number_correct; exact N|apply IH; exact L].
-      * destruct (Ascii.eqb c "#"%char) eqn:C.
-        -- apply Ascii.eqb_eq in C; subst c.
-           destruct (read_number rest) as [[n suffix]|] eqn:N; [|discriminate].
-           destruct (lex_pa fuel suffix) eqn:L; inversion H; subst.
-           eapply pa_lex_const; [apply read_number_correct; exact N|apply IH; exact L].
-        -- destruct (pa_space c) eqn:S; [|discriminate].
-           eapply pa_lex_space; [exact S|apply IH; exact H].
+    cbn [lex_pa] in H; try solve [inversion H; constructor].
+  repeat match type of H with
+    | context [option_map _ ?v] => let E := fresh "mapped" in destruct v eqn:E; cbn [option_map] in H
+    | context [if ?b then _ else _] => let E := fresh "branch" in destruct b eqn:E
+    | context [match ?v with _ => _ end] => let E := fresh "value" in destruct v eqn:E
+    end; try discriminate.
+  all: inversion H; subst.
+  all: repeat match goal with E : Ascii.eqb _ _ = true |- _ =>
+    apply Ascii.eqb_eq in E; subst end.
+  all: repeat match goal with E : read_number _ = Some _ |- _ =>
+    apply read_number_correct in E end.
+  all: eauto 3 using pa_lex_fixed, pa_lex_var, pa_lex_const, pa_lex_space.
 Qed.
 
 Theorem lex_pa_complete bytes code : pa_lexes bytes code ->

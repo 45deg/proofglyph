@@ -192,40 +192,16 @@ Proof. intros H E; subst; discriminate. Qed.
 Theorem items_parser_sound fuel ts items : parse_items_tp fuel ts = Some items -> items_parse ts items.
 Proof.
   revert ts items; induction fuel as [|fuel IH]; intros ts items H; [discriminate|].
-  destruct ts as [|[kind|path] rest]; cbn [parse_items_tp] in H; try discriminate.
-  { inversion H; constructor. }
-  destruct (String.eqb kind "import") eqn:IMP.
-  - apply String.eqb_eq in IMP; subst kind.
-    destruct rest as [|[n|path] tail]; try discriminate.
-    destruct (String.eqb path "") eqn:EMPTY; [discriminate|].
-    destruct (consume ";" tail) as [next|] eqn:SEMI; [|discriminate].
-    destruct (parse_items_tp fuel next) as [parsed|] eqn:R; [|discriminate].
-    inversion H; subst; apply consume_correct in SEMI; unfold token_at in SEMI; subst tail.
-    constructor; [apply String.eqb_neq; exact EMPTY|apply IH; exact R].
-  - destruct rest as [|[n|path] tail]; try discriminate.
-    destruct (declaration_keyword kind && name_token (Word n)) eqn:HEADER; [|discriminate].
-    apply andb_true_iff in HEADER as [K N].
-    destruct (parse_parameters fuel tail) as [[ps after]|] eqn:P; [|discriminate].
-    destruct (consume ":" after) as [types|] eqn:COLON; [|discriminate].
-    destruct (parse_term fuel types) as [[a bodystart]|] eqn:T; [|discriminate].
-    destruct (String.eqb kind "axiom") eqn:AX.
-    + destruct (consume ";" bodystart) as [next|] eqn:SEMI; [|discriminate].
-      destruct (parse_items_tp fuel next) as [parsed|] eqn:R; [|discriminate].
-      inversion H; subst.
-      apply consume_correct in SEMI; unfold token_at in SEMI; subst bodystart.
-      econstructor; eauto using parameters_parser_sound, term_parser_sound.
-      * apply consume_correct; exact COLON.
-      * constructor; apply String.eqb_eq; exact AX.
-    + destruct (consume ":=" bodystart) as [bodies|] eqn:EQUAL; [|discriminate].
-      destruct (parse_term fuel bodies) as [[b afterbody]|] eqn:B; [|discriminate].
-      destruct (consume ";" afterbody) as [next|] eqn:SEMI; [|discriminate].
-      destruct (parse_items_tp fuel next) as [parsed|] eqn:R; [|discriminate].
-      inversion H; subst.
-      apply consume_correct in SEMI; unfold token_at in SEMI; subst afterbody.
-      apply consume_correct in EQUAL; unfold token_at in EQUAL; subst bodystart.
-      econstructor; eauto using parameters_parser_sound, term_parser_sound.
-      * apply consume_correct; exact COLON.
-      * constructor; [apply String.eqb_neq; exact AX|eapply term_parser_sound; exact B].
+  cbn [parse_items_tp] in H; syntax_cases H; inversion H; subst; syntax_equations.
+  all: repeat match goal with E : context [match _ with _ => _ end] |- _ =>
+    syntax_cases E; inversion E; clear E; subst; syntax_equations end.
+  all: repeat match goal with
+    | E : _ && _ = true |- _ => apply andb_true_iff in E as [? ?]
+    | E : String.eqb _ _ = false |- _ => apply String.eqb_neq in E
+    end.
+  all: first [apply items_parse_nil | apply items_parse_import | eapply items_parse_decl].
+  all: eauto 3 using body_axiom, body_proof,
+    parameters_parser_sound, term_parser_sound, consume_sound, token_here.
 Qed.
 
 Lemma body_parse_length kind ps ts body tail : body_parses kind ps ts body tail ->
