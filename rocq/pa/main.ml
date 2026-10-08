@@ -7,13 +7,12 @@ exception Input_error of string
 let error offset message =
   raise (Input_error (Printf.sprintf "byte %d: %s" offset message))
 
-(* Extraction retains unary naturals to avoid trusting overflowing int arithmetic.
-   Limit conversion work in this unverified input adapter. *)
+(* Extracted naturals use Zarith; these bounds remain CLI resource limits. *)
 let index_limit = 100_000
 let fuel_limit = 100_000
 let nat_of_int n =
-  let rec go n acc = if n = 0 then acc else go (n - 1) (S acc) in
-  go n O
+  if n < 0 then invalid_arg "negative natural";
+  Big_int_Z.big_int_of_int n
 
 let parse source =
   let size = String.length source in

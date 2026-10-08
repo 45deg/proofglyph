@@ -51,6 +51,7 @@ with tempfile.TemporaryDirectory(prefix="tp-") as tmp:
     run(["compile", entry, "--no-axioms", "-o", assembly], 1)
     assert assembly.read_text() == encoded, "policy rejection overwrote output"
     run(["check", entry, "--no-axioms"], 1)
+    assert run(["check", entry, "--fuel", "100000"]).stdout.strip() == "Accepted 3 declarations"
     run(["check", entry, "--fuel", "1"], 1)
     for fuel in ("0", "-1", "100001", "bad"):
         run(["check", entry, "--fuel", fuel], 2)

@@ -1,6 +1,7 @@
 """Keep language theory independent of algorithms and correspondence proofs."""
 from pathlib import Path
 import re
+import subprocess
 
 ROOT = Path(__file__).resolve().parent
 LANGUAGE = {
@@ -14,11 +15,16 @@ modules = {(ns, p.stem): p for ns, directory in (("Pa", "pa"), ("Tp", "tp"))
 
 for directory in ("pa", "tp"):
     development = ROOT / directory
-    files = re.search(r"^VFILES := (.*)$", (development / "Makefile").read_text(), re.M).group(1).split()
+    files = subprocess.check_output(
+        ["make", "--no-print-directory", "-s", "-C", str(development), "print-vfiles"],
+        text=True,
+    ).split()
     project = [line for line in (development / "_CoqProject").read_text().splitlines() if line.endswith(".v")]
     assert files == project, f"{directory}: Makefile and _CoqProject module orders differ"
     assert len(files) == len(set(files)), f"{directory}: duplicate module in build order"
-    assert all((development / name).is_file() for name in files), f"{directory}: missing module"
+    assert set(files) == {p.name for p in development.glob("*.v")}, (
+        f"{directory}: _CoqProject must list every proof module exactly once"
+    )
 
 
 def layer(ns, name):

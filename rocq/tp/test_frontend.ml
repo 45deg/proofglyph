@@ -84,6 +84,25 @@ let codec_fixtures () =
     if Adapter.string_of_chars bytes <> expected then failwith "generated raw term writer mismatch") terms;
   Printf.printf "Codec fixtures and %d raw term cases passed\n" (List.length terms)
 
+let bigint_fixtures () =
+  let zero = Adapter.nat_of_int 0 and one = Adapter.nat_of_int 1 in
+  let huge = Z.shift_left Z.one 100 in
+  let successor = Z.succ huge in
+  if F.shift one zero (F.TVar huge) <> F.TVar successor then
+    failwith "shift overflowed";
+  if F.shift one successor (F.TVar huge) <> F.TVar huge then
+    failwith "shift ignored cutoff";
+  if F.subst huge F.TType (F.TVar huge) <> F.TType then
+    failwith "substitution missed large index";
+  if F.subst zero F.TType (F.TVar huge) <> F.TVar (Z.pred huge) then
+    failwith "substitution predecessor mismatch";
+  if not (Z.equal (F.pred zero) zero) then failwith "natural predecessor became negative";
+  if not (Z.equal (F.mul huge huge) (Z.shift_left Z.one 200)) then
+    failwith "multiplication overflowed";
+  (try ignore (Adapter.nat_of_int (-1)); failwith "negative natural accepted"
+   with Invalid_argument _ -> ());
+  print_endline "Big-integer shift, substitution, arithmetic and boundary checks passed"
+
 let tp_parser_fixtures () =
   let valid = [""; " // comment without newline";
     "axiom _x0' : Type;\r\n// comment\naxiom B : _x0' -> Type;";
@@ -126,6 +145,7 @@ let fixtures = [
 ]
 
 let () =
+  bigint_fixtures ();
   codec_fixtures ();
   tp_parser_fixtures ();
   (match Adapter.parse_raw "axiom A : Type; def k (x y : A) : A := x;" with
@@ -158,7 +178,7 @@ let () =
      "axiom A : Type; def bad : A := Type;"];
   let axiom = Adapter.declarations (S.parse "axiom A : Type;") in
   if F.compile fuel false axiom <> None then failwith "axiom policy ignored";
-  if F.compile F.O true axiom <> None then failwith "zero fuel accepted";
+  if F.compile (Adapter.nat_of_int 0) true axiom <> None then failwith "zero fuel accepted";
   if F.compile fuel false [] <> Some ([], []) then failwith "empty program rejected";
   Array.iteri (fun i path -> if i > 0 then (
     let ds = S.load path and raw = Adapter.load_raw path in

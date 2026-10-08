@@ -5,6 +5,8 @@ Gallina の復号器と検査器を OCaml に抽出し、専用 CLI から実行
 
 ## ビルドと実行
 
+抽出 CLI のビルドには ocamlfind と Zarith が必要です。
+
 ```sh
 # 検証とテスト
 make -C rocq/pa
@@ -28,7 +30,7 @@ rocq/pa/_build/pa check /tmp/proof.pa --prelude /tmp/prelude.pa
 
 - **公理の無矛盾性**: 登録された公理自体の無矛盾性は保証しません。
 - **計算資源**: fuel は再帰の深さであり、実機の時間・メモリ内での完了を保証するものではありません。
-- **実行基盤**: Rocq の抽出機構、OCaml コンパイラ・実行系、ファイル I/O は信頼境界に残ります。
+- **実行基盤**: Rocq の抽出機構、自然数を多倍長整数に置き換える抽出設定、Zarith、OCaml コンパイラ・実行系、ファイル I/O は信頼境界に残ります。
 
 ## TODO
 

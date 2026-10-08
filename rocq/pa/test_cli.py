@@ -58,6 +58,7 @@ def main():
 
         # Exhaustion and bounds fail closed; no integer overflow reaches the kernel.
         assembly.write_text("*:#0#0>#0$0\\!")
+        run([CHECKER, "check", assembly, "--fuel", "100000"])
         run([CHECKER, "check", assembly, "--fuel", "1"], 1)
         run([CHECKER, "check", assembly, "--fuel", "0"], 2)
         run([CHECKER, "check", assembly, "--fuel", "100001"], 2)

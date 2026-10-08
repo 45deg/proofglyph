@@ -91,5 +91,4 @@ let load_raw path =
 
 let nat_of_int n =
   if n < 0 then invalid_arg "negative natural";
-  let rec loop n acc = if n = 0 then acc else loop (n - 1) (F.S acc) in
-  loop n F.O
+  Big_int_Z.big_int_of_int n
