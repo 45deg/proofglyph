@@ -19,6 +19,13 @@ Rocq に定義しました。**閉じた式について、ZFC の証明可能性
   独立した `ZFC_proves` を定義。証明で変数範囲が保たれることと、意味論的健全性を証明。
   一般化では全仮定を持ち上げ、代入では binder の下で変数写像を持ち上げます。
   全称量化された等号の対称律・推移律もこの体系内で導出しています。
+- `Russell.v`: 分出と古典一階論理から「普遍集合は存在しない」を体系内で導出。
+  仮定の追加、連言の導入・除去、存在量化された仮定からの矛盾の導出も、既存の規則から証明。
+- `RussellVerification.v`: この導出を `ZFC_accepted` に接続し、同じ固定 prelude の下で
+  証明項が存在し、十分な fuel で受理されることを証明。具体的な出力項についても、
+  目標型と `proof_type no_universal_set` の一致、fuel 128 での受理を Rocq 内で検証。
+- `russell_export.py`: Russell の導出を、変数範囲・変数変更・仮定の持ち上げの証拠を
+  すべて含む LF 項として出力。既存の `export.ml` で `.pa` と Rocq データを生成。
 - `Specification.v`: 完成版の固定署名が満たすべき `correct_presentation` を定義。
   `declarative_presentation` からこの契約と証明可能性の同値性を導出済みです。
   `typed_translation_accepted` は証明翻訳の型付けから、十分な fuel すべてでの受理を導きます。
@@ -81,10 +88,12 @@ Rocq に定義しました。**閉じた式について、ZFC の証明可能性
 make -C zfc test ROCQ=/path/to/bin/rocq
 ```
 
-この作業環境の検証には次を使っています。
+Rocq は通常の opam switch にインストールできます。
 
 ```sh
-make -C zfc test ROCQ=/private/tmp/rocq4pa-toolchain/_opam/bin/rocq
+opam install rocq-core.9.2.0 rocq-stdlib.9.1.0
+eval $(opam env)
+make -C zfc test
 ```
 
 全理論の生成物は `zfc/_build/deep/`、従来の3公理の生成物は `zfc/_build/`。`prelude.pa` を先に読み込み、`proofs.pa` 内では `:` を禁止します。
@@ -95,6 +104,34 @@ rocq4pa/_build/rocq4pa check zfc/_build/deep/proofs.pa --prelude zfc/_build/deep
 
 `make test` は Rocq のコンパイルと `rocq check`、OCaml 版・Rocq 抽出版の両方での
 本体再検査、公理混入や不正な証明の拒否を確認します。前提名の許可一覧も固定しています。
+
+## 軽い集合論の例
+
+`Russell.no_universal_set_proved` は次の閉じた文を証明します。
+
+```text
+¬ ∃ U, ∀ x, x ∈ U
+```
+
+普遍集合 U を仮定し、分出で R = {x ∈ U | x ∉ x} を作ります。
+R ∈ U なので、分出の所属条件を R に適用すると R ∈ R ↔ R ∉ R。
+まず R ∈ R から矛盾を導いて R ∉ R を得て、逆向きの含意で R ∈ R を得ると矛盾します。
+集合論の公理として使うのは分出だけです。基礎や選択を必要としません。
+
+`no_universal_set_meaning` は符号化した文と上の通常の主張との意味の一致を示します。
+`ZfcDeep.RussellVerification.no_universal_set_accepted` は、この文の pa 証明項の
+存在と十分な fuel での受理を示します。具体的な項は `zfc/_build/russell/proofs.pa`、
+固定 prelude は同じディレクトリの `prelude.pa` に出力します。
+`russell_pa_accepted` はこの出力項を Rocq 内で検査して得た定理です。
+
+```sh
+make -C zfc test
+rocq4pa/_build/rocq4pa check zfc/_build/russell/proofs.pa --prelude zfc/_build/russell/prelude.pa
+_build/default/bin/main.exe check zfc/_build/russell/proofs.pa --prelude zfc/_build/russell/prelude.pa
+```
+
+証明本体は1宣言で、新しい公理や補助定数を追加しません。
+生成器は信頼境界の外にあり、検査器と Rocq による再検査を通す必要があります。
 
 ## 証明した同値性
 

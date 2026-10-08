@@ -45,7 +45,22 @@ def main():
             bad.write_text(f'#{u}*!')
             run([checker, 'check', bad, '--prelude', prelude], 1)
     test_deep()
-    print('passed: legacy and full-theory preludes, both checkers, schema guards and binder renaming')
+    test_russell()
+    print('passed: legacy and full-theory preludes, Russell proof, both checkers, schema guards and binder renaming')
+
+
+def test_russell():
+    out = OUT / 'russell'
+    prelude, proofs = out / 'prelude.pa', out / 'proofs.pa'
+    assert prelude.read_bytes() == (OUT / 'deep/prelude.pa').read_bytes()
+    assert (out / 'names.txt').read_text().splitlines() == (
+        (OUT / 'deep/names.txt').read_text().splitlines()[:83]
+        + ['proof_no_universal_set'])
+    assembly = proofs.read_text()
+    assert ':' not in assembly and assembly.count('!') == 1
+    for checker in CHECKERS:
+        run([checker, 'check', proofs, '--prelude', prelude])
+        run([checker, 'check', proofs, '--no-axioms'], 1)
 
 
 def test_deep():

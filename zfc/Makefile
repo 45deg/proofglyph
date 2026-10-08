@@ -9,11 +9,12 @@ verify:
 	$(MAKE) -C ../rocq4pa verify ROCQ=$(ROCQ)
 	mkdir -p $(BUILD)
 	cd .. && dune exec zfc/export.exe -- zfc/prelude.tp zfc/basic.tp zfc/$(BUILD)
-	cp Formula.v Axioms.v Semantics.v Deduction.v Encoding.v Specification.v Verification.v Certificates.v $(BUILD)/
+	cp Formula.v Axioms.v Semantics.v Deduction.v Russell.v Encoding.v Specification.v Verification.v Certificates.v $(BUILD)/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Formula.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Axioms.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Semantics.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Deduction.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Russell.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Certificates.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Encoding.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Specification.v
@@ -21,13 +22,17 @@ verify:
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Verification.v
 	mkdir -p $(BUILD)/deep
 	cd .. && dune exec zfc/export.exe -- zfc/proof_prelude.tp zfc/proof_certificates.tp zfc/$(BUILD)/deep
-	cp DeepVerification.v Translation.v GroundAdequacy.v Reflection.v $(BUILD)/deep/
+	cp DeepVerification.v Translation.v GroundAdequacy.v Reflection.v RussellVerification.v $(BUILD)/deep/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep deep/Artifact.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep deep/DeepVerification.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep deep/Translation.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep deep/GroundAdequacy.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep deep/Reflection.v
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) -Q deep ZfcDeep Zfc.Semantics Zfc.Specification Zfc.Verification Zfc.Certificates ZfcDeep.DeepVerification ZfcDeep.Translation ZfcDeep.GroundAdequacy ZfcDeep.Reflection
+	python3 russell_export.py
+	cd .. && dune exec zfc/export.exe -- zfc/proof_prelude.tp zfc/$(BUILD)/russell/source.tp zfc/$(BUILD)/russell
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q russell ZfcRussell russell/Artifact.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) -Q deep ZfcDeep -Q russell ZfcRussell deep/RussellVerification.v
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) -Q deep ZfcDeep -Q russell ZfcRussell Zfc.Semantics Zfc.Specification Zfc.Verification Zfc.Certificates Zfc.Russell ZfcDeep.DeepVerification ZfcDeep.Translation ZfcDeep.GroundAdequacy ZfcDeep.Reflection ZfcDeep.RussellVerification
 
 test: verify
 	$(MAKE) -C ../rocq4pa all ROCQ=$(ROCQ)
