@@ -11,13 +11,18 @@ export:
 
 verify: export
 	$(MAKE) -C ../rocq4pa verify ROCQ=$(ROCQ)
-	cp Calculi.v Encoding.v Verification.v Derivations.v $(BUILD)/
+	cp Calculi.v Encoding.v Verification.v Derivations.v CutElimination.v Restoration.v Examples.v $(BUILD)/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Calculi.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Encoding.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Artifact.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) NKArtifact.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) LKArtifact.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Verification.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Derivations.v
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Calculi.Calculi Calculi.Encoding Calculi.Verification Calculi.Derivations
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) CutElimination.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Restoration.v
+	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Examples.v
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Calculi.Calculi Calculi.Encoding Calculi.Verification Calculi.Derivations Calculi.CutElimination Calculi.Restoration Calculi.Examples
 
 test: verify
 	$(MAKE) -C ../rocq4pa all ROCQ=$(ROCQ)

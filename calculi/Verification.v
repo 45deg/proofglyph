@@ -1,6 +1,7 @@
 From Stdlib Require Import List.
 From Rocq4pa Require Import Syntax Kernel Program WellFormed Checker.
 From Calculi Require Import Artifact Encoding.
+From Calculi Require NKArtifact LKArtifact.
 Import ListNotations.
 
 Definition fixed_signature := map declared_type prelude.
@@ -40,3 +41,31 @@ Example exported_goals_match : map declared_type proofs = [
   tPi (tConst 3) (lk_type (singleton (tVar 0)) (singleton (tVar 0)))].
 Proof. vm_compute; reflexivity. Qed.
 Print Assumptions exported_goals_match.
+
+(** Independently renumbered preludes must work without the other calculus. *)
+Definition nk_signature := map declared_type NKArtifact.prelude.
+Definition lk_signature := map declared_type LKArtifact.prelude.
+Example nk_prelude_accepted :
+  check_program 128 true [] NKArtifact.prelude = Some nk_signature.
+Proof. vm_compute; reflexivity. Qed.
+Example lk_prelude_accepted :
+  check_program 128 true [] LKArtifact.prelude = Some lk_signature.
+Proof. vm_compute; reflexivity. Qed.
+Example nk_proofs_accepted : check_program 128 false nk_signature NKArtifact.proofs =
+  Some (nk_signature ++ map declared_type NKArtifact.proofs).
+Proof. vm_compute; reflexivity. Qed.
+Example lk_proofs_accepted : check_program 128 false lk_signature LKArtifact.proofs =
+  Some (lk_signature ++ map declared_type LKArtifact.proofs).
+Proof. vm_compute; reflexivity. Qed.
+Theorem nk_signature_well_formed : wf_signature nk_signature.
+Proof. eapply accepted_program_wf; [constructor|exact nk_prelude_accepted]. Qed.
+Theorem lk_signature_well_formed : wf_signature lk_signature.
+Proof. eapply accepted_program_wf; [constructor|exact lk_prelude_accepted]. Qed.
+Theorem nk_proofs_valid : valid_program nk_signature NKArtifact.proofs
+  (nk_signature ++ map declared_type NKArtifact.proofs).
+Proof. eapply check_program_sound; [exact nk_signature_well_formed|exact nk_proofs_accepted]. Qed.
+Theorem lk_proofs_valid : valid_program lk_signature LKArtifact.proofs
+  (lk_signature ++ map declared_type LKArtifact.proofs).
+Proof. eapply check_program_sound; [exact lk_signature_well_formed|exact lk_proofs_accepted]. Qed.
+Print Assumptions nk_proofs_valid.
+Print Assumptions lk_proofs_valid.

@@ -25,6 +25,43 @@ def run(command, expected=0):
     assert result.returncode == expected, (command, result.returncode, result.stdout, result.stderr)
 
 
+def test_separate_preludes(checker, candidate):
+    for calculus, auxiliary, count in [
+        ('nk', {'InContext', 'in_here', 'in_there', 'NK'}, 32),
+        ('lk', {'Perm', 'perm_nil', 'perm_cons', 'perm_swap', 'perm_trans', 'LK'}, 38),
+    ]:
+        names = (OUT / f'{calculus}-names.txt').read_text().splitlines()
+        expected = [name for name in EXPECTED if name in EXPECTED[:14]
+                    or name in auxiliary or name.startswith(f'{calculus}_')]
+        assert names == expected, (calculus, 'unexpected signature')
+        prelude, proofs = OUT / f'{calculus}-prelude.pa', OUT / f'{calculus}-proofs.pa'
+        assert prelude.read_text().count(':') == count
+        assert proofs.read_text().count('!') == 3 and ':' not in proofs.read_text()
+        run([checker, 'check', proofs, '--prelude', prelude])
+
+        def app(name, *args):
+            result = '#' + str(names.index(name))
+            for arg in args:
+                result += arg + '@'
+            return result
+
+        nil, bottom = app('nil'), app('Bottom')
+        a = app('Atom', app('zero'))
+        ga = app('cons', a, nil)
+        if calculus == 'nk':
+            identity = app('nk_assume', ga, a, app('in_here', a, nil))
+            typ, false_typ = app('NK', ga, a), app('NK', nil, bottom)
+        else:
+            identity = app('lk_identity', a)
+            typ, false_typ = app('LK', ga, ga), app('LK', nil, nil)
+        candidate.write_text(typ + identity + '!')
+        run([checker, 'check', candidate, '--prelude', prelude])
+        candidate.write_text(false_typ + identity + '!')
+        run([checker, 'check', candidate, '--prelude', prelude], 1)
+        candidate.write_text('*:')
+        run([checker, 'check', candidate, '--prelude', prelude], 1)
+
+
 def main():
     names = (OUT / 'names.txt').read_text().splitlines()
     assert names == EXPECTED, 'fixed signature or proof inventory changed'
@@ -80,6 +117,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='calculi-test-') as directory:
         candidate = Path(directory) / 'candidate.pa'
         for checker in CHECKERS:
+            test_separate_preludes(checker, candidate)
             run([checker, 'check', proofs, '--prelude', prelude])
             run([checker, 'check', proofs, '--no-axioms'], 1)
             for label, assembly in invalid.items():
@@ -98,7 +136,7 @@ def main():
                 except AssertionError as error:
                     raise AssertionError(label) from error
     print(f'passed: both checkers, 6 generic proofs, {len(valid)} concrete uses, '
-          f'{len(invalid)} rejection cases and the fixed prelude boundary')
+          f'{len(invalid)} rejection cases, separate NK/LK preludes and the fixed prelude boundary')
 
 
 if __name__ == '__main__':

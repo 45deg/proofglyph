@@ -167,5 +167,41 @@ let () =
   write "names.txt" (String.concat "\n" (List.map fst !globals) ^ "\n");
   write "Artifact.v" ("From Stdlib Require Import List.\nFrom Rocq4pa Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list !assumptions
     ^ ".\nDefinition proofs : list declaration := " ^ list !proofs ^ ".\n");
+  (* Project the combined inventory, renumbering every reference. Each subset
+     is checked in a fresh kernel so it must contain all its dependencies. *)
+  let export_subset prefix artifact include_name =
+    let subset_kernel = Kernel.create () and ids = ref [] in
+    let rec remap = function
+      | Term.Const old -> Term.Const (List.assoc old !ids)
+      | Term.App (f,x) -> Term.App (remap f,remap x)
+      | Term.Pi (a,b) -> Term.Pi (remap a,remap b)
+      | Term.Lam (a,b) -> Term.Lam (remap a,remap b)
+      | (Term.Type | Term.Kind | Term.Var _) as t -> t
+    in
+    let entries = List.filter (fun (name,_,_) -> include_name name)
+      (!assumptions @ !proofs) in
+    let entries = List.map (fun (name,typ,body) ->
+      let typ = remap typ and body = Option.map remap body in
+      let id = match body with
+        | None -> Kernel.assume subset_kernel typ
+        | Some t -> Kernel.prove subset_kernel typ t in
+      ids := (List.assoc name !globals,id) :: !ids;
+      name,typ,body) entries in
+    let prelude,proofs = List.partition (fun (_,_,body) -> body = None) entries in
+    write (prefix ^ "-prelude.pa") (String.concat "" (List.map pa prelude));
+    write (prefix ^ "-proofs.pa") (String.concat "" (List.map pa proofs));
+    write (prefix ^ "-names.txt") (String.concat "\n" (List.map (fun (name,_,_) -> name) entries) ^ "\n");
+    write artifact ("From Stdlib Require Import List.\nFrom Rocq4pa Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list prelude
+      ^ ".\nDefinition proofs : list declaration := " ^ list proofs ^ ".\n");
+    Printf.printf "exported %s: %d assumptions and %d proofs\n"
+      prefix (List.length prelude) (List.length proofs)
+  in
+  let shared name = List.assoc name !globals < 14 in
+  export_subset "nk" "NKArtifact.v" (fun name -> shared name
+    || List.mem name ["InContext";"in_here";"in_there";"NK"]
+    || String.starts_with ~prefix:"nk_" name);
+  export_subset "lk" "LKArtifact.v" (fun name -> shared name
+    || List.mem name ["Perm";"LK"] || String.starts_with ~prefix:"perm_" name
+    || String.starts_with ~prefix:"lk_" name);
   Printf.printf "exported %d fixed assumptions and %d proofs directly to pa\n"
     (List.length !assumptions) (List.length !proofs)
