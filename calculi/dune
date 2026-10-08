@@ -1,0 +1,3 @@
+(executable
+ (name export)
+ (libraries tinyprover_core tinyprover_pa))

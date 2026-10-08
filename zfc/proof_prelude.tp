@@ -1,0 +1,127 @@
+// Fixed LF presentation of the full theory in Axioms.v and Deduction.v.
+// Formula binders are explicit syntax. Every side condition needs a certificate.
+// The first nine declarations coincide with Encoding.syntax_prelude.
+axiom Index : Type;
+axiom zero : Index;
+axiom succ : Index -> Index;
+axiom Formula : Type;
+axiom bottom : Formula;
+axiom Equal : Index -> Index -> Formula;
+axiom Member : Index -> Index -> Formula;
+axiom Implies : Formula -> Formula -> Formula;
+axiom All : Formula -> Formula;
+
+axiom Lt : Index -> Index -> Type;
+axiom lt_zero (n : Index) : Lt zero (succ n);
+axiom lt_succ (x n : Index) : Lt x n -> Lt (succ x) (succ n);
+
+axiom Scoped : Index -> Formula -> Type;
+axiom scoped_bottom (n : Index) : Scoped n bottom;
+axiom scoped_equal (n x y : Index) : Lt x n -> Lt y n -> Scoped n (Equal x y);
+axiom scoped_member (n x y : Index) : Lt x n -> Lt y n -> Scoped n (Member x y);
+axiom scoped_imp (n : Index) (p q : Formula)
+  : Scoped n p -> Scoped n q -> Scoped n (Implies p q);
+axiom scoped_all (n : Index) (p : Formula) : Scoped (succ n) p -> Scoped n (All p);
+
+// A finite vocabulary of the maps used by the ZFC rules, not arbitrary functions.
+axiom Map : Type;
+axiom shift_map : Map;
+axiom unbind_map : Index -> Map;
+axiom up_map : Map -> Map;
+axiom sep_map : Map;
+axiom value_map : Map;
+axiom unique_map : Map;
+axiom image_map : Map;
+axiom Maps : Map -> Index -> Index -> Type;
+axiom maps_shift (i : Index) : Maps shift_map i (succ i);
+axiom maps_unbind_zero (x : Index) : Maps (unbind_map x) zero x;
+axiom maps_unbind_succ (x i : Index) : Maps (unbind_map x) (succ i) i;
+axiom maps_up_zero (r : Map) : Maps (up_map r) zero zero;
+axiom maps_up_succ (r : Map) (i j : Index)
+  : Maps r i j -> Maps (up_map r) (succ i) (succ j);
+axiom maps_sep_zero : Maps sep_map zero zero;
+axiom maps_sep_succ (i : Index) : Maps sep_map (succ i) (succ (succ (succ i)));
+axiom maps_value_zero : Maps value_map zero zero;
+axiom maps_value_one : Maps value_map (succ zero) (succ zero);
+axiom maps_value_tail (i : Index) : Maps value_map (succ (succ i)) (succ (succ (succ i)));
+axiom maps_unique_zero : Maps unique_map zero zero;
+axiom maps_unique_one : Maps unique_map (succ zero) (succ (succ zero));
+axiom maps_unique_tail (i : Index)
+  : Maps unique_map (succ (succ i)) (succ (succ (succ (succ i))));
+axiom maps_image_zero : Maps image_map zero (succ zero);
+axiom maps_image_one : Maps image_map (succ zero) zero;
+axiom maps_image_tail (i : Index)
+  : Maps image_map (succ (succ i)) (succ (succ (succ (succ i))));
+
+axiom Renames : Map -> Formula -> Formula -> Type;
+axiom rename_bottom (r : Map) : Renames r bottom bottom;
+axiom rename_equal (r : Map) (x y u v : Index)
+  : Maps r x u -> Maps r y v -> Renames r (Equal x y) (Equal u v);
+axiom rename_member (r : Map) (x y u v : Index)
+  : Maps r x u -> Maps r y v -> Renames r (Member x y) (Member u v);
+axiom rename_imp (r : Map) (p q u v : Formula)
+  : Renames r p u -> Renames r q v -> Renames r (Implies p q) (Implies u v);
+axiom rename_all (r : Map) (p q : Formula)
+  : Renames (up_map r) p q -> Renames r (All p) (All q);
+
+axiom Closes : Index -> Formula -> Formula -> Type;
+axiom close_zero (p : Formula) : Closes zero p p;
+axiom close_succ (n : Index) (p q : Formula) : Closes n p q -> Closes (succ n) p (All q);
+
+axiom Context : Type;
+axiom nil : Context;
+axiom cons : Formula -> Context -> Context;
+axiom InContext : Formula -> Context -> Type;
+axiom in_here (p : Formula) (g : Context) : InContext p (cons p g);
+axiom in_there (p q : Formula) (g : Context) : InContext p g -> InContext p (cons q g);
+axiom Lifts : Context -> Context -> Type;
+axiom lifts_nil : Lifts nil nil;
+axiom lifts_cons (p q : Formula) (g h : Context)
+  : Renames shift_map p q -> Lifts g h -> Lifts (cons p g) (cons q h);
+
+// Zax is syntactic evidence of membership in the axiom set, not truth in Rocq.
+axiom Zax : Formula -> Type;
+axiom ax_extensionality : Zax (All (All (Implies (All (Implies (Implies (Implies (Member zero (succ (succ zero))) (Member zero (succ zero))) (Implies (Implies (Member zero (succ zero)) (Member zero (succ (succ zero)))) bottom)) bottom)) (Equal (succ zero) zero))));
+axiom ax_empty : Zax (Implies (All (Implies (All (Implies (Member zero (succ zero)) bottom)) bottom)) bottom);
+axiom ax_pairing : Zax (All (All (Implies (All (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (Implies (Equal zero (succ (succ (succ zero)))) bottom) (Equal zero (succ (succ zero))))) (Implies (Implies (Implies (Implies (Equal zero (succ (succ (succ zero)))) bottom) (Equal zero (succ (succ zero)))) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom)));
+axiom ax_union : Zax (All (Implies (All (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (All (Implies (Implies (Implies (Member zero (succ (succ (succ zero)))) (Implies (Member (succ zero) zero) bottom)) bottom) bottom)) bottom)) (Implies (Implies (Implies (All (Implies (Implies (Implies (Member zero (succ (succ (succ zero)))) (Implies (Member (succ zero) zero) bottom)) bottom) bottom)) bottom) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom));
+axiom ax_power : Zax (All (Implies (All (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (All (Implies (Member zero (succ zero)) (Member zero (succ (succ (succ zero))))))) (Implies (Implies (All (Implies (Member zero (succ zero)) (Member zero (succ (succ (succ zero)))))) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom));
+axiom ax_infinity : Zax (Implies (All (Implies (Implies (Implies (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (All (Implies (Member zero (succ zero)) bottom)) bottom)) bottom) bottom)) bottom) (Implies (All (Implies (Member zero (succ zero)) (Implies (All (Implies (Implies (Implies (Member zero (succ (succ zero))) (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (Implies (Member zero (succ (succ zero))) bottom) (Equal zero (succ (succ zero))))) (Implies (Implies (Implies (Implies (Member zero (succ (succ zero))) bottom) (Equal zero (succ (succ zero)))) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom) bottom)) bottom))) bottom)) bottom) bottom)) bottom);
+axiom ax_foundation : Zax (All (Implies (Implies (All (Implies (Member zero (succ zero)) bottom)) bottom) (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (Member zero (succ (succ zero))) bottom)) bottom) bottom)) bottom)) bottom) bottom)) bottom)));
+axiom ax_choice : Zax (All (Implies (Implies (Implies (All (Implies (Member zero (succ zero)) (Implies (All (Implies (Member zero (succ zero)) bottom)) bottom))) (Implies (All (All (Implies (Implies (Implies (Member (succ zero) (succ (succ zero))) (Implies (Implies (Implies (Member zero (succ (succ zero))) (Implies (Implies (Equal (succ zero) zero) bottom) bottom)) bottom) bottom)) bottom) (All (Implies (Implies (Implies (Member zero (succ (succ zero))) (Implies (Member zero (succ zero)) bottom)) bottom) bottom))))) bottom)) bottom) (Implies (All (Implies (All (Implies (Member zero (succ (succ zero))) (Implies (All (Implies (Implies (Implies (Implies (Implies (Member zero (succ zero)) (Implies (Member zero (succ (succ zero))) bottom)) bottom) (Implies (All (Implies (Implies (Implies (Member zero (succ (succ zero))) (Implies (Member zero (succ (succ (succ zero)))) bottom)) bottom) (Equal zero (succ zero)))) bottom)) bottom) bottom)) bottom))) bottom)) bottom)));
+
+// Parameter closure and capture-avoiding renaming are explicit premises.
+// Redundant in full ZFC; retained to match the current zfc_axiom constructors.
+// Removing it requires a syntactic derivation from Replacement and Empty Set.
+axiom ax_separation (n : Index) (phi renamed result : Formula)
+  : Scoped (succ n) phi -> Renames sep_map phi renamed
+  -> Closes n (All (Implies (All (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (Implies (Member zero (succ (succ zero))) (Implies renamed bottom)) bottom)) (Implies (Implies (Implies (Implies (Member zero (succ (succ zero))) (Implies renamed bottom)) bottom) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom)) result -> Zax result;
+axiom ax_replacement (n : Index) (theta value unique image result : Formula)
+  : Scoped (succ (succ n)) theta
+  -> Renames value_map theta value -> Renames unique_map theta unique
+  -> Renames image_map theta image
+  -> Closes n (All (Implies (All (Implies (Member zero (succ zero)) (Implies (All (Implies (Implies (Implies value (Implies (All (Implies unique (Equal zero (succ zero)))) bottom)) bottom) bottom)) bottom))) (Implies (All (Implies (All (Implies (Implies (Implies (Member zero (succ zero)) (Implies (All (Implies (Implies (Implies (Member zero (succ (succ (succ zero)))) (Implies image bottom)) bottom) bottom)) bottom)) (Implies (Implies (Implies (All (Implies (Implies (Implies (Member zero (succ (succ (succ zero)))) (Implies image bottom)) bottom) bottom)) bottom) (Member zero (succ zero))) bottom)) bottom)) bottom)) bottom))) result -> Zax result;
+
+// Exactly the ten constructors of Deduction.derives, with explicit contexts.
+axiom Derives : Index -> Context -> Formula -> Type;
+axiom nd_assume (n : Index) (g : Context) (p : Formula)
+  : Scoped n p -> InContext p g -> Derives n g p;
+axiom nd_axiom (n : Index) (g : Context) (p : Formula) : Zax p -> Derives n g p;
+axiom nd_imp_intro (n : Index) (g : Context) (p q : Formula)
+  : Scoped n p -> Derives n (cons p g) q -> Derives n g (Implies p q);
+axiom nd_imp_elim (n : Index) (g : Context) (p q : Formula)
+  : Derives n g (Implies p q) -> Derives n g p -> Derives n g q;
+axiom nd_false (n : Index) (g : Context) (p : Formula)
+  : Scoped n p -> Derives n g bottom -> Derives n g p;
+axiom nd_classical (n : Index) (g : Context) (p : Formula)
+  : Scoped n p -> Derives n (cons (Implies p bottom) g) bottom -> Derives n g p;
+axiom nd_all_intro (n : Index) (g h : Context) (p : Formula)
+  : Lifts g h -> Derives (succ n) h p -> Derives n g (All p);
+axiom nd_all_elim (n : Index) (g : Context) (p q : Formula) (x : Index)
+  : Lt x n -> Renames (unbind_map x) p q
+  -> Derives n g (All p) -> Derives n g q;
+axiom nd_eq_refl (n : Index) (g : Context) (x : Index) : Lt x n -> Derives n g (Equal x x);
+axiom nd_eq_subst (n : Index) (g : Context) (p px py : Formula) (x y : Index)
+  : Scoped (succ n) p -> Lt x n -> Lt y n
+  -> Renames (unbind_map x) p px -> Renames (unbind_map y) p py
+  -> Derives n g (Equal x y) -> Derives n g px -> Derives n g py;
