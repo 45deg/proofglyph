@@ -16,6 +16,8 @@
 
 | 分野 | 命題・操作 | 宣言名 | ファイル |
 | --- | --- | --- | --- |
+| 入門 | 恒等関数・依存型・β同値 | [id](../examples/basics.tp), [dependent_id](../examples/basics.tp), [beta](../examples/basics.tp) | `basics.tp` |
+| 入門 | 証明済みの含意の合成を使う | [composition_example](../examples/logic.tp) | `logic.tp` |
 | 論理 | 含意の合成 `(A → B) → (B → C) → A → C` | [implication_composition](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
 | 論理 | 引数の交換・複製、関数の合成 | [exchange](../examples/commons/logic/propositional.tp), [duplicate](../examples/commons/logic/propositional.tp), [function_composition](../examples/commons/logic/quantifiers.tp) | `logic/propositional.tp`, `logic/quantifiers.tp` |
 | 論理 | 連言の交換則・結合則（両方向） | [and_comm](../examples/commons/logic/propositional.tp), [and_assoc_forward](../examples/commons/logic/propositional.tp), [and_assoc_backward](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
@@ -24,6 +26,7 @@
 | 論理 | ド・モルガン則 `¬(A ∨ B) ⇔ (¬A ∧ ¬B)`、`¬(A ∧ B) ⇔ (¬A ∨ ¬B)` | [demorgan_or_forward](../examples/commons/logic/demorgan.tp), [demorgan_or_backward](../examples/commons/logic/demorgan.tp), [demorgan_and_forward](../examples/commons/logic/demorgan.tp), [demorgan_and_backward](../examples/commons/logic/demorgan.tp) | `logic/demorgan.tp` |
 | 論理 | 全称の具体化・存在への証人導入 | [forall_specialize](../examples/commons/logic/quantifiers.tp), [exists_witness](../examples/commons/logic/quantifiers.tp), [forall_to_exists](../examples/commons/logic/quantifiers.tp) | `logic/quantifiers.tp` |
 | 等式 | 対称律・推移律・関数による保存 | [eq_sym](../examples/commons/equality.tp), [eq_trans](../examples/commons/equality.tp), [eq_cong](../examples/commons/equality.tp) | `equality.tp` |
+| 自然数 | 強い帰納法 | [nat_strong_induction](../examples/commons/nat/induction.tp) | `nat/induction.tp` |
 | 自然数 | `0 + n = n`, `n + 0 = n` | [add_zero_left](../examples/commons/nat/addition.tp), [add_zero_right](../examples/commons/nat/addition.tp) | `nat/addition.tp` |
 | 自然数 | 加算の結合則・交換則 | [add_assoc](../examples/commons/nat/addition.tp), [add_comm](../examples/commons/nat/addition.tp) | `nat/addition.tp` |
 | 自然数 | 乗算の分配則（両側）・結合則・交換則 | [mul_add_left](../examples/commons/nat/multiplication.tp), [mul_add_right](../examples/commons/nat/multiplication.tp), [mul_assoc](../examples/commons/nat/multiplication.tp), [mul_comm](../examples/commons/nat/multiplication.tp) | `nat/multiplication.tp` |
@@ -32,6 +35,10 @@
 | 自然数 | `2Σ(k=1..n) k = n(n+1)` | [triangular_double](../examples/commons/nat/sums.tp) | `nat/sums.tp` |
 | 整数論 | 整除性の推移律・和・積への保存 | [divides_trans](../examples/commons/nat/divisibility.tp), [divides_add](../examples/commons/nat/divisibility.tp), [divides_mul_right](../examples/commons/nat/divisibility.tp), [divides_mul_left](../examples/commons/nat/divisibility.tp) | `nat/divisibility.tp` |
 | 整数論 | 合同式の加算・乗算・累乗による保存 | [cong_add](../examples/commons/nat/congruence.tp), [cong_mul](../examples/commons/nat/congruence.tp), [cong_pow](../examples/commons/nat/congruence.tp) | `nat/congruence.tp` |
+| 整数論 | 除法の原理（商と余りの存在） | [division_algorithm](../examples/commons/nat/division.tp) | `nat/division.tp` |
+| 整数論 | 最小の正の証人の存在 | [least_positive](../examples/commons/nat/division.tp) | `nat/division.tp` |
+| 整数論 | 素因数の存在 | [prime_factor](../examples/commons/nat/factorization.tp) | `nat/factorization.tp` |
+| 整数論 | ユークリッドの補題・平方の整除性 | [prime_mul_elim](../examples/commons/nat/euclid.tp), [prime_divides_square](../examples/commons/nat/euclid.tp) | `nat/euclid.tp` |
 | 整数論 | 素数 `p` は `C(p,k)` を割り切る（`0 < k < p`） | [prime_divides_choose](../examples/commons/nat/prime_binomial.tp) | `nat/prime_binomial.tp` |
 | 整数論 | 二項定理 | [binomial_theorem](../examples/commons/nat/binomial_theorem.tp) | `nat/binomial_theorem.tp` |
 | 整数論 | 素数は無限に存在する | [primes_infinite](../examples/commons/nat/prime_infinitude.tp) | `nat/prime_infinitude.tp` |
