@@ -200,11 +200,6 @@
       "path": "examples/commons/nat/division.tp",
       "line": 6
     }],
-    "整数論：最小の正の証人の存在": [{
-      "name": "least_positive",
-      "path": "examples/commons/nat/division.tp",
-      "line": 69
-    }],
     "整数論：素因数の存在": [{
       "name": "prime_factor",
       "path": "examples/commons/nat/factorization.tp",

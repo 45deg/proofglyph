@@ -20,7 +20,8 @@
     :focus-visible { outline: 3px solid #005fcc; outline-offset: 3px; }
     #status { min-height: 1.7em; }
     .note { color: #555; font-size: .9rem; }
-    .grammar { margin-top: 36px; padding-top: 24px; border-top: 1px solid #ccc; }
+    .grammar-panes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 36px; padding-top: 24px; border-top: 1px solid #ccc; }
+    .grammar { min-width: 0; }
     .grammar h2 { margin: 0 0 16px; font-size: 1.35rem; }
     .grammar h3 { margin: 24px 0 10px; font-size: 1.05rem; }
     .grammar p, .grammar li { max-width: 80ch; line-height: 1.8; }
@@ -29,7 +30,7 @@
     .grammar table { width: 100%; border-collapse: collapse; line-height: 1.7; }
     .grammar th, .grammar td { text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid #ddd; overflow-wrap: anywhere; }
     .grammar th:first-child, .grammar td:first-child { width: 35%; }
-    @media (max-width: 850px) { .panes { grid-template-columns: 1fr; } textarea { height: 280px; } main { padding: 24px 16px; } }
+    @media (max-width: 850px) { .panes, .grammar-panes { grid-template-columns: 1fr; } textarea { height: 280px; } main { padding: 24px 16px; } }
   </style>
   <script src="browser.bc.js" defer></script>
   <script src="app.js" defer></script>
@@ -37,31 +38,62 @@
 <body>
 <main>
   <h1>tinyprover</h1>
-  <p>tp言語のソースコードを pa言語（記号列）へコンパイルし、Kernel で型検査を行います。pa言語を直接編集して検査することもできます。</p>
+  <p>pa言語で型と証明項を書き、型検査で証明を確かめます。tp言語はpaの高級言語で、変数や定数に名前を付けて書いたソースからpaを生成します。</p>
   <label for="example">証明例</label>
   <select id="example" disabled><option value="">証明例を選択…</option></select>
   <div class="panes">
     <section>
-      <label for="tp">1. tp言語（ソース）</label>
-      <textarea id="tp" spellcheck="false" autocapitalize="off" autocomplete="off">axiom A : Type;
-def id (x : A) : A := x;
-theorem keep (x : A) (y : A) : A := x;</textarea>
-      <button id="compile" disabled>コンパイルして検査</button>
-    </section>
-    <section>
-      <label for="pa">2. pa言語（記号列）</label>
+      <label for="pa">pa言語</label>
       <textarea id="pa" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       <button id="check" disabled>pa言語を検査</button>
     </section>
     <section>
-      <label for="result">3. 検査結果</label>
+      <label for="result">検査結果</label>
       <textarea id="result" readonly spellcheck="false"></textarea>
+    </section>
+    <section>
+      <label for="tp">tp言語（paの高級言語）</label>
+      <textarea id="tp" spellcheck="false" autocapitalize="off" autocomplete="off">axiom A : Type;
+def id (x : A) : A := x;
+theorem keep (x : A) (y : A) : A := x;</textarea>
+      <button id="compile" disabled>paを生成して検査</button>
     </section>
   </div>
   <p id="status" role="status" aria-live="polite">読み込み中…</p>
   <p class="note">すべての処理はブラウザ内で完結します。</p>
+  <div class="grammar-panes">
+  <section class="grammar" aria-labelledby="pa-grammar">
+    <h2 id="pa-grammar">pa言語（記号列）の構文</h2>
+    <p>paは左から順に読みます。型や項をスタックに積み、後ろに置いた記号で組み立てます。スタックは、途中の型や項を順番に保持するものです。下の表では右端が最後に積んだ項を表します。</p>
+    <table>
+      <thead><tr><th scope="col">記号</th><th scope="col">操作</th></tr></thead>
+      <tbody>
+        <tr><td><code>*</code></td><td><code>Type</code> をプッシュ</td></tr>
+        <tr><td><code>^</code></td><td><code>Kind</code> をプッシュ</td></tr>
+        <tr><td><code>$n</code></td><td>変数（de Bruijn index、<code>$0</code> が最内）</td></tr>
+        <tr><td><code>#n</code></td><td>登録済み定数（0始まり）</td></tr>
+        <tr><td><code>&gt;</code></td><td><code>A B</code> を取り出し、引数の型が <code>A</code>、戻り値の型が <code>B</code> の関数型（Π型）を積む。<code>B</code> は引数を参照できる</td></tr>
+        <tr><td><code>\</code></td><td><code>A b</code> を取り出し、型 <code>A</code> の引数を受け取って <code>b</code> を返す関数（λ項）を積む</td></tr>
+        <tr><td><code>@</code></td><td><code>f x</code> を取り出し、関数 <code>f</code> を引数 <code>x</code> に適用した項を積む</td></tr>
+        <tr><td><code>:</code></td><td>スタックが <code>[型]</code> のとき、その型を持つ定数を前提として登録し、スタックを空にする</td></tr>
+        <tr><td><code>!</code></td><td>スタックが <code>[型, 項]</code> のとき、項がその型を持つか検査して定数を登録し、スタックを空にする</td></tr>
+      </tbody>
+    </table>
+    <h3>恒等関数を書く</h3>
+    <pre><code>*:
+#0#0&gt;#0$0\!</code></pre>
+    <p><code>*:</code> は、型を表す定数を前提として登録します。最初の定数なので番号は <code>#0</code> です。続く <code>#0#0&gt;</code> で、その型の値を受け取り、同じ型の値を返す関数型を作ります。</p>
+    <p><code>#0$0\</code> は、受け取った引数をそのまま返す関数です。最後の <code>!</code> で関数型と関数を照合し、検査が成功すると新しい定数 <code>#1</code> を登録します。</p>
+    <h3>変数と定数の番号</h3>
+    <p><code>$0</code> は最も内側の引数、<code>$1</code> はその一つ外側の引数です。この番号の付け方をde Bruijn indexと呼びます。たとえば <code>#0#0$1\\</code> は、型 <code>#0</code> の引数を二つ受け取り、先に受け取った方を返す関数です。</p>
+    <p><code>#0</code>、<code>#1</code>、…は登録順に付く定数番号です。使えるのは、その位置までに登録した定数だけです。</p>
+    <h3>空白と検査</h3>
+    <p>記号の間の空白や改行は省けます。<code>$0</code> や <code>#12</code> の記号と数字の間には空白を入れられません。paにはコメント構文がありません。</p>
+    <p>型検査は <code>:</code> と <code>!</code> で登録するときに行います。スタックの項が足りない場合、登録時に余分な項がある場合、末尾に未登録の項が残る場合もエラーになります。</p>
+  </section>
   <section class="grammar" aria-labelledby="tp-grammar">
-    <h2 id="tp-grammar">tp言語の構文</h2>
+    <h2 id="tp-grammar">tp言語（paの高級言語）の構文</h2>
+    <p>tpでは、paの定数番号や変数番号を名前で書き、型と項を通常の関数の表記で組み立てます。「paを生成して検査」を押すと、名前を番号に変換してpaを生成し、そのpaを検査します。</p>
     <h3>宣言</h3>
     <table>
       <thead><tr><th scope="col">構文</th><th scope="col">説明</th></tr></thead>
@@ -75,39 +107,29 @@ theorem keep (x : A) (y : A) : A := x;</textarea>
     <table>
       <thead><tr><th scope="col">構文</th><th scope="col">説明</th></tr></thead>
       <tbody>
-        <tr><td><code>Type</code> / <code>Kind</code></td><td>宇宙（<code>Type : Kind</code>）</td></tr>
+        <tr><td><code>Type</code> / <code>Kind</code></td><td><code>Type</code> は型の型。<code>Type : Kind</code> が成り立つ。<code>Kind</code> 自体には型がない</td></tr>
         <tr><td><code>f x y</code></td><td>関数適用（左結合）</td></tr>
         <tr><td><code>A -&gt; B</code></td><td>関数型（右結合）</td></tr>
         <tr><td><code>forall (x : A), B</code></td><td>依存関数型（Π型）</td></tr>
         <tr><td><code>fun (x : A) =&gt; b</code></td><td>ラムダ抽象</td></tr>
       </tbody>
     </table>
+    <h3>paとの対応</h3>
+    <pre><code>axiom A : Type;
+def id (x : A) : A := x;</code></pre>
+    <p>このソースから、paの例と同じ <code>*:#0#0&gt;#0$0\!</code> が生成されます。<code>A</code> が <code>#0</code> に、関数の引数 <code>x</code> が <code>$0</code> に対応します。定数名 <code>id</code> はpaの記号列には含まれません。</p>
+    <p>宣言に書いた引数は、型では <code>forall</code>、本体では <code>fun</code> に展開されます。上の定義は次のようにも書けます。</p>
+    <pre><code>def id : A -&gt; A := fun (x : A) =&gt; x;</code></pre>
+    <p><code>f x y</code> は <code>(f x) y</code>、<code>A -&gt; B -&gt; C</code> は <code>A -&gt; (B -&gt; C)</code> と読みます。<code>forall (x : A), B</code> では、戻り値の型 <code>B</code> に引数 <code>x</code> を使えます。</p>
+    <h3>証明としての型検査</h3>
+    <p>証明例では、<code>Prop</code> を命題の型、<code>Prf P</code> を命題 <code>P</code> の証明の型として宣言しています。<code>theorem 名前 : Prf P := 項;</code> の検査では、その項が <code>Prf P</code> 型を持つことを確かめます。論理規則や自然数の公理も、宣言した前提として使います。</p>
+    <p><code>def</code> と <code>theorem</code> は同じ検査を受け、どちらもpaの <code>!</code> に変換されます。登録後の定数は、型の比較で本体を展開しません。直接書いた <code>(fun (x : A) =&gt; x) a</code> は <code>a</code> に簡約されますが、登録済みの <code>id a</code> は展開されません。</p>
+    <p>「検査成功」は、入力に含まれる前提のもとで項の型が正しいことを表します。前提そのものの正しさや無矛盾性は、この検査では判定しません。</p>
+    <h3>デモでの入力</h3>
+    <p><code>//</code> から行末までをコメントとして書けます。引数はすべて明示します。証明を自動で埋める穴やタクティクスはありません。このデモでは <code>import</code> を使えないため、証明例には依存する宣言も含めています。</p>
+    <p>tpを編集したら「paを生成して検査」、paを編集したら「pa言語を検査」を押してください。paを直接編集した後は、検査結果の定数名を <code>c0</code>、<code>c1</code>、…で表示します。</p>
   </section>
-  <section class="grammar" aria-labelledby="pa-grammar">
-    <h2 id="pa-grammar">pa言語（記号列）の構文</h2>
-    <table>
-      <thead><tr><th scope="col">記号</th><th scope="col">操作</th></tr></thead>
-      <tbody>
-        <tr><td><code>*</code></td><td><code>Type</code> をプッシュ</td></tr>
-        <tr><td><code>^</code></td><td><code>Kind</code> をプッシュ</td></tr>
-        <tr><td><code>$n</code></td><td>変数（de Bruijn index、<code>$0</code> が最内）</td></tr>
-        <tr><td><code>#n</code></td><td>登録済み定数（0始まり）</td></tr>
-        <tr><td><code>&gt;</code></td><td>Π型の構築: <code>A B → Pi(A, B)</code></td></tr>
-        <tr><td><code>\</code></td><td>λ項の構築: <code>A b → Lam(A, b)</code></td></tr>
-        <tr><td><code>@</code></td><td>関数適用: <code>f x → App(f, x)</code></td></tr>
-        <tr><td><code>:</code></td><td>前提の登録（スタック: <code>[型]</code>）</td></tr>
-        <tr><td><code>!</code></td><td>定義・証明の登録（スタック: <code>[型, 項]</code>）</td></tr>
-      </tbody>
-    </table>
-    <h3>対応例</h3>
-    <pre><code>// tp言語
-axiom A : Type;
-def id (x : A) : A := x;
-
-// pa言語
-*:
-#0#0&gt;#0$0\!</code></pre>
-  </section>
+  </div>
 </main>
 </body>
 </html>
