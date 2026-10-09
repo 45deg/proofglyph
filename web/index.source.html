@@ -20,6 +20,7 @@
     .brand-row { display:flex; align-items:baseline; gap:18px; padding:18px 0 14px; }
     h1 { font-size:20px; letter-spacing:-.5px; margin:0; font-weight:650; }
     .brand-row p { margin:0; color:var(--muted); font-size:13px; }
+    .repository-link { margin-left:auto; font-size:13px; white-space:nowrap; }
     .tabs { display:flex; gap:24px; overflow-x:auto; }
     .tabs button { flex-shrink:0; border:0; border-radius:0; background:transparent; padding:12px 2px; color:var(--muted); border-bottom:2px solid transparent; }
     .tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--text); font-weight:600; }
@@ -65,7 +66,7 @@
     .doc-nav { display:flex; gap:16px; flex-wrap:wrap; padding-bottom:16px; border-bottom:1px solid var(--line); }
     @media (prefers-color-scheme:dark) { :root { --bg:#181818; --surface:#202020; --text:#ececec; --muted:#ababaf; --line:#424246; --hover:#2e2e30; --accent:#78b7ff; } }
     @media (max-width:1000px) { .panes { grid-template-columns:minmax(220px,var(--hieratic-width,1fr)) minmax(220px,var(--proofglyph-width,1fr)); } .pane:last-child { grid-column:1/-1; border-left:0; border-top:1px solid var(--line); } .results { height:auto; max-height:480px; min-height:160px; } }
-    @media (max-width:640px) { .header-inner,main { padding-left:16px; padding-right:16px; } .brand-row { display:block; } .brand-row p { margin-top:4px; } .tabs { gap:20px; } .panes { grid-template-columns:1fr; } .pane + .pane { border-left:0; border-top:1px solid var(--line); } textarea { height:300px; } .toolbar .note { margin-left:0; width:100%; } .doc { font-size:14px; } .doc th,.doc td { padding:10px 6px; } }
+    @media (max-width:640px) { .header-inner,main { padding-left:16px; padding-right:16px; } .brand-row { display:grid; grid-template-columns:1fr auto; gap:4px 12px; } .brand-row p { grid-column:1/-1; grid-row:2; } .repository-link { grid-column:2; grid-row:1; } .tabs { gap:20px; } .panes { grid-template-columns:1fr; } .pane + .pane { border-left:0; border-top:1px solid var(--line); } textarea { height:300px; } .toolbar .note { margin-left:0; width:100%; } .doc { font-size:14px; } .doc th,.doc td { padding:10px 6px; } }
   </style>
   <script src="browser.bc.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous" defer></script>
@@ -76,7 +77,7 @@
 <a class="skip-link" href="#main">本文へ</a>
 <header class="app-header">
   <div class="header-inner">
-    <div class="brand-row"><h1>proofglyph</h1><p>λΠ 計算に基づく証明検査器</p></div>
+    <div class="brand-row"><h1>proofglyph</h1><p>λΠ 計算に基づく証明検査器</p><a class="repository-link" href="https://github.com/45deg/proofglyph">Repository</a></div>
     <nav class="tabs" role="tablist" aria-label="ワークスペースとドキュメント">
       <button id="tab-workspace" role="tab" aria-selected="true" aria-controls="workspace" tabindex="0">エディタ</button>
       <button id="tab-foundations" role="tab" aria-selected="false" aria-controls="foundations" tabindex="-1">基礎・背景</button>
