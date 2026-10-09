@@ -1,5 +1,5 @@
 From Stdlib Require Import List Permutation PeanoNat.
-From Tinyprover.Pa Require Import Syntax Program.
+From Tinyprover.Proofglyph Require Import Syntax Program.
 From Tinyprover.Calculi Require Import Calculi Encoding Verification.
 Import ListNotations.
 
@@ -213,7 +213,7 @@ Qed.
 
 (** The evidence can be installed as a proof declaration without adding any
     assumptions. This is declarative validity, not bounded checker acceptance. *)
-Corollary NK_has_valid_pa_proof g a : NK g a ->
+Corollary NK_has_valid_proofglyph_proof g a : NK g a ->
   exists p, valid_program fixed_signature [Prove (NK_code g a) p]
     (fixed_signature ++ [NK_code g a]).
 Proof.
@@ -224,7 +224,7 @@ Proof.
   - left; reflexivity.
   - exact P.
 Qed.
-Corollary LK_has_valid_pa_proof g d : LK g d ->
+Corollary LK_has_valid_proofglyph_proof g d : LK g d ->
   exists p, valid_program fixed_signature [Prove (LK_code g d) p]
     (fixed_signature ++ [LK_code g d]).
 Proof.
@@ -240,5 +240,5 @@ Print Assumptions membership_has_lf_evidence.
 Print Assumptions permutation_has_lf_evidence.
 Print Assumptions NK_has_lf_derivation.
 Print Assumptions LK_has_lf_derivation.
-Print Assumptions NK_has_valid_pa_proof.
-Print Assumptions LK_has_valid_pa_proof.
+Print Assumptions NK_has_valid_proofglyph_proof.
+Print Assumptions LK_has_valid_proofglyph_proof.

@@ -1,9 +1,9 @@
 "use strict";
 const example = document.getElementById("example");
 let sourcemap = null;
-let sourcePath = "examples/browser.tp";
-const tp = document.getElementById("tp");
-const pa = document.getElementById("pa");
+let sourcePath = "examples/browser.ht";
+const hieratic = document.getElementById("hieratic");
+const proofglyph = document.getElementById("proofglyph");
 const result = document.getElementById("result");
 const status = document.getElementById("status");
 const compileButton = document.getElementById("compile");
@@ -54,7 +54,7 @@ function showProofs(entries) {
 }
 
 function check() {
-  const checked = (sourcemap ? globalThis.tinyprover.checkMapped : globalThis.tinyprover.check)(pa.value);
+  const checked = (sourcemap ? globalThis.tinyprover.checkMapped : globalThis.tinyprover.check)(proofglyph.value);
   if (checked.ok) showProofs(JSON.parse(checked.entries));
   else showText(`検査失敗\n${checked.output}`);
   status.textContent = checked.ok ? "検査成功" : "検査失敗";
@@ -62,28 +62,28 @@ function check() {
 
 function compile() {
   sourcemap = null;
-  const compiled = globalThis.tinyprover.compileAt(sourcePath, tp.value);
+  const compiled = globalThis.tinyprover.compileAt(sourcePath, hieratic.value);
   if (!compiled.ok) {
-    pa.value = "";
+    proofglyph.value = "";
     showText(compiled.output);
     status.textContent = "コンパイル失敗";
     return;
   }
-  pa.value = compiled.output;
+  proofglyph.value = compiled.output;
   sourcemap = JSON.parse(compiled.sourcemap);
   check();
 }
 
-tp.addEventListener("input", () => {
+hieratic.addEventListener("input", () => {
   sourcemap = null;
   result.replaceChildren();
-  status.textContent = "tp が変更されました。再コンパイルしてください。";
+  status.textContent = "hieratic が変更されました。再コンパイルしてください。";
 });
-pa.addEventListener("input", () => {
+proofglyph.addEventListener("input", () => {
   sourcemap = null;
   result.replaceChildren();
   selectedNames = new Set();
-  status.textContent = "pa が変更されました。再検査してください。";
+  status.textContent = "proofglyph が変更されました。再検査してください。";
 });
 async function initialize() {
 if (globalThis.tinyprover) {
@@ -140,15 +140,15 @@ if (globalThis.tinyprover) {
     }
     result.replaceChildren();
     selectedNames = new Set(catalog.proofs[name].filter(match => match.path === path).map(match => match.name));
-    if (path.endsWith(".pa")) {
+    if (path.endsWith(".pg")) {
       sourcemap = null;
-      tp.value = "";
-      sourcePath = "examples/browser.tp";
-      pa.value = source;
+      hieratic.value = "";
+      sourcePath = "examples/browser.ht";
+      proofglyph.value = source;
       check();
     } else {
       sourcePath = path;
-      tp.value = source;
+      hieratic.value = source;
       compile();
     }
   });

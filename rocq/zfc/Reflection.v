@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Pa Require Import Syntax Program Kernel Substitution WellFormed TypingSubstitution
+From Tinyprover.Proofglyph Require Import Syntax Program Kernel Substitution WellFormed TypingSubstitution
   Checker Evaluation Confluence Preservation TypedNormalization.
 From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
 From Tinyprover.ZfcDeep Require Import Artifact DeepVerification Translation GroundAdequacy.
@@ -299,11 +299,11 @@ Proof.
 Qed.
 Theorem concrete_correct_presentation : correct_presentation zfc_signature proof_type.
 Proof. apply declarative_to_correct; exact concrete_declarative_presentation. Qed.
-Theorem ZFC_pa_iff p : sentence p ->
+Theorem ZFC_proofglyph_iff p : sentence p ->
   (ZFC_proves p <-> exists t fuel, check fuel zfc_signature t (proof_type p) = true).
 Proof. apply presentation_iff; exact concrete_correct_presentation. Qed.
 
 Print Assumptions normal_atomic_ground.
 Print Assumptions constant_meaning.
 Print Assumptions typed_proof_recovered.
-Print Assumptions ZFC_pa_iff.
+Print Assumptions ZFC_proofglyph_iff.

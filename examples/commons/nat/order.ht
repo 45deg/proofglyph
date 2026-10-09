@@ -1,0 +1,188 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/order.ht";
+import "addition.ht";
+
+theorem lt_succ_cancel (a b : Nat) (h : Prf (Lt (succ a) (succ b))) : Prf (Lt a b)
+  := lt_elim (succ a) (succ b) (Lt a b) h (fun (k : Nat) (hk : Prf (Eq (succ b) (add (succ a) (succ k)))) =>
+    lt_intro a b k (succ_injective b (add a (succ k)) (eq_trans (succ b) (add (succ a) (succ k)) (succ (add
+    a (succ k))) (hk) (add_succ a (succ k)))));
+
+theorem lt_upper_succ (a b : Nat) (h : Prf (Lt a b)) : Prf (Lt a (succ b))
+  := lt_elim a b (Lt a (succ b)) h (fun (k : Nat) (hk : Prf (Eq b (add a (succ k)))) => lt_intro a (succ b)
+    (succ k) (eq_trans (succ b) (succ (add a (succ k))) (add a (succ (succ k))) (eq_cong (fun (z : Nat) =>
+    (succ z)) b (add a (succ k)) (hk)) (eq_sym (add a (succ (succ k))) (succ (add a (succ k)))
+    (add_succ_right a (succ k)))));
+
+theorem lt_zero_absurd (a : Nat) (h : Prf (Lt a zero)) : Prf False
+  := lt_elim a zero False h (fun (k : Nat) (hk : Prf (Eq zero (add a (succ k)))) =>
+    succ_not_zero (add a k) (eq_trans (succ (add a k)) (add a (succ k)) zero
+      (eq_sym (add a (succ k)) (succ (add a k)) (add_succ_right a k))
+      (eq_sym zero (add a (succ k)) hk)));
+
+theorem lt_zero_irrefl (h : Prf (Lt zero zero)) : Prf False
+  := lt_elim zero zero False h (fun (k : Nat) (h : Prf (Eq zero (add zero (succ k)))) => succ_not_zero k
+    (eq_trans (succ k) (add zero (succ k)) zero (eq_sym (add zero (succ k)) (succ k) (add_zero (succ k)))
+    (eq_sym zero (add zero (succ k)) (h))));
+
+theorem zero_lt_succ (n : Nat) : Prf (Lt zero (succ n))
+  := lt_intro zero (succ n) n (eq_sym (add zero (succ n)) (succ n) (add_zero (succ n)));
+
+theorem le_succ (a b : Nat) (h : Prf (Le a b)) : Prf (Le (succ a) (succ b))
+  := le_elim a b (Le (succ a) (succ b)) h
+    (fun (k : Nat) (hk : Prf (Eq b (add a k))) => le_intro (succ a) (succ b) k (eq_trans (succ b) (succ (add
+    a k)) (add (succ a) k) (eq_cong (fun (z : Nat) => (succ z)) b (add a k) (hk)) (eq_sym (add (succ a) k)
+    (succ (add a k)) (add_succ a k))));
+
+theorem lt_succ (a b : Nat) (h : Prf (Lt a b)) : Prf (Lt (succ a) (succ b))
+  := lt_elim a b (Lt (succ a) (succ b)) h
+    (fun (k : Nat) (hk : Prf (Eq b (add a (succ k)))) => lt_intro (succ a) (succ b) k (eq_trans (succ b)
+    (succ (add a (succ k))) (add (succ a) (succ k)) (eq_cong (fun (z : Nat) => (succ z)) b (add a (succ k))
+    (hk)) (eq_sym (add (succ a) (succ k)) (succ (add a (succ k))) (add_succ a (succ k)))));
+
+theorem order_cases (a b : Nat) : Prf (Or (Lt b a) (Le a b))
+  := all_nat_elim (fun (b : Nat) => (Or (Lt b a) (Le a b)))
+    (nat_induction (fun (x : Nat) => (AllNat (fun (b : Nat) => (Or (Lt b x) (Le x b)))))
+      (all_nat_intro (fun (b : Nat) => (Or (Lt b zero) (Le zero b))) (fun (b : Nat) => or_right (Lt b zero)
+    (Le zero b) (le_intro zero b b (eq_sym (add zero b) b (add_zero b)))))
+      (fun (x : Nat) (ih : Prf (AllNat (fun (b : Nat) => (Or (Lt b x) (Le x b))))) => all_nat_intro (fun (b
+    : Nat) => (Or (Lt b (succ x)) (Le (succ x) b)))
+        (fun (b : Nat) => nat_cases (fun (b : Nat) => (Or (Lt b (succ x)) (Le (succ x) b))) b
+  (or_left (Lt zero (succ x)) (Le (succ x) zero) (zero_lt_succ x))
+  (fun (y : Nat) => or_elim (Lt y x) (Le x y) (Or (Lt (succ y) (succ x)) (Le (succ x) (succ y)))
+    (all_nat_elim (fun (b : Nat) => (Or (Lt b x) (Le x b))) ih y)
+    (fun (h : Prf (Lt y x)) => or_left (Lt (succ y) (succ x)) (Le (succ x) (succ y)) (lt_succ y x h))
+    (fun (h : Prf (Le x y)) => or_right (Lt (succ y) (succ x)) (Le (succ x) (succ y)) (le_succ x y h))))) a)
+    b;
+
+theorem le_refl (a : Nat) : Prf (Le a a)
+  := le_intro a a zero (eq_sym (add a zero) a (add_zero_right a));
+
+theorem le_succ_split (a b : Nat) (h : Prf (Le a (succ b))) : Prf (Or (Le a b) (Eq a (succ b)))
+  := le_elim a (succ b) (Or (Le a b) (Eq a (succ b))) h (fun (k : Nat) (he : Prf (Eq (succ b) (add a k))) =>
+    imp_elim (Eq (succ b) (add a k)) (Or (Le a b) (Eq a (succ b)))
+      (nat_cases (fun (j : Nat) => (Imp (Eq (succ b) (add a j)) (Or (Le a b) (Eq a (succ b))))) k
+        (imp_intro (Eq (succ b) (add a zero)) (Or (Le a b) (Eq a (succ b)))
+          (fun (hk : Prf (Eq (succ b) (add a zero))) => or_right (Le a b) (Eq a (succ b)) (eq_sym (succ b) a
+    (eq_trans (succ b) (add a zero) a (hk) (add_zero_right a)))))
+        (fun (j : Nat) => imp_intro (Eq (succ b) (add a (succ j))) (Or (Le a b) (Eq a (succ b)))
+          (fun (hk : Prf (Eq (succ b) (add a (succ j)))) => or_left (Le a b) (Eq a (succ b))
+            (le_intro a b j (succ_injective b (add a j) (eq_trans (succ b) (add a (succ j)) (succ (add a j))
+    (hk) (add_succ_right a j))))))) he);
+
+theorem le_zero_eq (a : Nat) (h : Prf (Le a zero)) : Prf (Eq a zero)
+  := le_elim a zero (Eq a zero) h (fun (k : Nat) (hk : Prf (Eq zero (add a k))) =>
+    add_eq_zero_left a k (eq_sym zero (add a k) hk));
+
+theorem lt_succ_to_le (a b : Nat) (h : Prf (Lt a (succ b))) : Prf (Le a b)
+  := lt_elim a (succ b) (Le a b) h (fun (k : Nat) (hk : Prf (Eq (succ b) (add a (succ k)))) =>
+    le_intro a b k (succ_injective b (add a k) (eq_trans (succ b) (add a (succ k)) (succ (add a k)) (hk)
+    (add_succ_right a k))));
+
+theorem positive_addend_lt (d k n : Nat) (hd : Prf (Lt zero d))
+  (he : Prf (Eq n (add d k))) : Prf (Lt k n)
+  := lt_elim zero d (Lt k n) hd (fun (j : Nat) (hd : Prf (Eq d (add zero (succ j)))) =>
+    lt_intro k n j (eq_trans n (add (succ j) k) (add k (succ j)) (eq_trans n (add (add zero (succ j)) k)
+    (add (succ j) k) (eq_trans n (add d k) (add (add zero (succ j)) k) (he) (eq_cong (fun (z : Nat) => (add
+    z k)) d (add zero (succ j)) (hd))) (eq_cong (fun (z : Nat) => (add z k)) (add zero (succ j)) (succ j)
+    (add_zero (succ j)))) (add_comm (succ j) k)));
+
+theorem nonzero_positive (n : Nat) (hn : Prf (Not (Eq n zero))) : Prf (Lt zero n)
+  := imp_elim (Not (Eq n zero)) (Lt zero n)
+    (nat_cases (fun (x : Nat) => (Imp (Not (Eq x zero)) (Lt zero x))) n
+      (imp_intro (Not (Eq zero zero)) (Lt zero zero) (fun (h : Prf (Not (Eq zero zero))) => false_elim (Lt
+    zero zero) (not_elim (Eq zero zero) h (eq_refl zero))))
+      (fun (x : Nat) => imp_intro (Not (Eq (succ x) zero)) (Lt zero (succ x))
+        (fun (h : Prf (Not (Eq (succ x) zero))) => zero_lt_succ x))) hn;
+
+theorem positive_not_zero (c : Nat) (hc : Prf (Lt zero c)) (hz : Prf (Eq c zero)) : Prf False
+  := lt_elim zero c False hc (fun (k : Nat) (h : Prf (Eq c (add zero (succ k)))) =>
+    succ_not_zero k (eq_trans (succ k) c zero (eq_sym c (succ k)
+      (eq_trans c (add zero (succ k)) (succ k) h (add_zero (succ k)))) hz));
+
+theorem le_lt_absurd (a b : Nat) (hle : Prf (Le a b)) (hlt : Prf (Lt b a)) : Prf False
+  := le_elim a b False hle (fun (k : Nat) (hk : Prf (Eq b (add a k))) =>
+    lt_elim b a False hlt (fun (j : Nat) (ha : Prf (Eq a (add b (succ j)))) =>
+      add_succ_not_self a (add k j)
+        (eq_trans (add a (succ (add k j))) (add (add a k) (succ j)) a
+          (eq_sym (add (add a k) (succ j)) (add a (succ (add k j)))
+            (eq_trans (add (add a k) (succ j)) (add a (add k (succ j))) (add a (succ (add k j)))
+              (add_assoc a k (succ j)) (eq_cong (fun (z : Nat) => add a z) (add k (succ j)) (succ (add k j))
+    (add_succ_right k j))))
+          (eq_trans (add (add a k) (succ j)) (add b (succ j)) a
+            (eq_cong (fun (z : Nat) => add z (succ j)) (add a k) b (eq_sym b (add a k) hk))
+            (eq_sym a (add b (succ j)) ha)))));
+
+theorem le_two_cases (d : Nat) (h : Prf (Le d (succ (succ zero)))) : Prf (Or (Eq d zero) (Or (Eq d (succ
+    zero)) (Eq d (succ (succ zero)))))
+  := imp_elim (Le d (succ (succ zero))) (Or (Eq d zero) (Or (Eq d (succ zero)) (Eq d (succ (succ zero)))))
+    (nat_cases (fun (x : Nat) => (Imp (Le x (succ (succ zero))) (Or (Eq x zero) (Or (Eq x (succ zero)) (Eq x
+    (succ (succ zero))))))) d
+      (imp_intro (Le zero (succ (succ zero))) (Or (Eq zero zero) (Or (Eq zero (succ zero)) (Eq zero (succ
+    (succ zero))))) (fun (h : Prf (Le zero (succ (succ zero)))) =>
+        or_left (Eq zero zero) (Or (Eq zero (succ zero)) (Eq zero (succ (succ zero)))) (eq_refl zero)))
+      (fun (x : Nat) => nat_cases (fun (x : Nat) => (Imp (Le (succ x) (succ (succ zero))) (Or (Eq (succ x)
+    zero) (Or (Eq (succ x) (succ zero)) (Eq (succ x) (succ (succ zero))))))) x
+        (imp_intro (Le (succ zero) (succ (succ zero))) (Or (Eq (succ zero) zero) (Or (Eq (succ zero) (succ
+    zero)) (Eq (succ zero) (succ (succ zero))))) (fun (h : Prf (Le (succ zero) (succ (succ zero)))) =>
+          or_right (Eq (succ zero) zero) (Or (Eq (succ zero) (succ zero)) (Eq (succ zero) (succ (succ
+    zero)))) (or_left (Eq (succ zero) (succ zero)) (Eq (succ zero) (succ (succ zero))) (eq_refl (succ
+    zero)))))
+        (fun (x : Nat) => imp_intro (Le (succ (succ x)) (succ (succ zero))) (Or (Eq (succ (succ x)) zero)
+    (Or (Eq (succ (succ x)) (succ zero)) (Eq (succ (succ x)) (succ (succ zero)))))
+          (fun (h : Prf (Le (succ (succ x)) (succ (succ zero)))) => le_elim (succ (succ x)) (succ (succ
+    zero)) (Or (Eq (succ (succ x)) zero) (Or (Eq (succ (succ x)) (succ zero)) (Eq (succ (succ x)) (succ
+    (succ zero))))) h
+            (fun (k : Nat) (hk : Prf (Eq (succ (succ zero)) (add (succ (succ x)) k))) =>
+              or_right (Eq (succ (succ x)) zero) (Or (Eq (succ (succ x)) (succ zero)) (Eq (succ (succ x))
+    (succ (succ zero)))) (or_right (Eq (succ (succ x)) (succ zero)) (Eq (succ (succ x)) (succ (succ zero)))
+    (eq_cong (fun (z : Nat) => succ (succ z)) x zero (add_eq_zero_left x k (eq_sym zero (add x k)
+    (succ_injective zero (add x k) (succ_injective (succ zero) (succ (add x k)) (eq_trans (succ (succ zero))
+    (succ (add (succ x) k)) (succ (succ (add x k))) (eq_trans (succ (succ zero)) (add (succ (succ x)) k)
+    (succ (add (succ x) k)) (hk) (add_succ (succ x) k)) (eq_cong (fun (z : Nat) => (succ z)) (add (succ x)
+    k) (succ (add x k)) (add_succ x k)))))))))))))) h;
+
+theorem gt_one_positive (n : Nat) (h : Prf (Lt (succ zero) n)) : Prf (Lt zero n)
+  := lt_elim (succ zero) n (Lt zero n) h
+    (fun (k : Nat) (hk : Prf (Eq n (add (succ zero) (succ k)))) => lt_intro zero n (succ k) (eq_trans n
+    (succ (succ k)) (add zero (succ (succ k))) (eq_trans n (succ (add zero (succ k))) (succ (succ k))
+    (eq_trans n (add (succ zero) (succ k)) (succ (add zero (succ k))) (hk) (add_succ zero (succ k)))
+    (eq_cong (fun (z : Nat) => (succ z)) (add zero (succ k)) (succ k) (add_zero (succ k)))) (eq_sym (add
+    zero (succ (succ k))) (succ (succ k)) (add_zero (succ (succ k))))));
+
+theorem le_ne_lt (a b : Nat) (hle : Prf (Le a b)) (hne : Prf (Not (Eq a b))) : Prf (Lt a b)
+  := le_elim a b (Lt a b) hle (fun (k : Nat) (hk : Prf (Eq b (add a k))) =>
+    imp_elim (Eq b (add a k)) (Lt a b)
+      (nat_cases (fun (x : Nat) => (Imp (Eq b (add a x)) (Lt a b))) k
+        (imp_intro (Eq b (add a zero)) (Lt a b)
+          (fun (hx : Prf (Eq b (add a zero))) => false_elim (Lt a b)
+            (not_elim (Eq a b) hne (eq_sym b a (eq_trans b (add a zero) a (hx) (add_zero_right a))))))
+        (fun (x : Nat) => imp_intro (Eq b (add a (succ x))) (Lt a b)
+          (fun (hx : Prf (Eq b (add a (succ x)))) => lt_intro a b x hx))) hk);
+
+theorem nonzero_not_one_gt_one (n : Nat) (h0 : Prf (Not (Eq n zero)))
+  (h1 : Prf (Not (Eq n (succ zero)))) : Prf (Lt (succ zero) n)
+  := imp_elim (Not (Eq n (succ zero))) (Lt (succ zero) n)
+    (imp_elim (Not (Eq n zero)) (Imp (Not (Eq n (succ zero))) (Lt (succ zero) n))
+      (nat_cases (fun (x : Nat) => (Imp (Not (Eq x zero)) (Imp (Not (Eq x (succ zero))) (Lt (succ zero)
+    x)))) n
+        (imp_intro (Not (Eq zero zero)) (Imp (Not (Eq zero (succ zero))) (Lt (succ zero) zero))
+          (fun (hz : Prf (Not (Eq zero zero))) => imp_intro (Not (Eq zero (succ zero))) (Lt (succ zero)
+    zero)
+            (fun (h1 : Prf (Not (Eq zero (succ zero)))) => false_elim (Lt (succ zero) zero) (not_elim (Eq
+    zero zero) hz (eq_refl zero)))))
+        (fun (x : Nat) => nat_cases (fun (x : Nat) => (Imp (Not (Eq (succ x) zero)) (Imp (Not (Eq (succ x)
+    (succ zero))) (Lt (succ zero) (succ x))))) x
+          (imp_intro (Not (Eq (succ zero) zero)) (Imp (Not (Eq (succ zero) (succ zero))) (Lt (succ zero)
+    (succ zero)))
+            (fun (hz : Prf (Not (Eq (succ zero) zero))) => imp_intro (Not (Eq (succ zero) (succ zero))) (Lt
+    (succ zero) (succ zero))
+              (fun (ho : Prf (Not (Eq (succ zero) (succ zero)))) => false_elim (Lt (succ zero) (succ zero))
+    (not_elim (Eq (succ zero) (succ zero)) ho (eq_refl (succ zero))))))
+          (fun (x : Nat) => imp_intro (Not (Eq (succ (succ x)) zero)) (Imp (Not (Eq (succ (succ x)) (succ
+    zero))) (Lt (succ zero) (succ (succ x))))
+            (fun (hz : Prf (Not (Eq (succ (succ x)) zero))) => imp_intro (Not (Eq (succ (succ x)) (succ
+    zero))) (Lt (succ zero) (succ (succ x)))
+              (fun (ho : Prf (Not (Eq (succ (succ x)) (succ zero)))) => lt_intro (succ zero) (succ (succ x))
+    x (eq_sym (add (succ zero) (succ x)) (succ (succ x)) (eq_trans (add (succ zero) (succ x)) (succ (add
+    zero (succ x))) (succ (succ x)) (add_succ zero (succ x)) (eq_cong (fun (z : Nat) => (succ z)) (add zero
+    (succ x)) (succ x) (add_zero (succ x)))))))))) h0) h1;

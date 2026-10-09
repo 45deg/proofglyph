@@ -1,5 +1,5 @@
 From Stdlib Require Import List Permutation.
-From Tinyprover.Pa Require Import Syntax Kernel Checker.
+From Tinyprover.Proofglyph Require Import Syntax Kernel Checker.
 From Tinyprover.Calculi Require Import Calculi Encoding Verification Derivations
   CutElimination Restoration.
 Import ListNotations.

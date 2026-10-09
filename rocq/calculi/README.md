@@ -1,6 +1,6 @@
-# 命題論理 NK / LK over pa
+# 命題論理 NK / LK over proofglyph
 
-古典命題論理の自然演繹（NK）とシーケント計算（LK）を、固定の pa prelude と LF 証明項として符号化した検証です。
+古典命題論理の自然演繹（NK）とシーケント計算（LK）を、固定の proofglyph prelude と LF 証明項として符号化した検証です。
 NK・LK の導出と tinyprover の証明項の対応関係、および LK のカット除去定理を Rocq で証明しています。
 
 ## ビルドと実行
@@ -9,9 +9,9 @@ NK・LK の導出と tinyprover の証明項の対応関係、および LK の�
 # 検証とテスト
 make -C rocq/calculi test
 
-# pa ファイルの生成と検査
+# proofglyph ファイルの生成と検査
 make -C rocq/calculi export
-dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pa --prelude rocq/calculi/_build/prelude.pa
+dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pg --prelude rocq/calculi/_build/prelude.pg
 ```
 
 ## 証明した保証
@@ -23,7 +23,7 @@ dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pa --prelude rocq/cal
 
 - **対象範囲**: 原子命題、⊥、⊤、含意、連言、選言、否定を対象とします（量化子・等号は含みません）。
 - **存在証明**: 導出やカット除去の「存在」の証明であり、実行可能な書き換えアルゴリズムではありません。
-- **バイト列の対応**: 生成された pa バイト列と Rocq 内 AST の対応は未証明です（テストによる照合を実施）。
+- **バイト列の対応**: 生成された proofglyph バイト列と Rocq 内 AST の対応は未証明です（テストによる照合を実施）。
 
 ## TODO
 

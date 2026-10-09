@@ -1,0 +1,9 @@
+From Stdlib Require Import Extraction ExtrOcamlBasic ExtrOcamlString ExtrOcamlNatBigInt.
+From Tinyprover.Hieratic Require Import Compile ProofglyphCodec ProofglyphCompile Desugar SurfaceCompile HieraticSyntax HieraticImports FileCompile.
+
+(** Extract naturals to Zarith to avoid unary allocation and machine overflow.
+    The standard extraction mappings and Zarith arithmetic are trusted. *)
+Extraction Language OCaml.
+Set Extraction Output Directory ".".
+Extraction "frontend.ml" compile lower encode_proofglyph decode_proofglyph compile_proofglyph check_proofglyph
+  desugar desugar_program compile_surface compile_surface_proofglyph lex_hieratic parse_hieratic load_hieratic prepare_files compile_files compile_files_proofglyph.

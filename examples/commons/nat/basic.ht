@@ -1,0 +1,20 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/peano.ht";
+
+theorem eq_cong (f : Nat -> Nat) (a b : Nat) (h : Prf (Eq a b))
+  : Prf (Eq (f a) (f b))
+  := eq_subst (fun (x : Nat) => Eq (f a) (f x)) a b h (eq_refl (f a));
+
+theorem eq_sym (a b : Nat) (h : Prf (Eq a b)) : Prf (Eq b a)
+  := eq_subst (fun (x : Nat) => Eq x a) a b h (eq_refl a);
+
+theorem eq_trans (a b c : Nat) (h : Prf (Eq a b)) (k : Prf (Eq b c))
+  : Prf (Eq a c) := eq_subst (fun (x : Nat) => Eq a x) b c k h;
+
+theorem nat_cases (P : Nat -> Prop) (n : Nat) (hz : Prf (P zero))
+  (hs : forall (k : Nat), Prf (P (succ k))) : Prf (P n)
+  := nat_induction P hz (fun (k : Nat) (ih : Prf (P k)) => hs k) n;
+
+theorem one_succ : Prf (Eq (succ zero) (succ zero)) := eq_refl (succ zero);
+
+theorem two_succ : Prf (Eq (succ (succ zero)) (succ (succ zero))) := eq_refl (succ (succ zero));

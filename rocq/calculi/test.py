@@ -1,11 +1,11 @@
-"""Check the fixed pa boundary and malformed evidence with both kernels."""
+"""Check the fixed proofglyph boundary and malformed evidence with both kernels."""
 from pathlib import Path
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'rocq/calculi/_build'
-CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/pa']
+CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/proofglyph/_build/proofglyph']
 
 EXPECTED = '''
 Index zero succ Formula Atom Bottom Top Imp Conj Disj Neg Context nil cons
@@ -34,7 +34,7 @@ def test_separate_preludes(checker, candidate):
         expected = [name for name in EXPECTED if name in EXPECTED[:14]
                     or name in auxiliary or name.startswith(f'{calculus}_')]
         assert names == expected, (calculus, 'unexpected signature')
-        prelude, proofs = OUT / f'{calculus}-prelude.pa', OUT / f'{calculus}-proofs.pa'
+        prelude, proofs = OUT / f'{calculus}-prelude.pg', OUT / f'{calculus}-proofs.pg'
         assert prelude.read_text().count(':') == count
         assert proofs.read_text().count('!') == 3 and ':' not in proofs.read_text()
         run([checker, 'check', proofs, '--prelude', prelude])
@@ -65,7 +65,7 @@ def test_separate_preludes(checker, candidate):
 def main():
     names = (OUT / 'names.txt').read_text().splitlines()
     assert names == EXPECTED, 'fixed signature or proof inventory changed'
-    prelude, proofs = OUT / 'prelude.pa', OUT / 'proofs.pa'
+    prelude, proofs = OUT / 'prelude.pg', OUT / 'proofs.pg'
     assert prelude.read_text().count(':') == 56
     assert proofs.read_text().count('!') == 6 and ':' not in proofs.read_text()
     const = lambda name: '#' + str(names.index(name))
@@ -115,7 +115,7 @@ def main():
             app('cons', app('Disj', a, app('Neg', a)), nil)), app('lk_excluded_middle', a)),
     }
     with tempfile.TemporaryDirectory(prefix='calculi-test-') as directory:
-        candidate = Path(directory) / 'candidate.pa'
+        candidate = Path(directory) / 'candidate.pg'
         for checker in CHECKERS:
             test_separate_preludes(checker, candidate)
             run([checker, 'check', proofs, '--prelude', prelude])
@@ -127,7 +127,7 @@ def main():
                 except AssertionError as error:
                     raise AssertionError(label) from error
             # Previously proved constants are available only after reading their proofs.
-            full_prelude = Path(directory) / 'with-lemmas.pa'
+            full_prelude = Path(directory) / 'with-lemmas.pg'
             full_prelude.write_text(prelude.read_text() + proofs.read_text())
             for label, assembly in valid.items():
                 candidate.write_text(assembly)

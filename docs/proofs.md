@@ -2,14 +2,14 @@
 
 `examples/commons/` には、論理・等式・自然数・整数論などの規則・定義・定理を分野別のモジュールとして収録しています。算術の土台は Peano 公理、論理・等式の推論規則、および明示的な述語と再帰方程式の定義に限定し、すべての定理はこれらから導出された証明項として記述されています。
 
-- [命題論理](../examples/commons/logic/propositional.tp): 含意、連言、選言、対偶、構成的なド・モルガン則。古典論理と量化は別モジュール。
-- [普遍集合の非存在](../examples/commons/sets/russell.tp): 分出と論理規則から導くラッセルの議論。
-- [等式](../examples/commons/equality.tp): 固定した型 `U` 上の反射律と置換から導出する3定理。
+- [命題論理](../examples/commons/logic/propositional.ht): 含意、連言、選言、対偶、構成的なド・モルガン則。古典論理と量化は別モジュール。
+- [普遍集合の非存在](../examples/commons/sets/russell.ht): 分出と論理規則から導くラッセルの議論。
+- [等式](../examples/commons/equality.ht): 固定した型 `U` 上の反射律と置換から導出する3定理。
 - [ライブラリの構成](../examples/commons/README.md): 加算、乗算、順序、整除性、合同式、素数、有限和など、用途に応じたモジュール。
-- [Peano の土台](../examples/commons/foundation/peano.tp): 自然数の記号、等式、帰納法、後者関数の単射性と0との区別。
-- [フェルマーの利用例](../examples/fermat_application.tp): 証明済みの小定理を import し、和に適用する定理。
+- [Peano の土台](../examples/commons/foundation/peano.ht): 自然数の記号、等式、帰納法、後者関数の単射性と0との区別。
+- [フェルマーの利用例](../examples/fermat_application.ht): 証明済みの小定理を import し、和に適用する定理。
 
-`examples/commons/foundation/` は前提となる語彙・公理・定義を含み、`examples/commons/logic/`、`examples/commons/equality.tp`、`examples/commons/nat/`、`examples/commons/sets/` はそれらに基づいて型検査される証明項です。証明ファイル自体には `axiom` を含みません。定義済みおよび証明済みの定数は不透明（opaque）として扱われ、定義や証明の本体は展開されません。そのため、項の計算や式の変形には等式の証明項を用います。
+`examples/commons/foundation/` は前提となる語彙・公理・定義を含み、`examples/commons/logic/`、`examples/commons/equality.ht`、`examples/commons/nat/`、`examples/commons/sets/` はそれらに基づいて型検査される証明項です。証明ファイル自体には `axiom` を含みません。定義済みおよび証明済みの定数は不透明（opaque）として扱われ、定義や証明の本体は展開されません。そのため、項の計算や式の変形には等式の証明項を用います。
 
 ## 実装した証明
 
@@ -19,36 +19,36 @@
 
 | 分野 | 命題・操作 | 宣言名 | ファイル |
 | --- | --- | --- | --- |
-| 入門 | 恒等関数・依存型・β同値 | [id](../examples/basics.tp), [dependent_id](../examples/basics.tp), [beta](../examples/basics.tp) | `basics.tp` |
-| 入門 | 証明済みの含意の合成を使う | [composition_example](../examples/logic.tp) | `logic.tp` |
-| 論理 | 含意の合成 `(A → B) → (B → C) → A → C` | [implication_composition](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
-| 論理 | 引数の交換・複製、関数の合成 | [exchange](../examples/commons/logic/propositional.tp), [duplicate](../examples/commons/logic/propositional.tp), [function_composition](../examples/commons/logic/quantifiers.tp) | `logic/propositional.tp`, `logic/quantifiers.tp` |
-| 論理 | 連言の交換則・結合則（両方向） | [and_comm](../examples/commons/logic/propositional.tp), [and_assoc_forward](../examples/commons/logic/propositional.tp), [and_assoc_backward](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
-| 論理 | 選言の交換則・場合分け | [or_comm](../examples/commons/logic/propositional.tp), [cases](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
-| 論理 | 対偶 `(A → B) → (¬B → ¬A)` | [contraposition](../examples/commons/logic/propositional.tp) | `logic/propositional.tp` |
-| 論理 | ド・モルガン則 `¬(A ∨ B) ⇔ (¬A ∧ ¬B)`、`¬(A ∧ B) ⇔ (¬A ∨ ¬B)` | [demorgan_or_forward](../examples/commons/logic/demorgan.tp), [demorgan_or_backward](../examples/commons/logic/demorgan.tp), [demorgan_and_forward](../examples/commons/logic/demorgan.tp), [demorgan_and_backward](../examples/commons/logic/demorgan.tp) | `logic/demorgan.tp` |
-| 論理 | 全称の具体化・存在への証人導入 | [forall_specialize](../examples/commons/logic/quantifiers.tp), [exists_witness](../examples/commons/logic/quantifiers.tp), [forall_to_exists](../examples/commons/logic/quantifiers.tp) | `logic/quantifiers.tp` |
-| 等式 | 対称律・推移律・関数による保存 | [eq_sym](../examples/commons/equality.tp), [eq_trans](../examples/commons/equality.tp), [eq_cong](../examples/commons/equality.tp) | `equality.tp` |
-| 自然数 | 強い帰納法 | [nat_strong_induction](../examples/commons/nat/induction.tp) | `nat/induction.tp` |
-| 自然数 | `0 + n = n`, `n + 0 = n` | [add_zero_left](../examples/commons/nat/addition.tp), [add_zero_right](../examples/commons/nat/addition.tp) | `nat/addition.tp` |
-| 自然数 | 加算の結合則・交換則 | [add_assoc](../examples/commons/nat/addition.tp), [add_comm](../examples/commons/nat/addition.tp) | `nat/addition.tp` |
-| 自然数 | 乗算の分配則（両側）・結合則・交換則 | [mul_add_left](../examples/commons/nat/multiplication.tp), [mul_add_right](../examples/commons/nat/multiplication.tp), [mul_assoc](../examples/commons/nat/multiplication.tp), [mul_comm](../examples/commons/nat/multiplication.tp) | `nat/multiplication.tp` |
-| 自然数 | `a^(m+n) = a^m a^n` | [pow_add](../examples/commons/nat/powers.tp) | `nat/powers.tp` |
-| 自然数 | 偶数同士・奇数同士の和は偶数 | [even_add](../examples/commons/nat/parity.tp), [odd_add](../examples/commons/nat/parity.tp) | `nat/parity.tp` |
-| 自然数 | `2Σ(k=1..n) k = n(n+1)` | [triangular_double](../examples/commons/nat/sums.tp) | `nat/sums.tp` |
-| 自然数 | `1 + 3 + … + (2n−1) = n²` | [odd_sum_square](../examples/commons/nat/sums.tp) | `nat/sums.tp` |
-| 整数論 | 整除性の推移律・和・積への保存 | [divides_trans](../examples/commons/nat/divisibility.tp), [divides_add](../examples/commons/nat/divisibility.tp), [divides_mul_right](../examples/commons/nat/divisibility.tp), [divides_mul_left](../examples/commons/nat/divisibility.tp) | `nat/divisibility.tp` |
-| 整数論 | 合同式の加算・乗算・累乗による保存 | [cong_add](../examples/commons/nat/congruence.tp), [cong_mul](../examples/commons/nat/congruence.tp), [cong_pow](../examples/commons/nat/congruence.tp) | `nat/congruence.tp` |
-| 整数論 | 除法の原理（商と余りの存在） | [division_algorithm](../examples/commons/nat/division.tp) | `nat/division.tp` |
-| 整数論 | 素因数の存在 | [prime_factor](../examples/commons/nat/factorization.tp) | `nat/factorization.tp` |
-| 整数論 | ユークリッドの補題・平方の整除性 | [prime_mul_elim](../examples/commons/nat/euclid.tp), [prime_divides_square](../examples/commons/nat/euclid.tp) | `nat/euclid.tp` |
-| 整数論 | 素数 `p` は `C(p,k)` を割り切る（`0 < k < p`） | [prime_divides_choose](../examples/commons/nat/prime_binomial.tp) | `nat/prime_binomial.tp` |
-| 整数論 | 二項定理 | [binomial_theorem](../examples/commons/nat/binomial_theorem.tp) | `nat/binomial_theorem.tp` |
-| 整数論 | 素数は無限に存在する | [primes_infinite](../examples/commons/nat/prime_infinitude.tp) | `nat/prime_infinitude.tp` |
-| 整数論 | √2 の無理性 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.tp), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.tp) | `nat/sqrt_two.tp` |
-| 整数論 | フェルマーの小定理と和への適用 | [fermat](../examples/commons/nat/fermat.tp), [fermat_sum](../examples/commons/nat/fermat.tp) | `nat/fermat.tp` |
+| 入門 | 恒等関数・依存型・β同値 | [id](../examples/basics.ht), [dependent_id](../examples/basics.ht), [beta](../examples/basics.ht) | `basics.ht` |
+| 入門 | 証明済みの含意の合成を使う | [composition_example](../examples/logic.ht) | `logic.ht` |
+| 論理 | 含意の合成 `(A → B) → (B → C) → A → C` | [implication_composition](../examples/commons/logic/propositional.ht) | `logic/propositional.ht` |
+| 論理 | 引数の交換・複製、関数の合成 | [exchange](../examples/commons/logic/propositional.ht), [duplicate](../examples/commons/logic/propositional.ht), [function_composition](../examples/commons/logic/quantifiers.ht) | `logic/propositional.ht`, `logic/quantifiers.ht` |
+| 論理 | 連言の交換則・結合則（両方向） | [and_comm](../examples/commons/logic/propositional.ht), [and_assoc_forward](../examples/commons/logic/propositional.ht), [and_assoc_backward](../examples/commons/logic/propositional.ht) | `logic/propositional.ht` |
+| 論理 | 選言の交換則・場合分け | [or_comm](../examples/commons/logic/propositional.ht), [cases](../examples/commons/logic/propositional.ht) | `logic/propositional.ht` |
+| 論理 | 対偶 `(A → B) → (¬B → ¬A)` | [contraposition](../examples/commons/logic/propositional.ht) | `logic/propositional.ht` |
+| 論理 | ド・モルガン則 `¬(A ∨ B) ⇔ (¬A ∧ ¬B)`、`¬(A ∧ B) ⇔ (¬A ∨ ¬B)` | [demorgan_or_forward](../examples/commons/logic/demorgan.ht), [demorgan_or_backward](../examples/commons/logic/demorgan.ht), [demorgan_and_forward](../examples/commons/logic/demorgan.ht), [demorgan_and_backward](../examples/commons/logic/demorgan.ht) | `logic/demorgan.ht` |
+| 論理 | 全称の具体化・存在への証人導入 | [forall_specialize](../examples/commons/logic/quantifiers.ht), [exists_witness](../examples/commons/logic/quantifiers.ht), [forall_to_exists](../examples/commons/logic/quantifiers.ht) | `logic/quantifiers.ht` |
+| 等式 | 対称律・推移律・関数による保存 | [eq_sym](../examples/commons/equality.ht), [eq_trans](../examples/commons/equality.ht), [eq_cong](../examples/commons/equality.ht) | `equality.ht` |
+| 自然数 | 強い帰納法 | [nat_strong_induction](../examples/commons/nat/induction.ht) | `nat/induction.ht` |
+| 自然数 | `0 + n = n`, `n + 0 = n` | [add_zero_left](../examples/commons/nat/addition.ht), [add_zero_right](../examples/commons/nat/addition.ht) | `nat/addition.ht` |
+| 自然数 | 加算の結合則・交換則 | [add_assoc](../examples/commons/nat/addition.ht), [add_comm](../examples/commons/nat/addition.ht) | `nat/addition.ht` |
+| 自然数 | 乗算の分配則（両側）・結合則・交換則 | [mul_add_left](../examples/commons/nat/multiplication.ht), [mul_add_right](../examples/commons/nat/multiplication.ht), [mul_assoc](../examples/commons/nat/multiplication.ht), [mul_comm](../examples/commons/nat/multiplication.ht) | `nat/multiplication.ht` |
+| 自然数 | `a^(m+n) = a^m a^n` | [pow_add](../examples/commons/nat/powers.ht) | `nat/powers.ht` |
+| 自然数 | 偶数同士・奇数同士の和は偶数 | [even_add](../examples/commons/nat/parity.ht), [odd_add](../examples/commons/nat/parity.ht) | `nat/parity.ht` |
+| 自然数 | `2Σ(k=1..n) k = n(n+1)` | [triangular_double](../examples/commons/nat/sums.ht) | `nat/sums.ht` |
+| 自然数 | `1 + 3 + … + (2n−1) = n²` | [odd_sum_square](../examples/commons/nat/sums.ht) | `nat/sums.ht` |
+| 整数論 | 整除性の推移律・和・積への保存 | [divides_trans](../examples/commons/nat/divisibility.ht), [divides_add](../examples/commons/nat/divisibility.ht), [divides_mul_right](../examples/commons/nat/divisibility.ht), [divides_mul_left](../examples/commons/nat/divisibility.ht) | `nat/divisibility.ht` |
+| 整数論 | 合同式の加算・乗算・累乗による保存 | [cong_add](../examples/commons/nat/congruence.ht), [cong_mul](../examples/commons/nat/congruence.ht), [cong_pow](../examples/commons/nat/congruence.ht) | `nat/congruence.ht` |
+| 整数論 | 除法の原理（商と余りの存在） | [division_algorithm](../examples/commons/nat/division.ht) | `nat/division.ht` |
+| 整数論 | 素因数の存在 | [prime_factor](../examples/commons/nat/factorization.ht) | `nat/factorization.ht` |
+| 整数論 | ユークリッドの補題・平方の整除性 | [prime_mul_elim](../examples/commons/nat/euclid.ht), [prime_divides_square](../examples/commons/nat/euclid.ht) | `nat/euclid.ht` |
+| 整数論 | 素数 `p` は `C(p,k)` を割り切る（`0 < k < p`） | [prime_divides_choose](../examples/commons/nat/prime_binomial.ht) | `nat/prime_binomial.ht` |
+| 整数論 | 二項定理 | [binomial_theorem](../examples/commons/nat/binomial_theorem.ht) | `nat/binomial_theorem.ht` |
+| 整数論 | 素数は無限に存在する | [primes_infinite](../examples/commons/nat/prime_infinitude.ht) | `nat/prime_infinitude.ht` |
+| 整数論 | √2 の無理性 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.ht), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.ht) | `nat/sqrt_two.ht` |
+| 整数論 | フェルマーの小定理と和への適用 | [fermat](../examples/commons/nat/fermat.ht), [fermat_sum](../examples/commons/nat/fermat.ht) | `nat/fermat.ht` |
 
-| 集合論 | ラッセルのパラドックスから普遍集合の非存在を示す | [no_universal_set](../examples/commons/sets/russell.tp) | `sets/russell.tp` |
+| 集合論 | ラッセルのパラドックスから普遍集合の非存在を示す | [no_universal_set](../examples/commons/sets/russell.ht) | `sets/russell.ht` |
 
 <!-- proof-catalog:end -->
 
@@ -93,11 +93,11 @@ triangular zero = zero
 triangular (succ n) = add (triangular n) (succ n)
 ```
 
-加算・乗算の結合則や交換則、累乗の加法則、三角数の公式などは帰納法から導出されます。[強い帰納法](../examples/commons/nat/induction.tp) も、通常の Peano 帰納法と順序の定義から導出される定理です。
+加算・乗算の結合則や交換則、累乗の加法則、三角数の公式などは帰納法から導出されます。[強い帰納法](../examples/commons/nat/induction.ht) も、通常の Peano 帰納法と順序の定義から導出される定理です。
 
 ### 奇数の和と平方数
 
-[奇数の和](../examples/commons/nat/sums.tp)は `1 + 3 + … + (2n−1) = n²` を Peano 帰納法で証明します。`sum n f` は添字 `0` から `n−1` までの和なので、各項を `succ (add k k)`（`2k+1`）とします。`n=0` では空の和と `0²` がともに0です。帰納段階では、補題 `square_succ` の `(n+1)² = n² + (2n+1)` を使います。これは、正方形に次の奇数個の点からなるL字の縁を加える見方に対応します。新しい公理は追加していません。
+[奇数の和](../examples/commons/nat/sums.ht)は `1 + 3 + … + (2n−1) = n²` を Peano 帰納法で証明します。`sum n f` は添字 `0` から `n−1` までの和なので、各項を `succ (add k k)`（`2k+1`）とします。`n=0` では空の和と `0²` がともに0です。帰納段階では、補題 `square_succ` の `(n+1)² = n² + (2n+1)` を使います。これは、正方形に次の奇数個の点からなるL字の縁を加える見方に対応します。新しい公理は追加していません。
 
 ### 述語の定義
 
@@ -119,13 +119,13 @@ RationalRootTwo ⇔ ∃a b, 0<b ∧ a*a=2*(b*b)
 
 ### 素因数、ユークリッドの補題、無限性
 
-[素因数の存在](../examples/commons/nat/factorization.tp) は、1 より大きい数が素数ならその数自身を取り、素数でなければ真の約数へ強い帰納法で降下します。真の約数の存在は素数の定義と古典論理から導出されます。
+[素因数の存在](../examples/commons/nat/factorization.ht) は、1 より大きい数が素数ならその数自身を取り、素数でなければ真の約数へ強い帰納法で降下します。真の約数の存在は素数の定義と古典論理から導出されます。
 
-[除法の原理](../examples/commons/nat/division.tp) は、正の除数 `d` に対して `n = d * q + r`（`r < d`）を満たす `q, r` を強い帰納法で構成します。
+[除法の原理](../examples/commons/nat/division.ht) は、正の除数 `d` に対して `n = d * q + r`（`r < d`）を満たす `q, r` を強い帰納法で構成します。
 
-[ユークリッドの補題](../examples/commons/nat/euclid.tp) は、`p | a * t` を満たす最小の正の `t` を取り、除法の原理と最小性から `t` が `p` と `b` を割り切ることを示します。素数の定義による `t = 1` または `t = p` の場合分けから `p | a` または `p | b` を導きます。
+[ユークリッドの補題](../examples/commons/nat/euclid.ht) は、`p | a * t` を満たす最小の正の `t` を取り、除法の原理と最小性から `t` が `p` と `b` を割り切ることを示します。素数の定義による `t = 1` または `t = p` の場合分けから `p | a` または `p | b` を導きます。
 
-[素数の無限性](../examples/commons/nat/prime_infinitude.tp) は `n! + 1` の素因数を取ります。もしそれが `n` 以下であれば、階乗と `n! + 1` の両方を割り切るため 1 を割り切ることになり矛盾します。
+[素数の無限性](../examples/commons/nat/prime_infinitude.ht) は `n! + 1` の素因数を取ります。もしそれが `n` 以下であれば、階乗と `n! + 1` の両方を割り切るため 1 を割り切ることになり矛盾します。
 
 ### 二項係数と有限和
 
@@ -137,7 +137,7 @@ choose zero (succ k) = zero
 choose (succ n) (succ k) = choose n k + choose n (succ k)
 ```
 
-[係数の恒等式](../examples/commons/nat/binomial_coefficients.tp) は、先に `choose_balance` で `(k+1)*C(n+1,k+1)=(n+1)*C(n,k)` を帰納法で証明し、正の添字を後者の形に移します。ユークリッドの補題と素数の整除性から `prime_divides_choose` を導出します。
+[係数の恒等式](../examples/commons/nat/binomial_coefficients.ht) は、先に `choose_balance` で `(k+1)*C(n+1,k+1)=(n+1)*C(n,k)` を帰納法で証明し、正の添字を後者の形に移します。ユークリッドの補題と素数の整除性から `prime_divides_choose` を導出します。
 
 有限和には、通常の接頭和 `sum`、開区間の和 `sum_between`、`i+j=n` の対角線上の和 `diagonal` を定義しています。対角和は次の再帰方程式を持ちます。
 
@@ -156,11 +156,11 @@ convolution n f g = diagonal n (i,j ↦ C(n,i)*f(i)*g(j))
 
 パスカルの関係式に対応する `convolution_pascal`、基底の `convolution_zero`、外延性、係数の取り出し、両端の分離はいずれも定理です。パスカルの式を公理として仮定するのではなく、二項係数の再帰と対角和の性質から導出しています。
 
-[二項定理](../examples/commons/nat/binomial_theorem.tp) はこれらの補題、累乗の再帰、分配則から `n` の帰納法で証明します。開区間の和の合同保存も、その和の再帰定義と順序の比較から帰納法で証明します。
+[二項定理](../examples/commons/nat/binomial_theorem.ht) はこれらの補題、累乗の再帰、分配則から `n` の帰納法で証明します。開区間の和の合同保存も、その和の再帰定義と順序の比較から帰納法で証明します。
 
 ### √2 の無理性
 
-[sqrt_two_no_positive_fraction](../examples/commons/nat/sqrt_two.tp) は、任意の自然数 `a, b` に対して `b > 0` と `a * a = 2 * (b * b)` から矛盾を導きます。既約分数への変換や互いに素であることを仮定しません。
+[sqrt_two_no_positive_fraction](../examples/commons/nat/sqrt_two.ht) は、任意の自然数 `a, b` に対して `b > 0` と `a * a = 2 * (b * b)` から矛盾を導きます。既約分数への変換や互いに素であることを仮定しません。
 
 ユークリッドの補題と 2 の素数性から `a` と `b` がともに 2 の倍数であることを示し、`a = 2k`, `b = 2j` と置きます。2 を消去すると `k * k = 2 * (j * j)` となり、`0 < j < b` であるため分母に関する強い帰納法により矛盾が導かれます。`sqrt_two_irrational` はこの定理から有理数表示の存在を排除します。
 
@@ -172,7 +172,7 @@ convolution n f g = diagonal n (i,j ↦ C(n,i)*f(i)*g(j))
 
 ## フェルマーの小定理
 
-[fermat](../examples/commons/nat/fermat.tp) は、以下の順で証明します。
+[fermat](../examples/commons/nat/fermat.ht) は、以下の順で証明します。
 
 1. `prime_divides_choose` から、二項展開の内側の各項が 0 と合同になる。
 2. `sum_between_cong_zero` で内側の和も 0 と合同になる。
@@ -180,26 +180,26 @@ convolution n f g = diagonal n (i,j ↦ C(n,i)*f(i)*g(j))
 4. 帰納法の仮定 `x^p ≡ x` を使い、後者の式へ移す。
 5. 素数の正値性と `pow_zero_positive` を基底として、自然数の帰納法を適用する。
 
-[fermat_sum](../examples/commons/nat/fermat.tp) は、証明済みの小定理に `x = a + b` を代入します。利用例の `fermat_application` はこの定理を import して適用します。
+[fermat_sum](../examples/commons/nat/fermat.ht) は、証明済みの小定理に `x = a + b` を代入します。利用例の `fermat_application` はこの定理を import して適用します。
 
 ## 検証
 
 ```sh
 dune build
 dune runtest
-dune exec bin/main.exe -- compile examples/commons/nat/fermat.tp -o /tmp/fermat.pa
-dune exec bin/main.exe -- check /tmp/fermat.pa
+dune exec bin/main.exe -- compile examples/commons/nat/fermat.ht -o /tmp/fermat.pg
+dune exec bin/main.exe -- check /tmp/fermat.pg
 # 分野別モジュールを単独で検査できる
-dune exec bin/main.exe -- compile examples/commons/nat/euclid.tp -o /tmp/euclid.pa
-dune exec bin/main.exe -- check /tmp/euclid.pa
+dune exec bin/main.exe -- compile examples/commons/nat/euclid.ht -o /tmp/euclid.pg
+dune exec bin/main.exe -- check /tmp/euclid.pg
 ```
 
 回帰テストでは、カタログに記載されたすべての定理が `Proven` として正しく登録されることを確認します。前提として許可される語彙は指定の公理一覧に限定され、証明ファイル側での公理追加は禁止されます。また、前提を先頭に集めたシグネチャに対して証明部分を前提追加禁止（`--no-axioms` 同等）で再検証し、誤った結論や不正な証明項が適切に拒否されることを確認しています。
 
 ## ラッセルの議論と普遍集合
 
-[Web用の証明](../examples/commons/sets/russell.tp)は、すべての集合を含む集合 `u` があると仮定し、分出で `r = {x ∈ u | x ∉ x}` を作ります。`r ∈ r` なら分出の条件から `r ∉ r` が得られるため、まず `r ∉ r` を証明できます。一方、普遍集合の仮定から `r ∈ u` なので、分出の逆向きの条件から `r ∈ r` が得られ、矛盾します。最終定理 `no_universal_set` は `¬∃u, ∀x, x ∈ u` を表します。
+[Web用の証明](../examples/commons/sets/russell.ht)は、すべての集合を含む集合 `u` があると仮定し、分出で `r = {x ∈ u | x ∉ x}` を作ります。`r ∈ r` なら分出の条件から `r ∉ r` が得られるため、まず `r ∉ r` を証明できます。一方、普遍集合の仮定から `r ∈ u` なので、分出の逆向きの条件から `r ∈ r` が得られ、矛盾します。最終定理 `no_universal_set` は `¬∃u, ∀x, x ∈ u` を表します。
 
-前提は既存の論理・量化規則に加え、[集合の所属関係と分出](../examples/commons/foundation/sets.tp)です。分出は既存の集合の部分集合を作る規則で、任意の性質から無制限に集合を作る内包原理ではありません。このデモでは述語パラメータで分出の図式を表し、排中律・選択公理・普遍集合の非存在そのものは仮定しません。
+前提は既存の論理・量化規則に加え、[集合の所属関係と分出](../examples/commons/foundation/sets.ht)です。分出は既存の集合の部分集合を作る規則で、任意の性質から無制限に集合を作る内包原理ではありません。このデモでは述語パラメータで分出の図式を表し、排中律・選択公理・普遍集合の非存在そのものは仮定しません。
 
 [既存のRocq/ZFC検証](../rocq/zfc/README.md)と同じラッセルの議論を、Webで読みやすい名前付きの証明項として別途記述しています。このWeb例はtinyproverのOCamlカーネルとブラウザ用検査器で検査しますが、Rocq側の一階論理AST・符号化との対応は証明していません。既存のRocq検証の対象は従来の証明項です。

@@ -1,13 +1,13 @@
 open Tinyprover_core
-module Assembly = Tinyprover_pa.Reader
-module Source = Tinyprover_tp.Source
+module Assembly = Tinyprover_proofglyph.Reader
+module Source = Tinyprover_hieratic.Source
 
 (** {1 tinyprover CLI Entry Point}
 
     Command-line interface implementation:
-    - [compile]: Compiles a .tp source file into verified .pa assembly and optional sourcemap.
-    - [check]: Verifies a .pa assembly file against the kernel.
-    - [inspect]: Verifies a .pa assembly file and prints each constant's type and provenance.
+    - [compile]: Compiles a .ht source file into verified .pg assembly and optional sourcemap.
+    - [check]: Verifies a .pg assembly file against the kernel.
+    - [inspect]: Verifies a .pg assembly file and prints each constant's type and provenance.
 
     Exit codes:
     - 0: Success

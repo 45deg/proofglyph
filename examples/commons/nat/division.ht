@@ -1,0 +1,113 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/classical.ht";
+import "divisibility.ht";
+import "induction.ht";
+
+theorem division_algorithm (d n : Nat) (hd : Prf (Lt zero d)) : Prf (Exists (fun (q : Nat) => Exists (fun (r
+    : Nat) => (And (Eq n (add (mul d q) r)) (Lt r d)))))
+  := nat_strong_induction (fun (n : Nat) => (Exists (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq n
+    (add (mul d q) r)) (Lt r d))))))
+    (fun (n : Nat) (ih : forall (k : Nat), Prf (Lt k n) -> Prf (Exists (fun (q : Nat) => Exists (fun (r :
+    Nat) => (And (Eq k (add (mul d q) r)) (Lt r d)))))) =>
+      or_elim (Lt n d) (Le d n) (Exists (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq n (add (mul d q)
+    r)) (Lt r d))))) (order_cases d n)
+        (fun (hlt : Prf (Lt n d)) => exists_intro (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq n (add
+    (mul d q) r)) (Lt r d)))) zero
+  (exists_intro (fun (r : Nat) => (And (Eq n (add (mul d zero) r)) (Lt r d))) n
+    (and_intro (Eq n (add (mul d zero) n)) (Lt n d) (eq_trans n (add zero n) (add (mul d zero) n) (eq_sym
+    (add zero n) n (add_zero n)) (eq_sym (add (mul d zero) n) (add zero n) (eq_cong (fun (z : Nat) => (add z
+    n)) (mul d zero) zero (mul_zero_right d)))) hlt)))
+        (fun (hle : Prf (Le d n)) => le_elim d n (Exists (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq
+    n (add (mul d q) r)) (Lt r d))))) hle (fun (k : Nat) (hnk : Prf (Eq n (add d k))) =>
+  exists_elim (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq k (add (mul d q) r)) (Lt r d)))) (Exists
+    (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq n (add (mul d q) r)) (Lt r d)))))
+    (ih k (positive_addend_lt d k n hd hnk))
+    (fun (q : Nat) (hq : Prf (Exists (fun (r : Nat) => (And (Eq k (add (mul d q) r)) (Lt r d))))) =>
+      exists_elim (fun (r : Nat) => (And (Eq k (add (mul d q) r)) (Lt r d))) (Exists (fun (q : Nat) =>
+    Exists (fun (r : Nat) => (And (Eq n (add (mul d q) r)) (Lt r d))))) hq
+        (fun (r : Nat) (hr : Prf (And (Eq k (add (mul d q) r)) (Lt r d))) =>
+          (fun (hkr : Prf (Eq k (add (mul d q) r))) =>
+            exists_intro (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq n (add (mul d q) r)) (Lt r
+    d)))) (succ q)
+              (exists_intro (fun (r : Nat) => (And (Eq n (add (mul d (succ q)) r)) (Lt r d))) r
+                (and_intro (Eq n (add (mul d (succ q)) r)) (Lt r d) (eq_trans n (add (add d (mul d q)) r)
+    (add (mul d (succ q)) r) (eq_trans n (add d (add (mul d q) r)) (add (add d (mul d q)) r) (eq_trans n
+    (add d k) (add d (add (mul d q) r)) (hnk) (eq_cong (fun (z : Nat) => (add d z)) k (add (mul d q) r)
+    (hkr))) (eq_sym (add (add d (mul d q)) r) (add d (add (mul d q) r)) (add_assoc d (mul d q) r))) (eq_cong
+    (fun (z : Nat) => (add z r)) (add d (mul d q)) (mul d (succ q)) (eq_sym (mul d (succ q)) (add d (mul d
+    q)) (mul_succ_right d q))))
+                  (and_right (Eq k (add (mul d q) r)) (Lt r d) hr))))
+            (and_left (Eq k (add (mul d q) r)) (Lt r d) hr)))))) n;
+
+theorem least_multiple_divides (p a t b : Nat) (ht : Prf (Lt zero t))
+  (hat : Prf (Divides p (mul a t))) (hmin : Prf (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t)
+    (Not (Divides p (mul a s)))))))) (hab : Prf (Divides p (mul a b))) : Prf (Divides t b)
+  := exists_elim (fun (q : Nat) => Exists (fun (r : Nat) => (And (Eq b (add (mul t q) r)) (Lt r t))))
+    (Divides t b)
+    (division_algorithm t b ht)
+    (fun (q : Nat) (hq : Prf (Exists (fun (r : Nat) => (And (Eq b (add (mul t q) r)) (Lt r t))))) =>
+      exists_elim (fun (r : Nat) => (And (Eq b (add (mul t q) r)) (Lt r t))) (Divides t b) hq
+        (fun (r : Nat) (hr : Prf (And (Eq b (add (mul t q) r)) (Lt r t))) =>
+          (fun (hbr : Prf (Eq b (add (mul t q) r))) (hrt : Prf (Lt r t)) =>
+            or_elim (Eq r zero) (Not (Eq r zero)) (Divides t b) (excluded_middle (Eq r zero))
+              (fun (hr0 : Prf (Eq r zero)) => divides_intro t b q (eq_trans b (add (mul t q) zero) (mul t q)
+    (eq_trans b (add (mul t q) r) (add (mul t q) zero) (hbr) (eq_cong (fun (z : Nat) => (add (mul t q) z)) r
+    zero (hr0))) (add_zero_right (mul t q))))
+              (fun (nr0 : Prf (Not (Eq r zero))) => false_elim (Divides t b) (not_elim (Divides p (mul a r))
+  (imp_elim (Lt r t) (Not (Divides p (mul a r)))
+    (imp_elim (Lt zero r) (Imp (Lt r t) (Not (Divides p (mul a r))))
+      (all_nat_elim (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Divides p (mul a s)))))) hmin r)
+      (nonzero_positive r nr0)) hrt) (divides_cancel_add p (mul a (mul t q)) (mul a r) (divides_eq p (mul
+    (mul a t) q) (mul a (mul t q)) (mul_assoc a t q)
+  (divides_mul_right p (mul a t) q hat))
+  (divides_eq p (mul a b) (add (mul a (mul t q)) (mul a r)) (eq_trans (mul a b) (mul a (add (mul t q) r))
+    (add (mul a (mul t q)) (mul a r)) (eq_cong (fun (z : Nat) => (mul a z)) b (add (mul t q) r) (hbr))
+    (mul_add_right a (mul t q) r)) hab)))))
+            (and_left (Eq b (add (mul t q) r)) (Lt r t) hr)
+            (and_right (Eq b (add (mul t q) r)) (Lt r t) hr)));
+
+theorem least_positive (Q : Nat -> Prop) (n : Nat) (hn : Prf (Lt zero n)) (hq : Prf (Q n))
+  : Prf (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s)
+    (Imp (Lt s t) (Not (Q s))))))))))
+  := imp_elim (Q n) (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt
+    zero s) (Imp (Lt s t) (Not (Q s)))))))))) (imp_elim (Lt zero n) (Imp (Q n) (Exists (fun (t : Nat) =>
+    (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q
+    s)))))))))))
+    (nat_strong_induction (fun (n : Nat) => (Imp (Lt zero n) (Imp (Q n) (Exists (fun (t : Nat) => (And (Lt
+    zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s)))))))))))))
+      (fun (n : Nat) (ih : forall (s : Nat), Prf (Lt s n) -> Prf (Imp (Lt zero s) (Imp (Q s) (Exists (fun (t
+    : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q
+    s))))))))))))) =>
+        imp_intro (Lt zero n) (Imp (Q n) (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun
+    (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s))))))))))) (fun (hn : Prf (Lt zero n)) =>
+          imp_intro (Q n) (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) =>
+    (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s)))))))))) (fun (hq : Prf (Q n)) =>
+            or_elim (Exists (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s))))) (Not (Exists (fun (s
+    : Nat) => (And (Lt zero s) (And (Lt s n) (Q s)))))) (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q
+    t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s)))))))))) (excluded_middle (Exists
+    (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s))))))
+              (fun (hsm : Prf (Exists (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s)))))) =>
+    exists_elim (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s)))) (Exists (fun (t : Nat) => (And (Lt
+    zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s)))))))))) hsm
+  (fun (s : Nat) (hs : Prf (And (Lt zero s) (And (Lt s n) (Q s)))) => imp_elim (Q s) (Exists (fun (t : Nat)
+    => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q
+    s))))))))))
+    (imp_elim (Lt zero s) (Imp (Q s) (Exists (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s :
+    Nat) => (Imp (Lt zero s) (Imp (Lt s t) (Not (Q s)))))))))))
+      (ih s (and_left (Lt s n) (Q s) (and_right (Lt zero s) (And (Lt s n) (Q s)) hs)))
+      (and_left (Lt zero s) (And (Lt s n) (Q s)) hs))
+    (and_right (Lt s n) (Q s) (and_right (Lt zero s) (And (Lt s n) (Q s)) hs))))
+              (fun (nsm : Prf (Not (Exists (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s))))))) =>
+    exists_intro (fun (t : Nat) => (And (Lt zero t) (And (Q t) (AllNat (fun (s : Nat) => (Imp (Lt zero s)
+    (Imp (Lt s t) (Not (Q s))))))))) n
+  (and_intro (Lt zero n) (And (Q n) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s n) (Not (Q
+    s))))))) hn
+    (and_intro (Q n) (AllNat (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s n) (Not (Q s)))))) hq
+    (all_nat_intro (fun (s : Nat) => (Imp (Lt zero s) (Imp (Lt s n) (Not (Q s)))))
+  (fun (s : Nat) => imp_intro (Lt zero s) (Imp (Lt s n) (Not (Q s)))
+    (fun (hs : Prf (Lt zero s)) => imp_intro (Lt s n) (Not (Q s))
+      (fun (hsn : Prf (Lt s n)) => not_intro (Q s) (fun (hq : Prf (Q s)) =>
+        not_elim (Exists (fun (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s))))) nsm (exists_intro (fun
+    (s : Nat) => (And (Lt zero s) (And (Lt s n) (Q s)))) s
+          (and_intro (Lt zero s) (And (Lt s n) (Q s)) hs (and_intro (Lt s n) (Q s) hsn hq)))))))))))))) n)
+    hn) hq;

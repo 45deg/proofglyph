@@ -1,0 +1,33 @@
+-Q ../proofglyph/_build Tinyprover.Proofglyph
+-Q . Tinyprover.Hieratic
+Surface.v
+DesugarSpec.v
+DesugarImpl.v
+Desugar.v
+ResolveSpec.v
+ResolveImpl.v
+Resolve.v
+CompileSpec.v
+CompileImpl.v
+Compile.v
+ProofglyphCodec.v
+ProofglyphCompileImpl.v
+ProofglyphCompile.v
+SurfaceCompileImpl.v
+SurfaceCompile.v
+HieraticSyntaxSpec.v
+HieraticSyntaxImpl.v
+HieraticSyntax.v
+HieraticImportsSpec.v
+HieraticImportsImpl.v
+HieraticImports.v
+HieraticExamples.v
+Examples.v
+ProofglyphExamples.v
+DesugarExamples.v
+FileSpec.v
+FileImpl.v
+FileCompile.v
+FileExamples.v
+Verification.v
+Extraction.v

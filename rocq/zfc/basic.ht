@@ -1,0 +1,37 @@
+// Every declaration in this file has a proof body. No new axioms.
+import "prelude.ht";
+
+// Equality is taken from the shared equality rules, not assumed here.
+theorem set_eq_sym (a b : U) (h : Prf (Eq a b)) : Prf (Eq b a)
+  := eq_subst (fun (x : U) => Eq x a) a b h (eq_refl a);
+
+// Any two sets with no members are equal.
+theorem empty_unique (a b : U)
+  (ha : forall (x : U), Prf (Not (Mem x a)))
+  (hb : forall (x : U), Prf (Not (Mem x b))) : Prf (Eq a b)
+  := set_ext a b
+    (fun (x : U) (h : Prf (Mem x a)) => false_elim (Mem x b) (not_elim (Mem x a) (ha x) h))
+    (fun (x : U) (h : Prf (Mem x b)) => false_elim (Mem x a) (not_elim (Mem x b) (hb x) h));
+
+// Object-language quantified version of the same statement.
+theorem empty_unique_quantified (a b : U)
+  (ha : Prf (All (fun (x : U) => Not (Mem x a))))
+  (hb : Prf (All (fun (x : U) => Not (Mem x b)))) : Prf (Eq a b)
+  := empty_unique a b
+    (fun (x : U) => all_elim (fun (y : U) => Not (Mem y a)) ha x)
+    (fun (x : U) => all_elim (fun (y : U) => Not (Mem y b)) hb x);
+
+// A nonempty set cannot equal an empty set.
+theorem inhabited_not_empty (a e x : U)
+  (hx : Prf (Mem x a)) (he : Prf (Not (Mem x e))) : Prf (Not (Eq a e))
+  := not_intro (Eq a e) (fun (h : Prf (Eq a e)) =>
+    not_elim (Mem x e) he (eq_subst (fun (s : U) => Mem x s) a e h hx));
+
+// Symmetry of the unordered-pair characterization, using no new assumptions.
+theorem pair_order_irrelevant (a b p : U)
+  (upper : forall (x : U), Prf (Mem x p) -> Prf (Or (Eq x a) (Eq x b)))
+  : forall (x : U), Prf (Mem x p) -> Prf (Or (Eq x b) (Eq x a))
+  := fun (x : U) (h : Prf (Mem x p)) =>
+    or_elim (Eq x a) (Eq x b) (Or (Eq x b) (Eq x a)) (upper x h)
+      (fun (ha : Prf (Eq x a)) => or_right (Eq x b) (Eq x a) ha)
+      (fun (hb : Prf (Eq x b)) => or_left (Eq x b) (Eq x a) hb);

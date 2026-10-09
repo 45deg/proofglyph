@@ -1,0 +1,14 @@
+// Checked proofs; prerequisites are imported by subject.
+import "binomial_coefficients.ht";
+import "euclid.ht";
+
+theorem prime_divides_choose (p k : Nat) (hp : Prf (Prime p))
+  (hk : Prf (Lt zero k)) (hkp : Prf (Lt k p)) : Prf (Divides p (choose p k))
+  := prime_mul_elim p k (choose p k) (Divides p (choose p k)) hp
+    (divides_eq p (mul p (choose (pred p) (pred k))) (mul k (choose p k))
+      (eq_sym (mul k (choose p k)) (mul p (choose (pred p) (pred k)))
+        (choose_mul_identity p k hk hkp))
+      (divides_mul_right p p (choose (pred p) (pred k)) (divides_refl p)))
+    (fun (hpk : Prf (Divides p k)) =>
+      false_elim (Divides p (choose p k)) (prime_not_divides_interior p k hp hk hkp hpk))
+    (fun (hpc : Prf (Divides p (choose p k))) => hpc);

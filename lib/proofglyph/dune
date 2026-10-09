@@ -1,0 +1,3 @@
+(library
+ (name tinyprover_proofglyph)
+ (libraries tinyprover_core))

@@ -1,6 +1,6 @@
-(* Untrusted generator: builds pa terms directly, without the tp compiler. *)
+(* Untrusted generator: builds proofglyph terms directly, without the hieratic compiler. *)
 open Tinyprover_core
-module Writer = Tinyprover_pa.Writer
+module Writer = Tinyprover_proofglyph.Writer
 
 type expr = Name of string | Sort | Apply of expr * expr
   | Product of string * expr * expr | Lambda of string * expr * expr
@@ -157,15 +157,15 @@ let () =
     let ch = open_out_bin (Filename.concat Sys.argv.(1) name) in
     Fun.protect ~finally:(fun () -> close_out_noerr ch) (fun () -> output_string ch contents)
   in
-  let pa (_,a,b) = Writer.encode a ^ (match b with None -> ":\n"
+  let proofglyph (_,a,b) = Writer.encode a ^ (match b with None -> ":\n"
     | Some t -> Writer.encode t ^ "!\n") in
   let declaration (_,a,b) = match b with None -> "Assume " ^ rocq a
     | Some t -> "Prove " ^ rocq a ^ " " ^ rocq t in
   let list xs = "[\n  " ^ String.concat ";\n  " (List.map declaration xs) ^ "\n]" in
-  write "prelude.pa" (String.concat "" (List.map pa !assumptions));
-  write "proofs.pa" (String.concat "" (List.map pa !proofs));
+  write "prelude.pg" (String.concat "" (List.map proofglyph !assumptions));
+  write "proofs.pg" (String.concat "" (List.map proofglyph !proofs));
   write "names.txt" (String.concat "\n" (List.map fst !globals) ^ "\n");
-  write "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Pa Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list !assumptions
+  write "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list !assumptions
     ^ ".\nDefinition proofs : list declaration := " ^ list !proofs ^ ".\n");
   (* Project the combined inventory, renumbering every reference. Each subset
      is checked in a fresh kernel so it must contain all its dependencies. *)
@@ -188,10 +188,10 @@ let () =
       ids := (List.assoc name !globals,id) :: !ids;
       name,typ,body) entries in
     let prelude,proofs = List.partition (fun (_,_,body) -> body = None) entries in
-    write (prefix ^ "-prelude.pa") (String.concat "" (List.map pa prelude));
-    write (prefix ^ "-proofs.pa") (String.concat "" (List.map pa proofs));
+    write (prefix ^ "-prelude.pg") (String.concat "" (List.map proofglyph prelude));
+    write (prefix ^ "-proofs.pg") (String.concat "" (List.map proofglyph proofs));
     write (prefix ^ "-names.txt") (String.concat "\n" (List.map (fun (name,_,_) -> name) entries) ^ "\n");
-    write artifact ("From Stdlib Require Import List.\nFrom Tinyprover.Pa Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list prelude
+    write artifact ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list prelude
       ^ ".\nDefinition proofs : list declaration := " ^ list proofs ^ ".\n");
     Printf.printf "exported %s: %d assumptions and %d proofs\n"
       prefix (List.length prelude) (List.length proofs)
@@ -203,5 +203,5 @@ let () =
   export_subset "lk" "LKArtifact.v" (fun name -> shared name
     || List.mem name ["Perm";"LK"] || String.starts_with ~prefix:"perm_" name
     || String.starts_with ~prefix:"lk_" name);
-  Printf.printf "exported %d fixed assumptions and %d proofs directly to pa\n"
+  Printf.printf "exported %d fixed assumptions and %d proofs directly to proofglyph\n"
     (List.length !assumptions) (List.length !proofs)

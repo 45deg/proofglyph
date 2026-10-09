@@ -1,9 +1,9 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Kernel WellFormed Checker.
+From Tinyprover.Proofglyph Require Import Syntax Kernel WellFormed Checker.
 From Tinyprover.Zfc Require Import Formula Axioms Encoding Deduction.
 
 (** The abstract target contract. Reflection.v supplies a concrete inhabitant
-    for the full fixed proof_prelude.tp signature. *)
+    for the full fixed proof_prelude.ht signature. *)
 Record correct_presentation (sg : list term) (proof_type : formula -> term) : Prop := {
   presentation_wf : wf_signature sg;
   presentation_target_sorted : forall p, sentence p -> sorted_type sg nil (proof_type p);

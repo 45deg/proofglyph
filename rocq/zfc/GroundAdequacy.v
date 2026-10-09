@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Pa Require Import Syntax Substitution Kernel WellFormed TypingSubstitution
+From Tinyprover.Proofglyph Require Import Syntax Substitution Kernel WellFormed TypingSubstitution
   Evaluation Confluence Generation Preservation TypedNormalization.
 Import ListNotations.
 

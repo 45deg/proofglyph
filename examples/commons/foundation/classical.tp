@@ -1,4 +1,0 @@
-// Trusted vocabulary, inference rules and explicit definitions.
-import "logic.tp";
-
-axiom excluded_middle (A : Prop) : Prf (Or A (Not A));

@@ -1,0 +1,3 @@
+(library
+ (name tinyprover_hieratic)
+ (libraries tinyprover_core tinyprover_proofglyph unix))

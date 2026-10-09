@@ -5,7 +5,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'rocq/zfc/_build'
-CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/pa/_build/pa']
+CHECKERS = [ROOT / '_build/default/bin/main.exe', ROOT / 'rocq/proofglyph/_build/proofglyph']
 
 
 def run(command, expected=0):
@@ -28,11 +28,11 @@ def main():
         'Mem', 'set_ext', 'empty_exists', 'pair_exists',
     }
     assert len(names[:-5]) == len(allowed) and set(names[:-5]) == allowed
-    prelude = OUT / 'prelude.pa'
-    proofs = OUT / 'proofs.pa'
+    prelude = OUT / 'prelude.pg'
+    proofs = OUT / 'proofs.pg'
     assert ':' not in proofs.read_text()
     with tempfile.TemporaryDirectory(prefix='zfc-test-') as directory:
-        bad = Path(directory) / 'bad.pa'
+        bad = Path(directory) / 'bad.pg'
         for checker in CHECKERS:
             run([checker, 'check', proofs, '--prelude', prelude])
             # Same terms are not accepted without their fixed prelude.
@@ -51,8 +51,8 @@ def main():
 
 def test_russell():
     out = OUT / 'russell'
-    prelude, proofs = out / 'prelude.pa', out / 'proofs.pa'
-    assert prelude.read_bytes() == (OUT / 'deep/prelude.pa').read_bytes()
+    prelude, proofs = out / 'prelude.pg', out / 'proofs.pg'
+    assert prelude.read_bytes() == (OUT / 'deep/prelude.pg').read_bytes()
     assert (out / 'names.txt').read_text().splitlines() == (
         (OUT / 'deep/names.txt').read_text().splitlines()[:83]
         + ['proof_no_universal_set'])
@@ -86,7 +86,7 @@ def test_deep():
         'choice', 'eq_reflexive', 'identity', 'separation', 'replacement', 'renaming_binder',
     ]]
     assert names == expected + proved
-    prelude, proofs = out / 'prelude.pa', out / 'proofs.pa'
+    prelude, proofs = out / 'prelude.pg', out / 'proofs.pg'
     assert ':' not in proofs.read_text()
     # Malformed evidence is tested at assembly level with both checkers.
     const = lambda name: '#' + str(names.index(name))
@@ -113,8 +113,8 @@ def test_deep():
     closed_refl = apps('nd_all_intro', z, const('nil'), const('nil'), eq, const('lifts_nil'), refl)
     beta_proof = app(target + '$0' + '\\', closed_refl)
     with tempfile.TemporaryDirectory(prefix='zfc-deep-test-') as directory:
-        bad = Path(directory) / 'bad.pa'
-        expanded = Path(directory) / 'beta.pa'
+        bad = Path(directory) / 'bad.pg'
+        expanded = Path(directory) / 'beta.pg'
         expanded.write_text(target + beta_proof + '!')
         for checker in CHECKERS:
             run([checker, 'check', expanded, '--prelude', prelude])
@@ -129,8 +129,8 @@ def test_deep():
                 run([checker, 'check', bad, '--prelude', prelude], 1)
     # Check the schema guard itself, rather than just a standalone Scoped family.
     with tempfile.TemporaryDirectory(prefix='zfc-schema-test-') as directory:
-        bad = Path(directory) / 'bad.tp'
-        prelude_source = (ROOT / 'rocq/zfc/proof_prelude.tp').as_posix()
+        bad = Path(directory) / 'bad.ht'
+        prelude_source = (ROOT / 'rocq/zfc/proof_prelude.ht').as_posix()
         sep = next(line for line in Path(prelude_source).read_text().splitlines()
                    if line.strip().startswith('-> Closes n '))
         sep_body = sep.split('-> Closes n ', 1)[1].rsplit(' result -> Zax result;', 1)[0]

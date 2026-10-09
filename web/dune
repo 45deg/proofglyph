@@ -2,7 +2,7 @@
  (name browser)
  (modules browser examples_data)
  (modes js)
- (libraries tinyprover_core tinyprover_pa tinyprover_tp js_of_ocaml))
+ (libraries tinyprover_core tinyprover_proofglyph tinyprover_hieratic js_of_ocaml))
 
 (rule
  (targets index.html app.js math.js catalog.json)
@@ -21,7 +21,7 @@
 (executable
  (name bundle_examples)
  (modules bundle_examples)
- (libraries tinyprover_tp str))
+ (libraries tinyprover_hieratic str))
 
 (rule
  (targets examples_data.ml)

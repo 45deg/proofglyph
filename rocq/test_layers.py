@@ -5,15 +5,15 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parent
 LANGUAGE = {
-    "Pa": set("Syntax Substitution Program WellFormed TypingSubstitution EvaluationSpec Confluence Generation Preservation Regularity Normalization Arity Reducibility TypedNormalization CheckerSpec CodecSpec".split()),
-    "Tp": set("Surface DesugarSpec ResolveSpec CompileSpec TpSyntaxSpec TpImportsSpec FileSpec".split()),
+    "Proofglyph": set("Syntax Substitution Program WellFormed TypingSubstitution EvaluationSpec Confluence Generation Preservation Regularity Normalization Arity Reducibility TypedNormalization CheckerSpec CodecSpec".split()),
+    "Hieratic": set("Surface DesugarSpec ResolveSpec CompileSpec HieraticSyntaxSpec HieraticImportsSpec FileSpec".split()),
 }
-IMPORT = re.compile(r"From\s+Tinyprover\.(Pa|Tp)\s+Require\s+(?:Import|Export)\s+([^.]*)\.", re.S)
-modules = {(ns, p.stem): p for ns, directory in (("Pa", "pa"), ("Tp", "tp"))
+IMPORT = re.compile(r"From\s+Tinyprover\.(Proofglyph|Hieratic)\s+Require\s+(?:Import|Export)\s+([^.]*)\.", re.S)
+modules = {(ns, p.stem): p for ns, directory in (("Proofglyph", "proofglyph"), ("Hieratic", "hieratic"))
            for p in (ROOT / directory).glob("*.v")}
 
 
-for directory in ("pa", "tp"):
+for directory in ("proofglyph", "hieratic"):
     development = ROOT / directory
     files = subprocess.check_output(
         ["make", "--no-print-directory", "-s", "-C", str(development), "print-vfiles"],

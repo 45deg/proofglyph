@@ -1,0 +1,6 @@
+// Reuse the propositional library to compose two implications.
+import "commons/logic/propositional.ht";
+
+theorem composition_example (A B C : Prop)
+  (ab : Prf A -> Prf B) (bc : Prf B -> Prf C) (a : Prf A) : Prf C
+  := implication_composition A B C ab bc a;

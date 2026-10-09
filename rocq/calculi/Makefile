@@ -1,6 +1,6 @@
 ROCQ ?= rocq
 BUILD := _build
-FLAGS := -Q ../../pa/_build Tinyprover.Pa -Q . Tinyprover.Calculi
+FLAGS := -Q ../../proofglyph/_build Tinyprover.Proofglyph -Q . Tinyprover.Calculi
 
 .PHONY: all export verify test
 all: test
@@ -10,7 +10,7 @@ export:
 	cd ../.. && dune exec rocq/calculi/export.exe -- rocq/calculi/$(BUILD)
 
 verify: export
-	$(MAKE) -C ../pa verify ROCQ=$(ROCQ)
+	$(MAKE) -C ../proofglyph verify ROCQ=$(ROCQ)
 	cp Calculi.v Encoding.v Verification.v Derivations.v CutElimination.v Restoration.v Examples.v $(BUILD)/
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Calculi.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Encoding.v
@@ -25,6 +25,6 @@ verify: export
 	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Tinyprover.Calculi.Calculi Tinyprover.Calculi.Encoding Tinyprover.Calculi.Verification Tinyprover.Calculi.Derivations Tinyprover.Calculi.CutElimination Tinyprover.Calculi.Restoration Tinyprover.Calculi.Examples
 
 test: verify
-	$(MAKE) -C ../pa all ROCQ=$(ROCQ)
+	$(MAKE) -C ../proofglyph all ROCQ=$(ROCQ)
 	cd ../.. && dune build bin/main.exe
 	python3 test.py

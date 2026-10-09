@@ -1,0 +1,61 @@
+// ラッセルのパラドックスから、普遍集合の非存在を示す。
+// すべての集合を含む U があると仮定し、分出で R = {x ∈ U | x ∉ x} を作る。
+// R ∈ R なら R ∉ R。したがって R ∉ R だが、R ∈ U と合わせると R ∈ R。
+// 矛盾するのは普遍集合の仮定。分出は、既存の集合の部分集合だけを作る。
+import "../foundation/sets.ht";
+
+// 分出の条件のうち、R ∈ R → R ∉ R の向きから R ∉ R を導く。
+theorem russell_not_self (u r : U)
+  (forward : forall (x : U), Prf (Mem x r) -> Prf (And (Mem x u) (Not (Mem x x))))
+  : Prf (Not (Mem r r))
+  := not_intro (Mem r r) (fun (self : Prf (Mem r r)) =>
+    not_elim (Mem r r)
+      (and_right (Mem r u) (Not (Mem r r)) (forward r self)) self);
+
+// 普遍集合なら R ∈ U。逆向きの条件から R ∈ R も得られ、矛盾する。
+theorem russell_contradiction (u r : U)
+  (universal : forall (x : U), Prf (Mem x u))
+  (forward : forall (x : U), Prf (Mem x r) -> Prf (And (Mem x u) (Not (Mem x x))))
+  (backward : forall (x : U), Prf (And (Mem x u) (Not (Mem x x))) -> Prf (Mem x r))
+  : Prf False
+  := not_elim (Mem r r) (russell_not_self u r forward)
+    (backward r (and_intro (Mem r u) (Not (Mem r r))
+      (universal r) (russell_not_self u r forward)));
+
+// 分出で得られる R を取り出し、その条件を上の補題へ渡す。
+theorem no_universal_set_at (u : U) (universal : Prf (All (fun (x : U) => Mem x u)))
+  : Prf False
+  := exists_elim
+    (fun (r : U) => All (fun (x : U) => And
+      (Imp (Mem x r) (And (Mem x u) (Not (Mem x x))))
+      (Imp (And (Mem x u) (Not (Mem x x))) (Mem x r)))) False
+    (separation u (fun (x : U) => Not (Mem x x)))
+    (fun (r : U)
+      (property : Prf (All (fun (x : U) => And
+        (Imp (Mem x r) (And (Mem x u) (Not (Mem x x))))
+        (Imp (And (Mem x u) (Not (Mem x x))) (Mem x r))))) =>
+      russell_contradiction u r
+        (fun (x : U) => all_elim (fun (y : U) => Mem y u) universal x)
+        (fun (x : U) (hx : Prf (Mem x r)) =>
+          imp_elim (Mem x r) (And (Mem x u) (Not (Mem x x)))
+            (and_left (Imp (Mem x r) (And (Mem x u) (Not (Mem x x))))
+              (Imp (And (Mem x u) (Not (Mem x x))) (Mem x r))
+              (all_elim (fun (y : U) => And
+                (Imp (Mem y r) (And (Mem y u) (Not (Mem y y))))
+                (Imp (And (Mem y u) (Not (Mem y y))) (Mem y r))) property x)) hx)
+        (fun (x : U) (hx : Prf (And (Mem x u) (Not (Mem x x)))) =>
+          imp_elim (And (Mem x u) (Not (Mem x x))) (Mem x r)
+            (and_right (Imp (Mem x r) (And (Mem x u) (Not (Mem x x))))
+              (Imp (And (Mem x u) (Not (Mem x x))) (Mem x r))
+              (all_elim (fun (y : U) => And
+                (Imp (Mem y r) (And (Mem y u) (Not (Mem y y))))
+                (Imp (And (Mem y u) (Not (Mem y y))) (Mem y r))) property x)) hx));
+
+// ¬∃U, ∀x, x ∈ U。普遍集合の非存在が最終的な定理。
+theorem no_universal_set
+  : Prf (Not (Exists (fun (u : U) => All (fun (x : U) => Mem x u))))
+  := not_intro (Exists (fun (u : U) => All (fun (x : U) => Mem x u)))
+    (fun (h : Prf (Exists (fun (u : U) => All (fun (x : U) => Mem x u)))) =>
+      exists_elim (fun (u : U) => All (fun (x : U) => Mem x u)) False h
+        (fun (u : U) (universal : Prf (All (fun (x : U) => Mem x u))) =>
+          no_universal_set_at u universal));

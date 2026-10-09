@@ -51,33 +51,33 @@
 <body>
 <main>
   <h1>tinyprover</h1>
-  <p>pa言語で型と証明項を書き、型検査で証明を確かめます。tp言語はpaの高級言語で、変数や定数に名前を付けて書いたソースからpaを生成します。</p>
+  <p>Proofglyph で型と証明項を書き、型検査で証明を確かめます。Hieratic は Proofglyph の高水準言語で、変数や定数に名前を付けて書いたソースから Proofglyph を生成します。</p>
   <label for="example">証明例</label>
   <select id="example" disabled><option value="">証明例を選択…</option></select>
   <div class="panes">
     <section>
-      <label for="pa">pa言語</label>
-      <textarea id="pa" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
-      <button id="check" disabled>pa言語を検査</button>
+      <label for="proofglyph">Proofglyph</label>
+      <textarea id="proofglyph" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <button id="check" disabled>Proofglyph を検査</button>
     </section>
     <section>
       <h2 id="result-heading" style="font-size:1rem;margin:0 0 10px">検査結果・定理</h2>
       <div id="result" class="results" role="region" aria-labelledby="result-heading" tabindex="0"></div>
     </section>
     <section>
-      <label for="tp">tp言語（paの高級言語）</label>
-      <textarea id="tp" spellcheck="false" autocapitalize="off" autocomplete="off">axiom A : Type;
+      <label for="hieratic">Hieratic（Proofglyph の高水準言語）</label>
+      <textarea id="hieratic" spellcheck="false" autocapitalize="off" autocomplete="off">axiom A : Type;
 def id (x : A) : A := x;
 theorem keep (x : A) (y : A) : A := x;</textarea>
-      <button id="compile" disabled>paを生成して検査</button>
+      <button id="compile" disabled>Proofglyph を生成して検査</button>
     </section>
   </div>
   <p id="status" role="status" aria-live="polite">読み込み中…</p>
   <p class="note">すべての処理はブラウザ内で完結します。</p>
   <div class="grammar-panes">
-  <section class="grammar" aria-labelledby="pa-grammar">
-    <h2 id="pa-grammar">pa言語（記号列）の構文</h2>
-    <p>paは左から順に読みます。型や項をスタックに積み、後ろに置いた記号で組み立てます。スタックは、途中の型や項を順番に保持するものです。下の表では右端が最後に積んだ項を表します。</p>
+  <section class="grammar" aria-labelledby="proofglyph-grammar">
+    <h2 id="proofglyph-grammar">Proofglyph（記号列）の構文</h2>
+    <p>Proofglyph は左から順に読みます。型や項をスタックに積み、後ろに置いた記号で組み立てます。スタックは、途中の型や項を順番に保持するものです。下の表では右端が最後に積んだ項を表します。</p>
     <table>
       <thead><tr><th scope="col">記号</th><th scope="col">操作</th></tr></thead>
       <tbody>
@@ -101,12 +101,12 @@ theorem keep (x : A) (y : A) : A := x;</textarea>
     <p><code>$0</code> は最も内側の引数、<code>$1</code> はその一つ外側の引数です。この番号の付け方をde Bruijn indexと呼びます。たとえば <code>#0#0$1\\</code> は、型 <code>#0</code> の引数を二つ受け取り、先に受け取った方を返す関数です。</p>
     <p><code>#0</code>、<code>#1</code>、…は登録順に付く定数番号です。使えるのは、その位置までに登録した定数だけです。</p>
     <h3>空白と検査</h3>
-    <p>記号の間の空白や改行は省けます。<code>$0</code> や <code>#12</code> の記号と数字の間には空白を入れられません。paにはコメント構文がありません。</p>
+    <p>記号の間の空白や改行は省けます。<code>$0</code> や <code>#12</code> の記号と数字の間には空白を入れられません。Proofglyph にはコメント構文がありません。</p>
     <p>型検査は <code>:</code> と <code>!</code> で登録するときに行います。スタックの項が足りない場合、登録時に余分な項がある場合、末尾に未登録の項が残る場合もエラーになります。</p>
   </section>
-  <section class="grammar" aria-labelledby="tp-grammar">
-    <h2 id="tp-grammar">tp言語（paの高級言語）の構文</h2>
-    <p>tpでは、paの定数番号や変数番号を名前で書き、型と項を通常の関数の表記で組み立てます。「paを生成して検査」を押すと、名前を番号に変換してpaを生成し、そのpaを検査します。</p>
+  <section class="grammar" aria-labelledby="hieratic-grammar">
+    <h2 id="hieratic-grammar">Hieratic の構文</h2>
+    <p>Hieratic では、Proofglyph の定数番号や変数番号を名前で書き、型と項を通常の関数の表記で組み立てます。「Proofglyph を生成して検査」を押すと、名前を番号に変換して Proofglyph を生成し、検査します。</p>
     <h3>宣言</h3>
     <table>
       <thead><tr><th scope="col">構文</th><th scope="col">説明</th></tr></thead>
@@ -127,20 +127,20 @@ theorem keep (x : A) (y : A) : A := x;</textarea>
         <tr><td><code>fun (x : A) =&gt; b</code></td><td>ラムダ抽象</td></tr>
       </tbody>
     </table>
-    <h3>paとの対応</h3>
+    <h3>Proofglyph との対応</h3>
     <pre><code>axiom A : Type;
 def id (x : A) : A := x;</code></pre>
-    <p>このソースから、paの例と同じ <code>*:#0#0&gt;#0$0\!</code> が生成されます。<code>A</code> が <code>#0</code> に、関数の引数 <code>x</code> が <code>$0</code> に対応します。定数名 <code>id</code> はpaの記号列には含まれません。</p>
+    <p>このソースから、Proofglyph の例と同じ <code>*:#0#0&gt;#0$0\!</code> が生成されます。<code>A</code> が <code>#0</code> に、関数の引数 <code>x</code> が <code>$0</code> に対応します。定数名 <code>id</code> は Proofglyph の記号列には含まれません。</p>
     <p>宣言に書いた引数は、型では <code>forall</code>、本体では <code>fun</code> に展開されます。上の定義は次のようにも書けます。</p>
     <pre><code>def id : A -&gt; A := fun (x : A) =&gt; x;</code></pre>
     <p><code>f x y</code> は <code>(f x) y</code>、<code>A -&gt; B -&gt; C</code> は <code>A -&gt; (B -&gt; C)</code> と読みます。<code>forall (x : A), B</code> では、戻り値の型 <code>B</code> に引数 <code>x</code> を使えます。</p>
     <h3>証明としての型検査</h3>
     <p>証明例では、<code>Prop</code> を命題の型、<code>Prf P</code> を命題 <code>P</code> の証明の型として宣言しています。<code>theorem 名前 : Prf P := 項;</code> の検査では、その項が <code>Prf P</code> 型を持つことを確かめます。論理規則や自然数の公理も、宣言した前提として使います。</p>
-    <p><code>def</code> と <code>theorem</code> は同じ検査を受け、どちらもpaの <code>!</code> に変換されます。登録後の定数は、型の比較で本体を展開しません。直接書いた <code>(fun (x : A) =&gt; x) a</code> は <code>a</code> に簡約されますが、登録済みの <code>id a</code> は展開されません。</p>
+    <p><code>def</code> と <code>theorem</code> は同じ検査を受け、どちらも Proofglyph の <code>!</code> に変換されます。登録後の定数は、型の比較で本体を展開しません。直接書いた <code>(fun (x : A) =&gt; x) a</code> は <code>a</code> に簡約されますが、登録済みの <code>id a</code> は展開されません。</p>
     <p>「検査成功」は、入力に含まれる前提のもとで項の型が正しいことを表します。前提そのものの正しさや無矛盾性は、この検査では判定しません。</p>
     <h3>デモでの入力</h3>
     <p><code>//</code> から行末までをコメントとして書けます。引数はすべて明示します。証明を自動で埋める穴やタクティクスはありません。このデモでは <code>import</code> を使えないため、証明例には依存する宣言も含めています。</p>
-    <p>tpを編集したら「paを生成して検査」、paを編集したら「pa言語を検査」を押してください。paを直接編集した後は、検査結果の定数名を <code>c0</code>、<code>c1</code>、…で表示します。</p>
+    <p>Hieratic を編集したら「Proofglyph を生成して検査」、Proofglyph を編集したら「Proofglyph を検査」を押してください。Proofglyph を直接編集した後は、検査結果の定数名を <code>c0</code>、<code>c1</code>、…で表示します。</p>
   </section>
   </div>
 </main>

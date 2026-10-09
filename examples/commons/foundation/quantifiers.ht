@@ -1,0 +1,17 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "logic.ht";
+
+axiom U : Type;
+
+axiom Exists : (U -> Prop) -> Prop;
+
+axiom exists_intro (P : U -> Prop) (x : U) : Prf (P x) -> Prf (Exists P);
+
+axiom All : (U -> Prop) -> Prop;
+
+axiom all_elim (P : U -> Prop) : Prf (All P) -> forall (x : U), Prf (P x);
+
+axiom all_intro (P : U -> Prop) : (forall (x : U), Prf (P x)) -> Prf (All P);
+
+axiom exists_elim (P : U -> Prop) (C : Prop) : Prf (Exists P)
+  -> (forall (x : U), Prf (P x) -> Prf C) -> Prf C;

@@ -1,0 +1,343 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/binomial.ht";
+import "sums.ht";
+
+theorem choose_above (n k : Nat) (h : Prf (Lt n k)) : Prf (Eq (choose n k) zero)
+  := imp_elim (Lt n k) (Eq (choose n k) zero)
+    (all_nat_elim (fun (k : Nat) => (Imp (Lt n k) (Eq (choose n k) zero)))
+      (nat_induction (fun (x : Nat) => (AllNat (fun (k : Nat) => (Imp (Lt x k) (Eq (choose x k) zero)))))
+        (all_nat_intro (fun (k : Nat) => (Imp (Lt zero k) (Eq (choose zero k) zero))) (fun (k : Nat) =>
+    nat_cases (fun (k : Nat) => (Imp (Lt zero k) (Eq (choose zero k) zero))) k
+  (imp_intro (Lt zero zero) (Eq (choose zero zero) zero) (fun (h : Prf (Lt zero zero)) => false_elim (Eq
+    (choose zero zero) zero) (lt_zero_irrefl h)))
+  (fun (y : Nat) => imp_intro (Lt zero (succ y)) (Eq (choose zero (succ y)) zero) (fun (h : Prf (Lt zero
+    (succ y))) => choose_zero_row y))))
+        (fun (x : Nat) (ih : Prf (AllNat (fun (k : Nat) => (Imp (Lt x k) (Eq (choose x k) zero))))) =>
+    all_nat_intro (fun (k : Nat) => (Imp (Lt (succ x) k) (Eq (choose (succ x) k) zero)))
+          (fun (k : Nat) => nat_cases (fun (k : Nat) => (Imp (Lt (succ x) k) (Eq (choose (succ x) k) zero)))
+    k
+  (imp_intro (Lt (succ x) zero) (Eq (choose (succ x) zero) zero)
+    (fun (h : Prf (Lt (succ x) zero)) => false_elim (Eq (choose (succ x) zero) zero) (lt_zero_absurd (succ
+    x) h)))
+  (fun (y : Nat) => imp_intro (Lt (succ x) (succ y)) (Eq (choose (succ x) (succ y)) zero)
+    (fun (h : Prf (Lt (succ x) (succ y))) => eq_trans (choose (succ x) (succ y)) (add zero zero) zero
+    (eq_trans (choose (succ x) (succ y)) (add zero (choose x (succ y))) (add zero zero) (eq_trans (choose
+    (succ x) (succ y)) (add (choose x y) (choose x (succ y))) (add zero (choose x (succ y))) (choose_pascal
+    x y) (eq_cong (fun (z : Nat) => (add z (choose x (succ y)))) (choose x y) zero ((imp_elim (Lt x y) (Eq
+    (choose x y) zero) (all_nat_elim (fun (k : Nat) => (Imp (Lt x k) (Eq (choose x k) zero))) ih y)
+    (lt_succ_cancel x y h))))) (eq_cong (fun (z : Nat) => (add zero z)) (choose x (succ y)) zero ((imp_elim
+    (Lt x (succ y)) (Eq (choose x (succ y)) zero) (all_nat_elim (fun (k : Nat) => (Imp (Lt x k) (Eq (choose
+    x k) zero))) ih (succ y)) (lt_upper_succ x y (lt_succ_cancel x y h)))))) (add_zero zero))))) n) k) h;
+
+theorem choose_diagonal (n : Nat) : Prf (Eq (choose n n) (succ zero))
+  := nat_induction (fun (x : Nat) => Eq (choose x x) (succ zero)) (choose_zero_column zero)
+    (fun (x : Nat) (ih : Prf (Eq (choose x x) (succ zero))) => eq_trans (choose (succ x) (succ x)) (add
+    (succ zero) zero) (succ zero) (eq_trans (choose (succ x) (succ x)) (add (succ zero) (choose x (succ x)))
+    (add (succ zero) zero) (eq_trans (choose (succ x) (succ x)) (add (choose x x) (choose x (succ x))) (add
+    (succ zero) (choose x (succ x))) (choose_pascal x x) (eq_cong (fun (z : Nat) => (add z (choose x (succ
+    x)))) (choose x x) (succ zero) (ih))) (eq_cong (fun (z : Nat) => (add (succ zero) z)) (choose x (succ
+    x)) zero (choose_above x (succ x) (lt_intro x (succ x) zero (eq_sym (add x (succ zero)) (succ x)
+    (add_one_right x)))))) (add_zero_right (succ zero))) n;
+
+theorem binomial_row_endpoints (n : Nat) (f : Nat -> Nat) (hn : Prf (Lt zero n))
+  : Prf (Eq (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k))) (add (add (f n) (f zero)) (sum_between
+    zero n (fun (k : Nat) => mul (choose n k) (f k)))))
+  := imp_elim (Lt zero n) (Eq (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k))) (add (add (f n) (f
+    zero)) (sum_between zero n (fun (k : Nat) => mul (choose n k) (f k)))))
+    (nat_cases (fun (x : Nat) => (Imp (Lt zero x) (Eq (sum (succ x) (fun (k : Nat) => mul (choose x k) (f
+    k))) (add (add (f x) (f zero)) (sum_between zero x (fun (k : Nat) => mul (choose x k) (f k))))))) n
+      (imp_intro (Lt zero zero) (Eq (sum (succ zero) (fun (k : Nat) => mul (choose zero k) (f k))) (add (add
+    (f zero) (f zero)) (sum_between zero zero (fun (k : Nat) => mul (choose zero k) (f k)))))
+        (fun (h : Prf (Lt zero zero)) => false_elim (Eq (sum (succ zero) (fun (k : Nat) => mul (choose zero
+    k) (f k))) (add (add (f zero) (f zero)) (sum_between zero zero (fun (k : Nat) => mul (choose zero k) (f
+    k))))) (lt_zero_irrefl h)))
+      (fun (x : Nat) => imp_intro (Lt zero (succ x)) (Eq (sum (succ (succ x)) (fun (k : Nat) => mul (choose
+    (succ x) k) (f k))) (add (add (f (succ x)) (f zero)) (sum_between zero (succ x) (fun (k : Nat) => mul
+    (choose (succ x) k) (f k)))))
+        (fun (h : Prf (Lt zero (succ x))) => eq_trans (sum (succ (succ x)) (fun (k : Nat) => mul (choose
+    (succ x) k) (f k))) (add (add (f (succ x)) (f zero)) (sum x (fun (k : Nat) => (fun (k : Nat) => mul
+    (choose (succ x) k) (f k)) (succ k)))) (add (add (f (succ x)) (f zero)) (sum_between zero (succ x) (fun
+    (k : Nat) => mul (choose (succ x) k) (f k)))) (eq_trans (sum (succ (succ x)) (fun (k : Nat) => mul
+    (choose (succ x) k) (f k))) (add (f (succ x)) (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) =>
+    mul (choose (succ x) k) (f k)) (succ k))))) (add (add (f (succ x)) (f zero)) (sum x (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (eq_trans (sum (succ (succ x)) (fun (k :
+    Nat) => mul (choose (succ x) k) (f k))) (add (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) =>
+    mul (choose (succ x) k) (f k)) (succ k)))) (f (succ x))) (add (f (succ x)) (add (f zero) (sum x (fun (k
+    : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k))))) (eq_trans (sum (succ (succ x))
+    (fun (k : Nat) => mul (choose (succ x) k) (f k))) (add (add (f zero) (sum x (fun (k : Nat) => (fun (k :
+    Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (mul (choose (succ x) (succ x)) (f (succ x)))) (add
+    (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (f
+    (succ x))) (eq_trans (sum (succ (succ x)) (fun (k : Nat) => mul (choose (succ x) k) (f k))) (add (sum
+    (succ x) (fun (k : Nat) => mul (choose (succ x) k) (f k))) (mul (choose (succ x) (succ x)) (f (succ
+    x)))) (add (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ
+    k)))) (mul (choose (succ x) (succ x)) (f (succ x)))) (sum_succ (succ x) (fun (k : Nat) => mul (choose
+    (succ x) k) (f k))) (eq_cong (fun (z : Nat) => (add z (mul (choose (succ x) (succ x)) (f (succ x)))))
+    (sum (succ x) (fun (k : Nat) => mul (choose (succ x) k) (f k))) (add (f zero) (sum x (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (eq_trans (sum (succ x) (fun (k : Nat) =>
+    mul (choose (succ x) k) (f k))) (add (mul (choose (succ x) zero) (f zero)) (sum x (fun (k : Nat) => (fun
+    (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (add (f zero) (sum x (fun (k : Nat) => (fun (k :
+    Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (sum_shift x (fun (k : Nat) => mul (choose (succ x)
+    k) (f k))) (eq_cong (fun (z : Nat) => (add z (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose
+    (succ x) k) (f k)) (succ k))))) (mul (choose (succ x) zero) (f zero)) (f zero) (eq_trans (mul (choose
+    (succ x) zero) (f zero)) (mul (succ zero) (f zero)) (f zero) (eq_cong (fun (z : Nat) => (mul z (f
+    zero))) (choose (succ x) zero) (succ zero) (choose_zero_column (succ x))) (mul_one_left (f zero)))))))
+    (eq_cong (fun (z : Nat) => (add (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose
+    (succ x) k) (f k)) (succ k)))) z)) (mul (choose (succ x) (succ x)) (f (succ x))) (f (succ x)) (eq_trans
+    (mul (choose (succ x) (succ x)) (f (succ x))) (mul (succ zero) (f (succ x))) (f (succ x)) (eq_cong (fun
+    (z : Nat) => (mul z (f (succ x)))) (choose (succ x) (succ x)) (succ zero) (choose_diagonal (succ x)))
+    (mul_one_left (f (succ x)))))) (add_comm (add (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul
+    (choose (succ x) k) (f k)) (succ k)))) (f (succ x)))) (eq_sym (add (add (f (succ x)) (f zero)) (sum x
+    (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))) (add (f (succ x)) (add (f
+    zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k))))) (add_assoc
+    (f (succ x)) (f zero) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ
+    k)))))) (eq_cong (fun (z : Nat) => (add (add (f (succ x)) (f zero)) z)) (sum x (fun (k : Nat) => (fun (k
+    : Nat) => mul (choose (succ x) k) (f k)) (succ k))) (sum_between zero (succ x) (fun (k : Nat) => mul
+    (choose (succ x) k) (f k))) (eq_sym (sum_between zero (succ x) (fun (k : Nat) => mul (choose (succ x) k)
+    (f k))) (sum x (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ x) k) (f k)) (succ k)))
+    (sum_between_prefix x (fun (k : Nat) => mul (choose (succ x) k) (f k)))))))) hn;
+
+theorem binomial_row_pascal (n : Nat) (f : Nat -> Nat) : Prf (Eq (sum (succ (succ n)) (fun (k : Nat) => mul
+    (choose (succ n) k) (f k))) (add (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f
+    (succ k)) k))) (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k)))))
+  := eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (sum (succ n) (fun
+    (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (add (f zero) (sum n (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (add (sum (succ n) (fun (k : Nat) => mul (choose
+    n k) ((fun (k : Nat) => f (succ k)) k))) (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k))))
+    (eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (add (sum (succ n)
+    (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (f zero)) (sum n (fun (k : Nat)
+    => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (add (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k))) (add (f zero) (sum n (fun (k : Nat) => (fun (k : Nat)
+    => mul (choose n k) (f k)) (succ k))))) (eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose
+    (succ n) k) (f k))) (add (add (f zero) (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat)
+    => f (succ k)) k)))) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (add
+    (add (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (f zero)) (sum
+    n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (eq_trans (sum (succ (succ n))
+    (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (f zero) (add (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose
+    n k) (f k)) (succ k))))) (add (add (f zero) (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k :
+    Nat) => f (succ k)) k)))) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))
+    (eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (f zero) (add (sum
+    (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum (succ n) (fun (k :
+    Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (add (f zero) (add (sum (succ n) (fun (k
+    : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum n (fun (k : Nat) => (fun (k : Nat)
+    => mul (choose n k) (f k)) (succ k))))) (eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose
+    (succ n) k) (f k))) (add (f zero) (sum (succ n) (fun (k : Nat) => add ((fun (k : Nat) => mul (choose n
+    k) ((fun (k : Nat) => f (succ k)) k)) k) ((fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k))
+    (succ k)) k)))) (add (f zero) (add (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f
+    (succ k)) k))) (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))))
+    (eq_trans (sum (succ (succ n)) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (f zero) (sum
+    (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k)))) (add (f zero)
+    (sum (succ n) (fun (k : Nat) => add ((fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k))
+    k)) k) ((fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)) k)))) (eq_trans (sum (succ
+    (succ n)) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (add (mul (choose (succ n) zero) (f zero))
+    (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k)))) (add (f
+    zero) (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k))))
+    (sum_shift (succ n) (fun (k : Nat) => mul (choose (succ n) k) (f k))) (eq_cong (fun (z : Nat) => (add z
+    (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k))))) (mul
+    (choose (succ n) zero) (f zero)) (f zero) (eq_trans (mul (choose (succ n) zero) (f zero)) (mul (succ
+    zero) (f zero)) (f zero) (eq_cong (fun (z : Nat) => (mul z (f zero))) (choose (succ n) zero) (succ zero)
+    (choose_zero_column (succ n))) (mul_one_left (f zero))))) (eq_cong (fun (z : Nat) => (add (f zero) z))
+    (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k))) (sum (succ
+    n) (fun (k : Nat) => add ((fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k)) k) ((fun
+    (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)) k))) (sum_ext (succ n) (fun (k : Nat)
+    => (fun (k : Nat) => mul (choose (succ n) k) (f k)) (succ k)) (fun (k : Nat) => add ((fun (k : Nat) =>
+    mul (choose n k) ((fun (k : Nat) => f (succ k)) k)) k) ((fun (k : Nat) => (fun (k : Nat) => mul (choose
+    n k) (f k)) (succ k)) k)) (fun (k : Nat) => eq_trans (mul (choose (succ n) (succ k)) (f (succ k))) (mul
+    (add (choose n k) (choose n (succ k))) (f (succ k))) (add (mul (choose n k) (f (succ k))) (mul (choose n
+    (succ k)) (f (succ k)))) (eq_cong (fun (z : Nat) => (mul z (f (succ k)))) (choose (succ n) (succ k))
+    (add (choose n k) (choose n (succ k))) (choose_pascal n k)) (mul_add_left (choose n k) (choose n (succ
+    k)) (f (succ k))))))) (eq_cong (fun (z : Nat) => (add (f zero) z)) (sum (succ n) (fun (k : Nat) => add
+    ((fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k)) k) ((fun (k : Nat) => (fun (k :
+    Nat) => mul (choose n k) (f k)) (succ k)) k))) (add (sum (succ n) (fun (k : Nat) => mul (choose n k)
+    ((fun (k : Nat) => f (succ k)) k))) (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose n k)
+    (f k)) (succ k)))) (sum_add (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k))
+    k)) (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (eq_cong (fun (z : Nat) =>
+    (add (f zero) z)) (add (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k))
+    k))) (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (add (sum
+    (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum n (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (eq_cong (fun (z : Nat) => (add (sum (succ n) (fun
+    (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) z)) (sum (succ n) (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) (sum n (fun (k : Nat) => (fun (k : Nat) => mul
+    (choose n k) (f k)) (succ k))) (eq_trans (sum (succ n) (fun (k : Nat) => (fun (k : Nat) => mul (choose n
+    k) (f k)) (succ k))) (add (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))
+    zero) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) (eq_trans (sum (succ
+    n) (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) (add (sum n (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) (mul (choose n (succ n)) (f (succ n)))) (add (sum n
+    (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) zero) (sum_succ n (fun (k : Nat)
+    => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) (eq_cong (fun (z : Nat) => (add (sum n (fun (k :
+    Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))) z)) (mul (choose n (succ n)) (f (succ n)))
+    zero (eq_trans (mul (choose n (succ n)) (f (succ n))) (mul zero (f (succ n))) zero (eq_cong (fun (z :
+    Nat) => (mul z (f (succ n)))) (choose n (succ n)) zero (choose_above n (succ n) (lt_intro n (succ n)
+    zero (eq_sym (add n (succ zero)) (succ n) (add_one_right n))))) (mul_zero (f (succ n))))))
+    (add_zero_right (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))))))
+    (eq_sym (add (add (f zero) (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ
+    k)) k)))) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (add (f zero)
+    (add (sum (succ n) (fun (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum n (fun (k
+    : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (add_assoc (f zero) (sum (succ n) (fun
+    (k : Nat) => mul (choose n k) ((fun (k : Nat) => f (succ k)) k))) (sum n (fun (k : Nat) => (fun (k :
+    Nat) => mul (choose n k) (f k)) (succ k)))))) (eq_cong (fun (z : Nat) => (add z (sum n (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (add (f zero) (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k)))) (add (sum (succ n) (fun (k : Nat) => mul (choose n k)
+    ((fun (k : Nat) => f (succ k)) k))) (f zero)) (add_comm (f zero) (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k)))))) (add_assoc (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k))) (f zero) (sum n (fun (k : Nat) => (fun (k : Nat) => mul
+    (choose n k) (f k)) (succ k))))) (eq_cong (fun (z : Nat) => (add (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) ((fun (k : Nat) => f (succ k)) k))) z)) (add (f zero) (sum n (fun (k : Nat) => (fun (k :
+    Nat) => mul (choose n k) (f k)) (succ k)))) (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k)))
+    (eq_sym (sum (succ n) (fun (k : Nat) => mul (choose n k) (f k))) (add (f zero) (sum n (fun (k : Nat) =>
+    (fun (k : Nat) => mul (choose n k) (f k)) (succ k)))) (eq_trans (sum (succ n) (fun (k : Nat) => mul
+    (choose n k) (f k))) (add (mul (choose n zero) (f zero)) (sum n (fun (k : Nat) => (fun (k : Nat) => mul
+    (choose n k) (f k)) (succ k)))) (add (f zero) (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n
+    k) (f k)) (succ k)))) (sum_shift n (fun (k : Nat) => mul (choose n k) (f k))) (eq_cong (fun (z : Nat) =>
+    (add z (sum n (fun (k : Nat) => (fun (k : Nat) => mul (choose n k) (f k)) (succ k))))) (mul (choose n
+    zero) (f zero)) (f zero) (eq_trans (mul (choose n zero) (f zero)) (mul (succ zero) (f zero)) (f zero)
+    (eq_cong (fun (z : Nat) => (mul z (f zero))) (choose n zero) (succ zero) (choose_zero_column n))
+    (mul_one_left (f zero)))))));
+
+theorem choose_balance (n k : Nat) : Prf (Eq (mul (succ k) (choose (succ n) (succ k))) (mul (succ n) (choose
+    n k)))
+  := all_nat_elim (fun (b : Nat) => (Eq (mul (succ b) (choose (succ n) (succ b))) (mul (succ n) (choose n
+    b))))
+    (nat_induction (fun (x : Nat) => (AllNat (fun (b : Nat) => (Eq (mul (succ b) (choose (succ x) (succ b)))
+    (mul (succ x) (choose x b)))))) (all_nat_intro (fun (b : Nat) => (Eq (mul (succ b) (choose (succ zero)
+    (succ b))) (mul (succ zero) (choose zero b))))
+  (fun (b : Nat) => nat_cases (fun (b : Nat) => (Eq (mul (succ b) (choose (succ zero) (succ b))) (mul (succ
+    zero) (choose zero b)))) b (eq_trans (mul (succ zero) (choose (succ zero) (succ zero))) (mul (succ zero)
+    (succ zero)) (mul (succ zero) (choose zero zero)) (eq_trans (mul (succ zero) (choose (succ zero) (succ
+    zero))) (succ zero) (mul (succ zero) (succ zero)) (eq_trans (mul (succ zero) (choose (succ zero) (succ
+    zero))) (add (succ zero) zero) (succ zero) (eq_trans (mul (succ zero) (choose (succ zero) (succ zero)))
+    (add (succ zero) (choose zero (succ zero))) (add (succ zero) zero) (eq_trans (mul (succ zero) (choose
+    (succ zero) (succ zero))) (add (choose zero zero) (choose zero (succ zero))) (add (succ zero) (choose
+    zero (succ zero))) (eq_trans (mul (succ zero) (choose (succ zero) (succ zero))) (choose (succ zero)
+    (succ zero)) (add (choose zero zero) (choose zero (succ zero))) (mul_one_left (choose (succ zero) (succ
+    zero))) (choose_pascal zero zero)) (eq_cong (fun (z : Nat) => (add z (choose zero (succ zero)))) (choose
+    zero zero) (succ zero) (choose_zero_column zero))) (eq_cong (fun (z : Nat) => (add (succ zero) z))
+    (choose zero (succ zero)) zero (choose_zero_row zero))) (add_zero_right (succ zero))) (eq_sym (mul (succ
+    zero) (succ zero)) (succ zero) (mul_one_left (succ zero)))) (eq_sym (mul (succ zero) (choose zero zero))
+    (mul (succ zero) (succ zero)) (eq_cong (fun (z : Nat) => (mul (succ zero) z)) (choose zero zero) (succ
+    zero) (choose_zero_column zero))))
+    (fun (y : Nat) => eq_trans (mul (succ (succ y)) (choose (succ zero) (succ (succ y)))) (mul (succ zero)
+    zero) (mul (succ zero) (choose zero (succ y))) (eq_trans (mul (succ (succ y)) (choose (succ zero) (succ
+    (succ y)))) zero (mul (succ zero) zero) (eq_trans (mul (succ (succ y)) (choose (succ zero) (succ (succ
+    y)))) (mul (succ (succ y)) zero) zero (eq_trans (mul (succ (succ y)) (choose (succ zero) (succ (succ
+    y)))) (mul (succ (succ y)) (add zero zero)) (mul (succ (succ y)) zero) (eq_trans (mul (succ (succ y))
+    (choose (succ zero) (succ (succ y)))) (mul (succ (succ y)) (add zero (choose zero (succ (succ y)))))
+    (mul (succ (succ y)) (add zero zero)) (eq_trans (mul (succ (succ y)) (choose (succ zero) (succ (succ
+    y)))) (mul (succ (succ y)) (add (choose zero (succ y)) (choose zero (succ (succ y))))) (mul (succ (succ
+    y)) (add zero (choose zero (succ (succ y))))) (eq_cong (fun (z : Nat) => (mul (succ (succ y)) z))
+    (choose (succ zero) (succ (succ y))) (add (choose zero (succ y)) (choose zero (succ (succ y))))
+    (choose_pascal zero (succ y))) (eq_cong (fun (z : Nat) => (mul (succ (succ y)) z)) (add (choose zero
+    (succ y)) (choose zero (succ (succ y)))) (add zero (choose zero (succ (succ y)))) (eq_cong (fun (z :
+    Nat) => (add z (choose zero (succ (succ y))))) (choose zero (succ y)) zero (choose_zero_row y))))
+    (eq_cong (fun (z : Nat) => (mul (succ (succ y)) z)) (add zero (choose zero (succ (succ y)))) (add zero
+    zero) (eq_cong (fun (z : Nat) => (add zero z)) (choose zero (succ (succ y))) zero (choose_zero_row (succ
+    y))))) (eq_cong (fun (z : Nat) => (mul (succ (succ y)) z)) (add zero zero) zero (add_zero zero)))
+    (mul_zero_right (succ (succ y)))) (eq_sym (mul (succ zero) zero) zero (mul_zero_right (succ zero))))
+    (eq_sym (mul (succ zero) (choose zero (succ y))) (mul (succ zero) zero) (eq_cong (fun (z : Nat) => (mul
+    (succ zero) z)) (choose zero (succ y)) zero (choose_zero_row y))))))
+      (fun (x : Nat) (ih : Prf (AllNat (fun (b : Nat) => (Eq (mul (succ b) (choose (succ x) (succ b))) (mul
+    (succ x) (choose x b)))))) => all_nat_intro (fun (b : Nat) => (Eq (mul (succ b) (choose (succ (succ x))
+    (succ b))) (mul (succ (succ x)) (choose (succ x) b))))
+  (fun (b : Nat) => nat_cases (fun (b : Nat) => (Eq (mul (succ b) (choose (succ (succ x)) (succ b))) (mul
+    (succ (succ x)) (choose (succ x) b)))) b (eq_trans (mul (succ zero) (choose (succ (succ x)) (succ
+    zero))) (mul (succ (succ x)) (succ zero)) (mul (succ (succ x)) (choose (succ x) zero)) (eq_trans (mul
+    (succ zero) (choose (succ (succ x)) (succ zero))) (succ (succ x)) (mul (succ (succ x)) (succ zero))
+    (eq_trans (mul (succ zero) (choose (succ (succ x)) (succ zero))) (succ (add zero (succ x))) (succ (succ
+    x)) (eq_trans (mul (succ zero) (choose (succ (succ x)) (succ zero))) (add (succ zero) (succ x)) (succ
+    (add zero (succ x))) (eq_trans (mul (succ zero) (choose (succ (succ x)) (succ zero))) (add (succ zero)
+    (choose (succ x) (succ zero))) (add (succ zero) (succ x)) (eq_trans (mul (succ zero) (choose (succ (succ
+    x)) (succ zero))) (add (choose (succ x) zero) (choose (succ x) (succ zero))) (add (succ zero) (choose
+    (succ x) (succ zero))) (eq_trans (mul (succ zero) (choose (succ (succ x)) (succ zero))) (choose (succ
+    (succ x)) (succ zero)) (add (choose (succ x) zero) (choose (succ x) (succ zero))) (mul_one_left (choose
+    (succ (succ x)) (succ zero))) (choose_pascal (succ x) zero)) (eq_cong (fun (z : Nat) => (add z (choose
+    (succ x) (succ zero)))) (choose (succ x) zero) (succ zero) (choose_zero_column (succ x)))) (eq_cong (fun
+    (z : Nat) => (add (succ zero) z)) (choose (succ x) (succ zero)) (succ x) (eq_trans (choose (succ x)
+    (succ zero)) (mul (succ x) (succ zero)) (succ x) (eq_trans (choose (succ x) (succ zero)) (mul (succ x)
+    (choose x zero)) (mul (succ x) (succ zero)) (eq_trans (choose (succ x) (succ zero)) (mul (succ zero)
+    (choose (succ x) (succ zero))) (mul (succ x) (choose x zero)) (eq_sym (mul (succ zero) (choose (succ x)
+    (succ zero))) (choose (succ x) (succ zero)) (mul_one_left (choose (succ x) (succ zero)))) (all_nat_elim
+    (fun (b : Nat) => (Eq (mul (succ b) (choose (succ x) (succ b))) (mul (succ x) (choose x b)))) ih zero))
+    (eq_cong (fun (z : Nat) => (mul (succ x) z)) (choose x zero) (succ zero) (choose_zero_column x)))
+    (mul_one_right (succ x))))) (add_succ zero (succ x))) (eq_cong (fun (z : Nat) => (succ z)) (add zero
+    (succ x)) (succ x) (add_zero (succ x)))) (eq_sym (mul (succ (succ x)) (succ zero)) (succ (succ x))
+    (mul_one_right (succ (succ x))))) (eq_sym (mul (succ (succ x)) (choose (succ x) zero)) (mul (succ (succ
+    x)) (succ zero)) (eq_cong (fun (z : Nat) => (mul (succ (succ x)) z)) (choose (succ x) zero) (succ zero)
+    (choose_zero_column (succ x)))))
+    (fun (y : Nat) => eq_trans (mul (succ (succ y)) (choose (succ (succ x)) (succ (succ y)))) (add (choose
+    (succ x) (succ y)) (mul (succ x) (choose (succ x) (succ y)))) (mul (succ (succ x)) (choose (succ x)
+    (succ y))) (eq_trans (mul (succ (succ y)) (choose (succ (succ x)) (succ (succ y)))) (add (choose (succ
+    x) (succ y)) (mul (succ x) (add (choose x y) (choose x (succ y))))) (add (choose (succ x) (succ y)) (mul
+    (succ x) (choose (succ x) (succ y)))) (eq_trans (mul (succ (succ y)) (choose (succ (succ x)) (succ (succ
+    y)))) (add (choose (succ x) (succ y)) (add (mul (succ x) (choose x y)) (mul (succ x) (choose x (succ
+    y))))) (add (choose (succ x) (succ y)) (mul (succ x) (add (choose x y) (choose x (succ y))))) (eq_trans
+    (mul (succ (succ y)) (choose (succ (succ x)) (succ (succ y)))) (add (add (choose (succ x) (succ y)) (mul
+    (succ x) (choose x y))) (mul (succ x) (choose x (succ y)))) (add (choose (succ x) (succ y)) (add (mul
+    (succ x) (choose x y)) (mul (succ x) (choose x (succ y))))) (eq_trans (mul (succ (succ y)) (choose (succ
+    (succ x)) (succ (succ y)))) (add (add (choose (succ x) (succ y)) (mul (succ x) (choose x y))) (mul (succ
+    (succ y)) (choose (succ x) (succ (succ y))))) (add (add (choose (succ x) (succ y)) (mul (succ x) (choose
+    x y))) (mul (succ x) (choose x (succ y)))) (eq_trans (mul (succ (succ y)) (choose (succ (succ x)) (succ
+    (succ y)))) (add (add (choose (succ x) (succ y)) (mul (succ y) (choose (succ x) (succ y)))) (mul (succ
+    (succ y)) (choose (succ x) (succ (succ y))))) (add (add (choose (succ x) (succ y)) (mul (succ x) (choose
+    x y))) (mul (succ (succ y)) (choose (succ x) (succ (succ y))))) (eq_trans (mul (succ (succ y)) (choose
+    (succ (succ x)) (succ (succ y)))) (add (mul (succ (succ y)) (choose (succ x) (succ y))) (mul (succ (succ
+    y)) (choose (succ x) (succ (succ y))))) (add (add (choose (succ x) (succ y)) (mul (succ y) (choose (succ
+    x) (succ y)))) (mul (succ (succ y)) (choose (succ x) (succ (succ y))))) (eq_trans (mul (succ (succ y))
+    (choose (succ (succ x)) (succ (succ y)))) (mul (succ (succ y)) (add (choose (succ x) (succ y)) (choose
+    (succ x) (succ (succ y))))) (add (mul (succ (succ y)) (choose (succ x) (succ y))) (mul (succ (succ y))
+    (choose (succ x) (succ (succ y))))) (eq_cong (fun (z : Nat) => (mul (succ (succ y)) z)) (choose (succ
+    (succ x)) (succ (succ y))) (add (choose (succ x) (succ y)) (choose (succ x) (succ (succ y))))
+    (choose_pascal (succ x) (succ y))) (mul_add_right (succ (succ y)) (choose (succ x) (succ y)) (choose
+    (succ x) (succ (succ y))))) (eq_cong (fun (z : Nat) => (add z (mul (succ (succ y)) (choose (succ x)
+    (succ (succ y)))))) (mul (succ (succ y)) (choose (succ x) (succ y))) (add (choose (succ x) (succ y))
+    (mul (succ y) (choose (succ x) (succ y)))) (mul_succ (succ y) (choose (succ x) (succ y))))) (eq_cong
+    (fun (z : Nat) => (add z (mul (succ (succ y)) (choose (succ x) (succ (succ y)))))) (add (choose (succ x)
+    (succ y)) (mul (succ y) (choose (succ x) (succ y)))) (add (choose (succ x) (succ y)) (mul (succ x)
+    (choose x y))) (eq_cong (fun (z : Nat) => (add (choose (succ x) (succ y)) z)) (mul (succ y) (choose
+    (succ x) (succ y))) (mul (succ x) (choose x y)) (all_nat_elim (fun (b : Nat) => (Eq (mul (succ b)
+    (choose (succ x) (succ b))) (mul (succ x) (choose x b)))) ih y)))) (eq_cong (fun (z : Nat) => (add (add
+    (choose (succ x) (succ y)) (mul (succ x) (choose x y))) z)) (mul (succ (succ y)) (choose (succ x) (succ
+    (succ y)))) (mul (succ x) (choose x (succ y))) (all_nat_elim (fun (b : Nat) => (Eq (mul (succ b) (choose
+    (succ x) (succ b))) (mul (succ x) (choose x b)))) ih (succ y)))) (add_assoc (choose (succ x) (succ y))
+    (mul (succ x) (choose x y)) (mul (succ x) (choose x (succ y))))) (eq_cong (fun (z : Nat) => (add (choose
+    (succ x) (succ y)) z)) (add (mul (succ x) (choose x y)) (mul (succ x) (choose x (succ y)))) (mul (succ
+    x) (add (choose x y) (choose x (succ y)))) (eq_sym (mul (succ x) (add (choose x y) (choose x (succ y))))
+    (add (mul (succ x) (choose x y)) (mul (succ x) (choose x (succ y)))) (mul_add_right (succ x) (choose x
+    y) (choose x (succ y)))))) (eq_cong (fun (z : Nat) => (add (choose (succ x) (succ y)) z)) (mul (succ x)
+    (add (choose x y) (choose x (succ y)))) (mul (succ x) (choose (succ x) (succ y))) (eq_cong (fun (z :
+    Nat) => (mul (succ x) z)) (add (choose x y) (choose x (succ y))) (choose (succ x) (succ y)) (eq_sym
+    (choose (succ x) (succ y)) (add (choose x y) (choose x (succ y))) (choose_pascal x y))))) (eq_sym (mul
+    (succ (succ x)) (choose (succ x) (succ y))) (add (choose (succ x) (succ y)) (mul (succ x) (choose (succ
+    x) (succ y)))) (mul_succ (succ x) (choose (succ x) (succ y))))))) n) k;
+
+theorem choose_mul_identity (n k : Nat) (hk : Prf (Lt zero k)) (hkn : Prf (Lt k n)) : Prf (Eq (mul k (choose
+    n k)) (mul n (choose (pred n) (pred k))))
+  := imp_elim (Lt k n) (Eq (mul k (choose n k)) (mul n (choose (pred n) (pred k))))
+    (imp_elim (Lt zero k) (Imp (Lt k n) (Eq (mul k (choose n k)) (mul n (choose (pred n) (pred k)))))
+      (nat_cases (fun (n : Nat) => (Imp (Lt zero k) (Imp (Lt k n) (Eq (mul k (choose n k)) (mul n (choose
+    (pred n) (pred k))))))) n
+        (imp_intro (Lt zero k) (Imp (Lt k zero) (Eq (mul k (choose zero k)) (mul zero (choose (pred zero)
+    (pred k)))))
+          (fun (hk : Prf (Lt zero k)) => imp_intro (Lt k zero) (Eq (mul k (choose zero k)) (mul zero (choose
+    (pred zero) (pred k))))
+            (fun (hkn : Prf (Lt k zero)) => false_elim (Eq (mul k (choose zero k)) (mul zero (choose (pred
+    zero) (pred k)))) (lt_zero_absurd k hkn))))
+        (fun (x : Nat) => nat_cases (fun (k : Nat) => (Imp (Lt zero k) (Imp (Lt k (succ x)) (Eq (mul k
+    (choose (succ x) k)) (mul (succ x) (choose (pred (succ x)) (pred k))))))) k
+  (imp_intro (Lt zero zero) (Imp (Lt zero (succ x)) (Eq (mul zero (choose (succ x) zero)) (mul (succ x)
+    (choose (pred (succ x)) (pred zero)))))
+    (fun (hk : Prf (Lt zero zero)) => imp_intro (Lt zero (succ x)) (Eq (mul zero (choose (succ x) zero))
+    (mul (succ x) (choose (pred (succ x)) (pred zero))))
+      (fun (hkn : Prf (Lt zero (succ x))) => false_elim (Eq (mul zero (choose (succ x) zero)) (mul (succ x)
+    (choose (pred (succ x)) (pred zero)))) (lt_zero_irrefl hk))))
+  (fun (y : Nat) => imp_intro (Lt zero (succ y)) (Imp (Lt (succ y) (succ x)) (Eq (mul (succ y) (choose (succ
+    x) (succ y))) (mul (succ x) (choose (pred (succ x)) (pred (succ y))))))
+    (fun (hk : Prf (Lt zero (succ y))) => imp_intro (Lt (succ y) (succ x)) (Eq (mul (succ y) (choose (succ
+    x) (succ y))) (mul (succ x) (choose (pred (succ x)) (pred (succ y)))))
+      (fun (hkn : Prf (Lt (succ y) (succ x))) => eq_trans (mul (succ y) (choose (succ x) (succ y))) (mul
+    (succ x) (choose (pred (succ x)) y)) (mul (succ x) (choose (pred (succ x)) (pred (succ y)))) (eq_trans
+    (mul (succ y) (choose (succ x) (succ y))) (mul (succ x) (choose x y)) (mul (succ x) (choose (pred (succ
+    x)) y)) (choose_balance x y) (eq_cong (fun (z : Nat) => (mul (succ x) z)) (choose x y) (choose (pred
+    (succ x)) y) (eq_cong (fun (z : Nat) => (choose z y)) x (pred (succ x)) (eq_sym (pred (succ x)) x
+    (pred_succ x))))) (eq_cong (fun (z : Nat) => (mul (succ x) z)) (choose (pred (succ x)) y) (choose (pred
+    (succ x)) (pred (succ y))) (eq_cong (fun (z : Nat) => (choose (pred (succ x)) z)) y (pred (succ y))
+    (eq_sym (pred (succ y)) y (pred_succ y))))))))) hk) hkn;

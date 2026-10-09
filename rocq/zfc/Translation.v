@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Pa Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed Checker.
+From Tinyprover.Proofglyph Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed Checker.
 From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
 From Tinyprover.ZfcDeep Require Import Artifact DeepVerification.
 Import ListNotations.

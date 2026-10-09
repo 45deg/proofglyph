@@ -1,0 +1,6 @@
+// Reuse Fermat for the sum of two natural numbers.
+import "commons/nat/fermat.ht";
+
+theorem fermat_application (p a b : Nat) (hp : Prf (Prime p))
+  : Prf (Cong (pow (add a b) p) (add a b) p)
+  := fermat_sum a b p hp;

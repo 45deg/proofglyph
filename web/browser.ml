@@ -1,6 +1,6 @@
 open Tinyprover_core
-module Assembly = Tinyprover_pa.Reader
-module Source = Tinyprover_tp.Source
+module Assembly = Tinyprover_proofglyph.Reader
+module Source = Tinyprover_hieratic.Source
 open Js_of_ocaml
 
 (** {1 Browser JavaScript Bindings}
@@ -33,7 +33,7 @@ let protect f input =
 (** Cache holding the last successful compilation result from [compile_at] (used by [checkMapped]). *)
 let last_compiled : Source.compiled option ref = ref None
 
-(** Verifies .pa assembly and formats the output string.
+(** Verifies .pg assembly and formats the output string.
     If [mappings] are provided, constant indices are replaced with original declaration names. *)
 let check ?(mappings=[]) source =
   let kernel = Kernel.create () in

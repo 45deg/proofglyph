@@ -1,12 +1,12 @@
 open Tinyprover_core
-module Assembly = Tinyprover_pa.Reader
-module Source = Tinyprover_tp.Source
+module Assembly = Tinyprover_proofglyph.Reader
+module Source = Tinyprover_hieratic.Source
 open Term
 
 (** {1 tinyprover Regression Test Suite}
 
     Covers unit and regression tests for kernel type checking, assembly execution,
-    the .tp frontend compiler, import resolution, and mathematical libraries
+    the .ht frontend compiler, import resolution, and mathematical libraries
     (propositional/predicate logic, equality, Peano arithmetic, and Fermat's Little Theorem).
     Also includes extensive negative test cases ensuring ill-formed inputs are rejected. *)
 
@@ -58,9 +58,9 @@ let () =
     assert (Source.annotate_assembly_error compiled.sourcemap "byte 999: unfinished stack"
       = "byte 999: unfinished stack");
     assert (Source.annotate_assembly_error compiled.sourcemap "other error" = "other error");
-    let with_file = [{m with file = Some "examples/test.tp"}] in
+    let with_file = [{m with file = Some "examples/test.ht"}] in
     assert (Source.annotate_assembly_error with_file message
-      = "examples/test.tp:2:1 (id): " ^ message));
+      = "examples/test.ht:2:1 (id): " ^ message));
   test "source type errors retain declaration location and assembly byte" (fun () ->
     match compile "// heading\naxiom A : Type;\ndef bad : A := Type;" with
     | _ -> assert false
@@ -198,13 +198,13 @@ let () =
       List.iter (fun (p,s) -> write p s) files;
       f dir write) in
   test "CLI check prints only a summary while inspect lists constants" (fun () ->
-    with_fixture ["input.pa", "*:\n#0#0>#0$0\\!\n"] (fun dir _ ->
+    with_fixture ["input.pg", "*:\n#0#0>#0$0\\!\n"] (fun dir _ ->
       let run command =
         let output = Filename.concat dir "output" in
         let log = Unix.openfile output [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
         let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
           Unix.create_process "../bin/main.exe"
-            [|"tinyprover"; command; Filename.concat dir "input.pa"|] Unix.stdin log log) in
+            [|"tinyprover"; command; Filename.concat dir "input.pg"|] Unix.stdin log log) in
         assert (snd (Unix.waitpid [] pid) = Unix.WEXITED 0);
         Source.read_file output in
       let summary = "Accepted: 2 declarations (1 assumptions).\n" in
@@ -212,62 +212,62 @@ let () =
       assert (run "inspect" =
         "c0 [assumption] : Type\nc1 [proven] : (forall ($x0 : c0), c0)\n" ^ summary)));
   test "imports expand at their declaration site, relative to the importing file" (fun () ->
-    with_fixture ["base.tp", "axiom A : Type;";
-                  "nested dir/proof.tp", "import \"../base.tp\"; theorem id (x : A) : A := x;";
-                  "root.tp", "import \"nested dir/proof.tp\"; theorem use (x : A) : A := id x;"]
+    with_fixture ["base.ht", "axiom A : Type;";
+                  "nested dir/proof.ht", "import \"../base.ht\"; theorem id (x : A) : A := x;";
+                  "root.ht", "import \"nested dir/proof.ht\"; theorem use (x : A) : A := id x;"]
       (fun dir _ ->
-        let path = Filename.concat dir "root.tp" in
+        let path = Filename.concat dir "root.ht" in
         let r = Source.compile_file path in
         assert (r.names = ["A"; "id"; "use"]); verify r.assembly;
         assert (List.map (fun (d:Source.declaration) -> Filename.basename (Option.get d.at.file))
-          r.declarations = ["base.tp"; "proof.tp"; "root.tp"]);
+          r.declarations = ["base.ht"; "proof.ht"; "root.ht"]);
         assert ((Source.compile_file path).assembly = r.assembly)));
   test "diamond imports and path aliases register one canonical file once" (fun () ->
-    with_fixture ["base.tp", "axiom A : Type;";
-                  "left.tp", "import \"base.tp\"; theorem left (x : A) : A := x;";
-                  "right.tp", "import \"./base.tp\"; theorem right (x : A) : A := x;";
-                  "root.tp", "import \"left.tp\"; import \"right.tp\"; import \"alias.tp\";"]
+    with_fixture ["base.ht", "axiom A : Type;";
+                  "left.ht", "import \"base.ht\"; theorem left (x : A) : A := x;";
+                  "right.ht", "import \"./base.ht\"; theorem right (x : A) : A := x;";
+                  "root.ht", "import \"left.ht\"; import \"right.ht\"; import \"alias.ht\";"]
       (fun dir _ ->
-        Unix.symlink "base.tp" (Filename.concat dir "alias.tp");
-        let r = Source.compile_file (Filename.concat dir "root.tp") in
+        Unix.symlink "base.ht" (Filename.concat dir "alias.ht");
+        let r = Source.compile_file (Filename.concat dir "root.ht") in
         assert (r.names = ["A"; "left"; "right"]);
         assert (List.map (fun (m:Source.mapping) ->
           Filename.basename (Option.get m.file)) r.sourcemap
-          = ["base.tp"; "left.tp"; "right.tp"])));
+          = ["base.ht"; "left.ht"; "right.ht"])));
   test "cyclic imports are rejected, including a symlink back to the root" (fun () ->
-    with_fixture ["root.tp", "import \"other.tp\";"; "other.tp", "import \"root.tp\";"]
+    with_fixture ["root.ht", "import \"other.ht\";"; "other.ht", "import \"root.ht\";"]
       (fun dir write ->
-        rejects (fun () -> ignore (Source.compile_file (Filename.concat dir "root.tp")));
-        write "root.tp" "import \"alias.tp\";";
-        Unix.symlink "root.tp" (Filename.concat dir "alias.tp");
-        rejects (fun () -> ignore (Source.compile_file (Filename.concat dir "root.tp")))));
+        rejects (fun () -> ignore (Source.compile_file (Filename.concat dir "root.ht")));
+        write "root.ht" "import \"alias.ht\";";
+        Unix.symlink "root.ht" (Filename.concat dir "alias.ht");
+        rejects (fun () -> ignore (Source.compile_file (Filename.concat dir "root.ht")))));
   test "missing imports and imported source errors retain file locations" (fun () ->
-    with_fixture ["root.tp", "import \"missing.tp\";"] (fun dir write ->
-      let path = Filename.concat dir "root.tp" in
+    with_fixture ["root.ht", "import \"missing.ht\";"] (fun dir write ->
+      let path = Filename.concat dir "root.ht" in
       (try ignore (Source.compile_file path); failwith "missing import accepted"
-       with Source.Error msg -> assert (contains msg "root.tp:1:1"));
-      write "missing.tp" "axiom A Type;";
+       with Source.Error msg -> assert (contains msg "root.ht:1:1"));
+      write "missing.ht" "axiom A Type;";
       (try ignore (Source.compile_file path); failwith "invalid imported source accepted"
-       with Source.Error msg -> assert (contains msg "missing.tp:1:"));
-      write "missing.tp" "axiom A : Type;";
+       with Source.Error msg -> assert (contains msg "missing.ht:1:"));
+      write "missing.ht" "axiom A : Type;";
       assert ((Source.compile_file path).names = ["A"])));
   test "imports cannot hide duplicate declarations or forward references" (fun () ->
-    with_fixture ["base.tp", "axiom A : Type;";
-                  "root.tp", "axiom A : Type; import \"base.tp\";"]
+    with_fixture ["base.ht", "axiom A : Type;";
+                  "root.ht", "axiom A : Type; import \"base.ht\";"]
       (fun dir write ->
-        let path = Filename.concat dir "root.tp" in
+        let path = Filename.concat dir "root.ht" in
         rejects (fun () -> ignore (Source.compile_file path));
-        write "root.tp" "theorem id (x : A) : A := x; import \"base.tp\";";
+        write "root.ht" "theorem id (x : A) : A := x; import \"base.ht\";";
         rejects (fun () -> ignore (Source.compile_file path))));
   test "import paths are quoted, nonempty and have no escapes" (fun () ->
     List.iter (fun s -> rejects (fun () -> ignore (Source.parse_items s)))
-      ["import base;"; "import \"\";"; "import \"base.tp\"";
+      ["import base;"; "import \"\";"; "import \"base.ht\"";
        "import \"bad\\path\";"; "import \"bad\npath\";"];
-    reject_source "import \"base.tp\";");
+    reject_source "import \"base.ht\";");
   test "CLI preserves an existing output when an import or proof fails" (fun () ->
-    with_fixture ["root.tp", "import \"missing.tp\";"; "out.pa", "sentinel"; "out.map", "map sentinel"]
+    with_fixture ["root.ht", "import \"missing.ht\";"; "out.pg", "sentinel"; "out.map", "map sentinel"]
       (fun dir write ->
-        let root = Filename.concat dir "root.tp" and output = Filename.concat dir "out.pa" in
+        let root = Filename.concat dir "root.ht" and output = Filename.concat dir "out.pg" in
         let run () =
           let log = Unix.openfile (Filename.concat dir "log") [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
           let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
@@ -277,7 +277,7 @@ let () =
           assert (Source.read_file output = "sentinel");
           assert (Source.read_file (Filename.concat dir "out.map") = "map sentinel") in
         run ();
-        write "root.tp" "axiom A : Type; theorem bad : A := Type;";
+        write "root.ht" "axiom A : Type; theorem bad : A := Type;";
         run ()));
   let arithmetic_axioms = [
     "All"; "AllBi"; "AllNat"; "AllSeq"; "And"; "Cong";
@@ -308,34 +308,34 @@ let () =
         if Hashtbl.mem seen key then false
         else (Hashtbl.add seen key (); true)) (Source.load file)) files in
   let arithmetic_modules = [
-    "../examples/commons/nat/addition.tp";
-    "../examples/commons/nat/basic.tp";
-    "../examples/commons/nat/binomial_coefficients.tp";
-    "../examples/commons/nat/binomial_theorem.tp";
-    "../examples/commons/nat/classical.tp";
-    "../examples/commons/nat/congruence.tp";
-    "../examples/commons/nat/convolution.tp";
-    "../examples/commons/nat/diagonal.tp";
-    "../examples/commons/nat/divisibility.tp";
-    "../examples/commons/nat/division.tp";
-    "../examples/commons/nat/euclid.tp";
-    "../examples/commons/nat/factorization.tp";
-    "../examples/commons/nat/fermat.tp";
-    "../examples/commons/nat/induction.tp";
-    "../examples/commons/nat/modular_sums.tp";
-    "../examples/commons/nat/multiplication.tp";
-    "../examples/commons/nat/order.tp";
-    "../examples/commons/nat/ordered_multiplication.tp";
-    "../examples/commons/nat/parity.tp";
-    "../examples/commons/nat/powers.tp";
-    "../examples/commons/nat/prime_binomial.tp";
-    "../examples/commons/nat/prime_infinitude.tp";
-    "../examples/commons/nat/primes.tp";
-    "../examples/commons/nat/sqrt_two.tp";
-    "../examples/commons/nat/sums.tp";
+    "../examples/commons/nat/addition.ht";
+    "../examples/commons/nat/basic.ht";
+    "../examples/commons/nat/binomial_coefficients.ht";
+    "../examples/commons/nat/binomial_theorem.ht";
+    "../examples/commons/nat/classical.ht";
+    "../examples/commons/nat/congruence.ht";
+    "../examples/commons/nat/convolution.ht";
+    "../examples/commons/nat/diagonal.ht";
+    "../examples/commons/nat/divisibility.ht";
+    "../examples/commons/nat/division.ht";
+    "../examples/commons/nat/euclid.ht";
+    "../examples/commons/nat/factorization.ht";
+    "../examples/commons/nat/fermat.ht";
+    "../examples/commons/nat/induction.ht";
+    "../examples/commons/nat/modular_sums.ht";
+    "../examples/commons/nat/multiplication.ht";
+    "../examples/commons/nat/order.ht";
+    "../examples/commons/nat/ordered_multiplication.ht";
+    "../examples/commons/nat/parity.ht";
+    "../examples/commons/nat/powers.ht";
+    "../examples/commons/nat/prime_binomial.ht";
+    "../examples/commons/nat/prime_infinitude.ht";
+    "../examples/commons/nat/primes.ht";
+    "../examples/commons/nat/sqrt_two.ht";
+    "../examples/commons/nat/sums.ht";
   ] in
-  let logic_modules = ["../examples/commons/logic/propositional.tp";
-    "../examples/commons/logic/quantifiers.tp"; "../examples/commons/logic/classical.tp"] in
+  let logic_modules = ["../examples/commons/logic/propositional.ht";
+    "../examples/commons/logic/quantifiers.ht"; "../examples/commons/logic/classical.ht"] in
   test "arithmetic signature contains only the fixed primitive foundation" (fun () ->
     let result = Source.compile_declarations (load_modules arithmetic_modules) in
     List.iter (fun (d:Source.declaration) ->
@@ -371,7 +371,7 @@ let () =
       replay.declarations (List.filter ((<>) "") (String.split_on_char '\n' replay.assembly));
     declarations in
   test "Fermat imports proved arithmetic prerequisites" (fun () ->
-    let source = check_catalog ["../examples/fermat_application.tp"]
+    let source = check_catalog ["../examples/fermat_application.ht"]
       ["fermat"; "fermat_sum"; "fermat_application"; "prime_mul_elim"; "prime_divides_choose";
        "choose_mul_identity"; "binomial_theorem"; "binomial_at_one";
        "sum_between_cong_zero"; "convolution_unit_right"] in
@@ -398,15 +398,15 @@ let () =
     List.iter (fun (d:Source.declaration) ->
       if not (List.mem d.name ["excluded_middle"; "demorgan_and_forward"]) then (
         let typ = Source.resolve !globals d.at d.typ in
-        Buffer.add_string output (Tinyprover_pa.Writer.encode typ);
+        Buffer.add_string output (Tinyprover_proofglyph.Writer.encode typ);
         (match d.body with
          | None -> Buffer.add_char output ':'
-         | Some b -> Buffer.add_string output (Tinyprover_pa.Writer.encode (Source.resolve !globals d.at b));
+         | Some b -> Buffer.add_string output (Tinyprover_proofglyph.Writer.encode (Source.resolve !globals d.at b));
              Buffer.add_char output '!');
         globals := (d.name,List.length !globals)::!globals)) declarations;
     verify (Buffer.contents output));
   test "Russell derives no universal set from separation without classical choice" (fun () ->
-    let source = check_catalog ["../examples/commons/sets/russell.tp"]
+    let source = check_catalog ["../examples/commons/sets/russell.ht"]
       ["russell_not_self"; "russell_contradiction"; "no_universal_set_at"; "no_universal_set"] in
     assert (List.exists (fun (d:Source.declaration) -> d.name = "separation" && d.body = None) source);
     assert (not (List.exists (fun (d:Source.declaration) ->
@@ -417,7 +417,7 @@ let () =
       ^ " (forward : forall (x : U), Prf (Mem x r) -> Prf (And (Mem x u) (Not (Mem x x))))"
       ^ " : Prf False := russell_not_self u r forward;"));
   test "equality catalog derives laws from substitution" (fun () ->
-    let source = check_catalog ["../examples/commons/equality.tp"] ["eq_sym"; "eq_trans"; "eq_cong"] in
+    let source = check_catalog ["../examples/commons/equality.ht"] ["eq_sym"; "eq_trans"; "eq_cong"] in
     reject_loaded source (
       "\ntheorem invalid_sym (a b : U) (h : Prf (Eq a b)) : Prf (Eq b a) := h;"));
   test "arithmetic catalog covers natural numbers and number theory" (fun () ->
@@ -466,53 +466,53 @@ let () =
       ^ " := sqrt_two_no_positive_fraction a b (zero_lt_succ b) h;"));
   test "subject libraries compile independently" (fun () ->
     List.iter (fun path -> ignore (Source.compile_file path)) [
-      "../examples/commons/equality.tp";
-      "../examples/commons/foundation/arithmetic.tp";
-      "../examples/commons/foundation/binomial.tp";
-      "../examples/commons/foundation/classical.tp";
-      "../examples/commons/foundation/congruence.tp";
-      "../examples/commons/foundation/divisibility.tp";
-      "../examples/commons/foundation/equality.tp";
-      "../examples/commons/foundation/logic.tp";
-      "../examples/commons/foundation/nat_logic.tp";
-      "../examples/commons/foundation/order.tp";
-      "../examples/commons/foundation/parity.tp";
-      "../examples/commons/foundation/peano.tp";
-      "../examples/commons/foundation/primes.tp";
-      "../examples/commons/foundation/quantifiers.tp";
-      "../examples/commons/foundation/sqrt_two.tp";
-      "../examples/commons/foundation/sums.tp";
-      "../examples/commons/logic/classical.tp";
-      "../examples/commons/logic/propositional.tp";
-      "../examples/commons/logic/quantifiers.tp";
-      "../examples/commons/nat/addition.tp";
-      "../examples/commons/nat/basic.tp";
-      "../examples/commons/nat/binomial_coefficients.tp";
-      "../examples/commons/nat/binomial_theorem.tp";
-      "../examples/commons/nat/classical.tp";
-      "../examples/commons/nat/congruence.tp";
-      "../examples/commons/nat/convolution.tp";
-      "../examples/commons/nat/diagonal.tp";
-      "../examples/commons/nat/divisibility.tp";
-      "../examples/commons/nat/division.tp";
-      "../examples/commons/nat/euclid.tp";
-      "../examples/commons/nat/factorization.tp";
-      "../examples/commons/nat/fermat.tp";
-      "../examples/commons/nat/induction.tp";
-      "../examples/commons/nat/modular_sums.tp";
-      "../examples/commons/nat/multiplication.tp";
-      "../examples/commons/nat/order.tp";
-      "../examples/commons/nat/ordered_multiplication.tp";
-      "../examples/commons/nat/parity.tp";
-      "../examples/commons/nat/powers.tp";
-      "../examples/commons/nat/prime_binomial.tp";
-      "../examples/commons/nat/prime_infinitude.tp";
-      "../examples/commons/nat/primes.tp";
-      "../examples/commons/nat/sqrt_two.tp";
-      "../examples/commons/nat/sums.tp";
+      "../examples/commons/equality.ht";
+      "../examples/commons/foundation/arithmetic.ht";
+      "../examples/commons/foundation/binomial.ht";
+      "../examples/commons/foundation/classical.ht";
+      "../examples/commons/foundation/congruence.ht";
+      "../examples/commons/foundation/divisibility.ht";
+      "../examples/commons/foundation/equality.ht";
+      "../examples/commons/foundation/logic.ht";
+      "../examples/commons/foundation/nat_logic.ht";
+      "../examples/commons/foundation/order.ht";
+      "../examples/commons/foundation/parity.ht";
+      "../examples/commons/foundation/peano.ht";
+      "../examples/commons/foundation/primes.ht";
+      "../examples/commons/foundation/quantifiers.ht";
+      "../examples/commons/foundation/sqrt_two.ht";
+      "../examples/commons/foundation/sums.ht";
+      "../examples/commons/logic/classical.ht";
+      "../examples/commons/logic/propositional.ht";
+      "../examples/commons/logic/quantifiers.ht";
+      "../examples/commons/nat/addition.ht";
+      "../examples/commons/nat/basic.ht";
+      "../examples/commons/nat/binomial_coefficients.ht";
+      "../examples/commons/nat/binomial_theorem.ht";
+      "../examples/commons/nat/classical.ht";
+      "../examples/commons/nat/congruence.ht";
+      "../examples/commons/nat/convolution.ht";
+      "../examples/commons/nat/diagonal.ht";
+      "../examples/commons/nat/divisibility.ht";
+      "../examples/commons/nat/division.ht";
+      "../examples/commons/nat/euclid.ht";
+      "../examples/commons/nat/factorization.ht";
+      "../examples/commons/nat/fermat.ht";
+      "../examples/commons/nat/induction.ht";
+      "../examples/commons/nat/modular_sums.ht";
+      "../examples/commons/nat/multiplication.ht";
+      "../examples/commons/nat/order.ht";
+      "../examples/commons/nat/ordered_multiplication.ht";
+      "../examples/commons/nat/parity.ht";
+      "../examples/commons/nat/powers.ht";
+      "../examples/commons/nat/prime_binomial.ht";
+      "../examples/commons/nat/prime_infinitude.ht";
+      "../examples/commons/nat/primes.ht";
+      "../examples/commons/nat/sqrt_two.ht";
+      "../examples/commons/nat/sums.ht";
     ]);
   test "addition imports neither classical logic nor number theory" (fun () ->
-    let declarations = Source.load "../examples/commons/nat/addition.tp" in
+    let declarations = Source.load "../examples/commons/nat/addition.ht" in
     List.iter (fun name ->
       assert (not (List.exists (fun (d:Source.declaration) -> d.name = name) declarations)))
       ["excluded_middle"; "Prime"; "convolution"; "RationalRootTwo"]);

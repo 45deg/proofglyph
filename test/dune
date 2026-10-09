@@ -1,4 +1,4 @@
 (test
  (name tests)
  (deps ../bin/main.exe (source_tree ../examples))
- (libraries tinyprover_core tinyprover_pa tinyprover_tp))
+ (libraries tinyprover_core tinyprover_proofglyph tinyprover_hieratic))

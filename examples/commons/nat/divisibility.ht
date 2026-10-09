@@ -1,0 +1,84 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/divisibility.ht";
+import "multiplication.ht";
+import "order.ht";
+
+theorem divides_mul_right (d a b : Nat) (ha : Prf (Divides d a))
+  : Prf (Divides d (mul a b))
+  := divides_elim d a (Divides d (mul a b)) ha
+    (fun (k : Nat) (ha : Prf (Eq a (mul d k))) =>
+      divides_intro d (mul a b) (mul k b) (eq_trans (mul a b) (mul (mul d k) b) (mul d (mul k b)) (eq_cong
+    (fun (z : Nat) => (mul z b)) a (mul d k) (ha)) (mul_assoc d k b)));
+
+theorem divides_eq (d a b : Nat) (h : Prf (Eq a b)) (ha : Prf (Divides d a))
+  : Prf (Divides d b) := eq_subst (fun (x : Nat) => Divides d x) a b h ha;
+
+theorem divides_refl (a : Nat) : Prf (Divides a a)
+  := divides_intro a a (succ zero) (eq_sym (mul a (succ zero)) a (mul_one_right a));
+
+theorem divides_mul_left (d a b : Nat) (hb : Prf (Divides d b))
+  : Prf (Divides d (mul a b))
+  := divides_eq d (mul b a) (mul a b) (mul_comm b a) (divides_mul_right d b a hb);
+
+theorem divides_cancel_add (d a b : Nat) (hda : Prf (Divides d a))
+  (hdab : Prf (Divides d (add a b))) : Prf (Divides d b)
+  := divides_elim d a (Divides d b) hda (fun (k : Nat) (ha : Prf (Eq a (mul d k))) =>
+    divides_elim d (add a b) (Divides d b) hdab (fun (j : Nat) (hab : Prf (Eq (add a b) (mul d j))) =>
+      or_elim (Lt j k) (Le k j) (Divides d b) (order_cases k j)
+        (fun (hlt : Prf (Lt j k)) => lt_elim j k (Divides d b) hlt
+  (fun (r : Nat) (hk : Prf (Eq k (add j (succ r)))) => divides_intro d b zero
+    (eq_trans b zero (mul d zero)
+      (add_eq_zero_left b (mul d (succ r)) (eq_trans (add b (mul d (succ r))) (add (mul d (succ r)) b) zero
+        (add_comm b (mul d (succ r))) (add_cancel_left (mul d j) (add (mul d (succ r)) b) zero (eq_trans
+    (add (mul d j) (add (mul d (succ r)) b)) (mul d j) (add (mul d j) zero) (eq_trans (add (mul d j) (add
+    (mul d (succ r)) b)) (add a b) (mul d j) (eq_trans (add (mul d j) (add (mul d (succ r)) b)) (add (mul d
+    k) b) (add a b) (eq_trans (add (mul d j) (add (mul d (succ r)) b)) (add (mul d (add j (succ r))) b) (add
+    (mul d k) b) (eq_trans (add (mul d j) (add (mul d (succ r)) b)) (add (add (mul d j) (mul d (succ r))) b)
+    (add (mul d (add j (succ r))) b) (eq_sym (add (add (mul d j) (mul d (succ r))) b) (add (mul d j) (add
+    (mul d (succ r)) b)) (add_assoc (mul d j) (mul d (succ r)) b)) (eq_cong (fun (z : Nat) => (add z b))
+    (add (mul d j) (mul d (succ r))) (mul d (add j (succ r))) (eq_sym (mul d (add j (succ r))) (add (mul d
+    j) (mul d (succ r))) (mul_add_right d j (succ r))))) (eq_cong (fun (z : Nat) => (add z b)) (mul d (add j
+    (succ r))) (mul d k) (eq_sym (mul d k) (mul d (add j (succ r))) (eq_cong (fun (z : Nat) => (mul d z)) k
+    (add j (succ r)) (hk))))) (eq_cong (fun (z : Nat) => (add z b)) (mul d k) a (eq_sym a (mul d k) (ha))))
+    (hab)) (eq_sym (add (mul d j) zero) (mul d j) (add_zero_right (mul d j)))))))
+      (eq_sym (mul d zero) zero (mul_zero_right d)))))
+        (fun (hle : Prf (Le k j)) => le_elim k j (Divides d b) hle (fun (r : Nat) (hj : Prf (Eq j (add k
+    r))) =>
+  divides_intro d b r (add_cancel_left a b (mul d r) (eq_trans (add a b) (add (mul d k) (mul d r)) (add a
+    (mul d r)) (eq_trans (add a b) (mul d (add k r)) (add (mul d k) (mul d r)) (eq_trans (add a b) (mul d j)
+    (mul d (add k r)) (hab) (eq_cong (fun (z : Nat) => (mul d z)) j (add k r) (hj))) (mul_add_right d k r))
+    (eq_cong (fun (z : Nat) => (add z (mul d r))) (mul d k) a (eq_sym a (mul d k) (ha)))))))));
+
+theorem divisor_le_positive (d n : Nat) (hn : Prf (Lt zero n)) (hd : Prf (Divides d n))
+  : Prf (Le d n)
+  := divides_elim d n (Le d n) hd (fun (k : Nat) (he : Prf (Eq n (mul d k))) =>
+    imp_elim (Eq n (mul d k)) (Le d n)
+      (nat_cases (fun (j : Nat) => (Imp (Eq n (mul d j)) (Le d n))) k
+        (imp_intro (Eq n (mul d zero)) (Le d n)
+          (fun (hk : Prf (Eq n (mul d zero))) => false_elim (Le d n) (positive_not_zero n hn (eq_trans n
+    (mul d zero) zero (hk) (mul_zero_right d)))))
+        (fun (j : Nat) => imp_intro (Eq n (mul d (succ j))) (Le d n)
+          (fun (hk : Prf (Eq n (mul d (succ j)))) => le_intro d n (mul d j) (eq_trans n (mul d (succ j))
+    (add d (mul d j)) (hk) (mul_succ_right d j))))) he);
+
+theorem divides_add (d a b : Nat) (ha : Prf (Divides d a)) (hb : Prf (Divides d b))
+  : Prf (Divides d (add a b))
+  := divides_elim d a (Divides d (add a b)) ha
+    (fun (k : Nat) (ha : Prf (Eq a (mul d k))) =>
+      divides_elim d b (Divides d (add a b)) hb
+        (fun (j : Nat) (hb : Prf (Eq b (mul d j))) =>
+          divides_intro d (add a b) (add k j) (eq_trans (add a b) (add (mul d k) (mul d j)) (mul d (add k
+    j))
+    (eq_trans (add a b) (add (mul d k) b) (add (mul d k) (mul d j)) (eq_cong (fun (z : Nat) => (add z b)) a
+    (mul d k) (ha)) (eq_cong (fun (z : Nat) => (add (mul d k) z)) b (mul d j) (hb))) (eq_sym (mul d (add k
+    j))
+    (add (mul d k) (mul d j)) (mul_add_right d k j)))));
+
+theorem divides_trans (a b c : Nat) (hab : Prf (Divides a b)) (hbc : Prf (Divides b c))
+  : Prf (Divides a c)
+  := divides_elim a b (Divides a c) hab
+    (fun (k : Nat) (hb : Prf (Eq b (mul a k))) =>
+      divides_elim b c (Divides a c) hbc
+        (fun (j : Nat) (hc : Prf (Eq c (mul b j))) =>
+          divides_intro a c (mul k j) (eq_trans c (mul (mul a k) j) (mul a (mul k j)) (eq_trans c (mul b j)
+    (mul (mul a k) j) (hc) (eq_cong (fun (z : Nat) => (mul z j)) b (mul a k) (hb))) (mul_assoc a k j))));

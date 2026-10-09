@@ -1,0 +1,59 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/classical.ht";
+import "../foundation/sums.ht";
+import "congruence.ht";
+import "order.ht";
+
+theorem sum_between_cong_zero_rule (lo hi m : Nat) (f : Nat -> Nat) : Prf (Imp (AllNat (fun (k : Nat) =>
+    (Imp (Lt lo k) (Imp (Lt k hi) (Cong (f k) zero m))))) (Cong (sum_between lo hi f) zero m))
+  := nat_induction (fun (x : Nat) => (Imp (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k x) (Cong (f k)
+    zero m))))) (Cong (sum_between lo x f) zero m))) (imp_intro (AllNat (fun (k : Nat) => (Imp (Lt lo k)
+    (Imp (Lt k zero) (Cong (f k) zero m))))) (Cong (sum_between lo zero f) zero m) (fun (h : Prf (AllNat
+    (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k zero) (Cong (f k) zero m)))))) => eq_to_cong (sum_between lo
+    zero f) zero m (sum_between_zero lo f))) (fun (x : Nat) (ih : Prf (Imp (AllNat (fun (k : Nat) => (Imp
+    (Lt lo k) (Imp (Lt k x) (Cong (f k) zero m))))) (Cong (sum_between lo x f) zero m))) => imp_intro
+    (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m))))) (Cong (sum_between
+    lo (succ x) f) zero m) (fun (h : Prf (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k (succ x)) (Cong
+    (f k) zero m)))))) =>
+  or_elim (Lt lo x) (Not (Lt lo x)) (Cong (sum_between lo (succ x) f) zero m) (excluded_middle (Lt lo x))
+    (fun (hx : Prf (Lt lo x)) => cong_trans (sum_between lo (succ x) f) (add (sum_between lo x f) (f x))
+    zero m
+  (eq_to_cong (sum_between lo (succ x) f) (add (sum_between lo x f) (f x)) m (sum_between_succ_inside lo x f
+    hx))
+  (cong_trans (add (sum_between lo x f) (f x)) (add zero zero) zero m
+    (cong_add (sum_between lo x f) zero (f x) zero m (imp_elim (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp
+    (Lt k x) (Cong (f k) zero m))))) (Cong (sum_between lo x f) zero m) ih (all_nat_intro (fun (k : Nat) =>
+    (Imp (Lt lo k) (Imp (Lt k x) (Cong (f k) zero m))))
+  (fun (k : Nat) => imp_intro (Lt lo k) (Imp (Lt k x) (Cong (f k) zero m)) (fun (hlo : Prf (Lt lo k)) =>
+    imp_intro (Lt k x) (Cong (f k) zero m) (fun (hhi : Prf (Lt k x)) =>
+      imp_elim (Lt k (succ x)) (Cong (f k) zero m)
+        (imp_elim (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m))
+          (all_nat_elim (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m)))) h k)
+    hlo)
+        (lt_upper_succ k x hhi)))))) (imp_elim (Lt x (succ x)) (Cong (f x) zero m)
+  (imp_elim (Lt lo x) (Imp (Lt x (succ x)) (Cong (f x) zero m))
+    (all_nat_elim (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m)))) h x) hx)
+    (lt_intro x (succ x) zero (eq_sym (add x (succ zero)) (succ x) (add_one_right x)))))
+    (eq_to_cong (add zero zero) zero m (add_zero zero))))
+    (fun (nx : Prf (Not (Lt lo x))) => cong_trans (sum_between lo (succ x) f) (sum_between lo x f) zero m
+  (eq_to_cong (sum_between lo (succ x) f) (sum_between lo x f) m (sum_between_succ_outside lo x f nx))
+    (imp_elim (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k x) (Cong (f k) zero m))))) (Cong
+    (sum_between lo x f) zero m) ih (all_nat_intro (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k x) (Cong (f
+    k) zero m))))
+  (fun (k : Nat) => imp_intro (Lt lo k) (Imp (Lt k x) (Cong (f k) zero m)) (fun (hlo : Prf (Lt lo k)) =>
+    imp_intro (Lt k x) (Cong (f k) zero m) (fun (hhi : Prf (Lt k x)) =>
+      imp_elim (Lt k (succ x)) (Cong (f k) zero m)
+        (imp_elim (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m))
+          (all_nat_elim (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k (succ x)) (Cong (f k) zero m)))) h k)
+    hlo)
+        (lt_upper_succ k x hhi))))))))) hi;
+
+theorem sum_between_cong_zero (lo hi m : Nat) (f : Nat -> Nat)
+  (h : forall (k : Nat), Prf (Lt lo k) -> Prf (Lt k hi) -> Prf (Cong (f k) zero m))
+  : Prf (Cong (sum_between lo hi f) zero m)
+  := imp_elim (AllNat (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k hi) (Cong (f k) zero m))))) (Cong
+    (sum_between lo hi f) zero m) (sum_between_cong_zero_rule lo hi m f)
+    (all_nat_intro (fun (k : Nat) => (Imp (Lt lo k) (Imp (Lt k hi) (Cong (f k) zero m))))
+      (fun (k : Nat) => imp_intro (Lt lo k) (Imp (Lt k hi) (Cong (f k) zero m))
+        (fun (hlo : Prf (Lt lo k)) => imp_intro (Lt k hi) (Cong (f k) zero m)
+          (fun (hhi : Prf (Lt k hi)) => h k hlo hhi))));

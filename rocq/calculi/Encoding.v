@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax.
+From Tinyprover.Proofglyph Require Import Syntax.
 From Tinyprover.Calculi Require Import Calculi.
 Import ListNotations.
 

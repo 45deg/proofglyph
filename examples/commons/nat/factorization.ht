@@ -1,0 +1,60 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/primes.ht";
+import "classical.ht";
+import "divisibility.ht";
+import "induction.ht";
+
+theorem proper_factor (n : Nat) (hn : Prf (Lt (succ zero) n)) (np : Prf (Not (Prime n))) : Prf (Exists (fun
+    (d : Nat) => (And (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n))))))
+  := double_negation_elim (Exists (fun (d : Nat) => (And (Divides d n) (And (Not (Eq d (succ zero))) (Not
+    (Eq d n)))))) (not_intro (Not (Exists (fun (d : Nat) => (And (Divides d n) (And (Not (Eq d (succ zero)))
+    (Not (Eq d n))))))) (fun (ne : Prf (Not (Exists (fun (d : Nat) => (And (Divides d n) (And (Not (Eq d
+    (succ zero))) (Not (Eq d n)))))))) =>
+    not_elim (Prime n) np (prime_intro n hn
+      (fun (d : Nat) (hd : Prf (Divides d n)) => or_elim (Eq d (succ zero)) (Not (Eq d (succ zero))) (Or (Eq
+    d (succ zero)) (Eq d n)) (excluded_middle (Eq d (succ zero)))
+  (fun (he : Prf (Eq d (succ zero))) => or_left (Eq d (succ zero)) (Eq d n) he)
+  (fun (nd1 : Prf (Not (Eq d (succ zero)))) => or_elim (Eq d n) (Not (Eq d n)) (Or (Eq d (succ zero)) (Eq d
+    n)) (excluded_middle (Eq d n))
+    (fun (he : Prf (Eq d n)) => or_right (Eq d (succ zero)) (Eq d n) he)
+    (fun (ndn : Prf (Not (Eq d n))) => false_elim (Or (Eq d (succ zero)) (Eq d n)) (not_elim (Exists (fun (d
+    : Nat) => (And (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n)))))) ne (exists_intro (fun (d :
+    Nat) => (And (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n))))) d
+  (and_intro (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n))) hd
+    (and_intro (Not (Eq d (succ zero))) (Not (Eq d n)) nd1 ndn))))))))));
+
+theorem prime_factor (n : Nat) (hn : Prf (Lt (succ zero) n)) : Prf (Exists (fun (p : Nat) => And (Prime p)
+    (Divides p n)))
+  := imp_elim (Lt (succ zero) n) (Exists (fun (p : Nat) => And (Prime p) (Divides p n)))
+    (nat_strong_induction (fun (n : Nat) => (Imp (Lt (succ zero) n) (Exists (fun (p : Nat) => And (Prime p)
+    (Divides p n)))))
+      (fun (n : Nat) (ih : forall (d : Nat), Prf (Lt d n) -> Prf (Imp (Lt (succ zero) d) (Exists (fun (p :
+    Nat) => And (Prime p) (Divides p d))))) =>
+        imp_intro (Lt (succ zero) n) (Exists (fun (p : Nat) => And (Prime p) (Divides p n))) (fun (hn : Prf
+    (Lt (succ zero) n)) =>
+          or_elim (Prime n) (Not (Prime n)) (Exists (fun (p : Nat) => And (Prime p) (Divides p n)))
+    (excluded_middle (Prime n))
+            (fun (hp : Prf (Prime n)) => exists_intro (fun (p : Nat) => And (Prime p) (Divides p n)) n
+              (and_intro (Prime n) (Divides n n) hp (divides_refl n)))
+            (fun (np : Prf (Not (Prime n))) => exists_elim (fun (d : Nat) => (And (Divides d n) (And (Not
+    (Eq d (succ zero))) (Not (Eq d n))))) (Exists (fun (p : Nat) => And (Prime p) (Divides p n)))
+    (proper_factor n hn np)
+  (fun (d : Nat) (h : Prf (And (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n))))) =>
+    (fun (hd : Prf (Divides d n)) (nd1 : Prf (Not (Eq d (succ zero)))) (ndn : Prf (Not (Eq d n))) =>
+      exists_elim (fun (p : Nat) => And (Prime p) (Divides p d)) (Exists (fun (p : Nat) => And (Prime p)
+    (Divides p n)))
+        (imp_elim (Lt (succ zero) d) (Exists (fun (p : Nat) => And (Prime p) (Divides p d))) (ih d (le_ne_lt
+    d n (divisor_le_positive d n (gt_one_positive n hn) hd) ndn)) (nonzero_not_one_gt_one d (not_intro (Eq d
+    zero) (fun (hd0 : Prf (Eq d zero)) => divides_elim d n False hd
+  (fun (k : Nat) (hk : Prf (Eq n (mul d k))) => positive_not_zero n (gt_one_positive n hn) (eq_trans n (mul
+    zero k) zero (eq_trans n (mul d k) (mul zero k) (hk) (eq_cong (fun (z : Nat) => (mul z k)) d zero
+    (hd0))) (mul_zero k))))) nd1))
+        (fun (p : Nat) (hp : Prf (And (Prime p) (Divides p d))) =>
+          exists_intro (fun (p : Nat) => And (Prime p) (Divides p n)) p
+            (and_intro (Prime p) (Divides p n) (and_left (Prime p) (Divides p d) hp)
+              (divides_trans p d n (and_right (Prime p) (Divides p d) hp) hd))))
+      (and_left (Divides d n) (And (Not (Eq d (succ zero))) (Not (Eq d n))) h)
+      (and_left (Not (Eq d (succ zero))) (Not (Eq d n)) (and_right (Divides d n) (And (Not (Eq d (succ
+    zero))) (Not (Eq d n))) h))
+      (and_right (Not (Eq d (succ zero))) (Not (Eq d n)) (and_right (Divides d n) (And (Not (Eq d (succ
+    zero))) (Not (Eq d n))) h)))))) n) hn;

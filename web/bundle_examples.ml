@@ -1,9 +1,9 @@
-module Source = Tinyprover_tp.Source
+module Source = Tinyprover_hieratic.Source
 
 (** {1 Example Bundler and Catalog Generator}
 
     Processes source files under [examples/] for web demo and documentation:
-    - Default mode: recursively inlines imports in .tp files into self-contained text
+    - Default mode: recursively inlines imports in .ht files into self-contained text
       and emits the [Examples_data.files] OCaml source for the browser demo.
     - [--catalog] mode: cross-references examples against [docs/proofs.md] to output
       the JSON proof catalog. *)
@@ -14,12 +14,12 @@ let read path =
   Fun.protect ~finally:(fun () -> close_in ch)
     (fun () -> really_input_string ch (in_channel_length ch))
 
-(** Recursively collects all [.tp] and [.pa] file paths in a directory. *)
+(** Recursively collects all [.ht] and [.pg] file paths in a directory. *)
 let rec files path =
   if Sys.is_directory path then
     Sys.readdir path |> Array.to_list |> List.sort String.compare
     |> List.concat_map (fun name -> files (Filename.concat path name))
-  else if Filename.check_suffix path ".tp" || Filename.check_suffix path ".pa" then [path]
+  else if Filename.check_suffix path ".ht" || Filename.check_suffix path ".pg" then [path]
   else []
 
 (** Expands imports in-place in the source text, removing duplicates and repetitive headers.
@@ -79,7 +79,7 @@ let () =
     name, read path) (files root) in
   if Array.length Sys.argv > 1 && Sys.argv.(1) = "--catalog" then (
   let proofs = List.concat_map (fun (path, source) ->
-    if Filename.check_suffix path ".pa" then [] else
+    if Filename.check_suffix path ".pg" then [] else
     Source.parse_items ~file:path source |> List.filter_map (function
       | Source.Declaration d when d.body <> None -> Some (d.name, path, d.at.line)
       | _ -> None)) sources in
@@ -120,7 +120,7 @@ let () =
   else (
     print_endline "let files = [";
     List.iter (fun (path, source) ->
-      let source = if Filename.check_suffix path ".tp" then
+      let source = if Filename.check_suffix path ".ht" then
         expand (Filename.concat root (String.sub path 9 (String.length path - 9)))
         else source in
       Printf.printf "  (%S, %S);\n" path source) sources;

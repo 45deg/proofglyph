@@ -1,4 +1,4 @@
-# Each development owns its dependency on pa; run these serially even with -j.
+# Each development owns its dependency on proofglyph; run these serially even with -j.
 ROCQ ?= rocq
 OCAMLC ?= ocamlc
 
@@ -6,8 +6,8 @@ OCAMLC ?= ocamlc
 all: verify
 
 verify test:
-	$(MAKE) -C pa $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
-	$(MAKE) -C tp $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
+	$(MAKE) -C proofglyph $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
+	$(MAKE) -C hieratic $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C calculi $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C zfc $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 

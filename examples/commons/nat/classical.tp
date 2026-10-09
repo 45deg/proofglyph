@@ -1,7 +1,0 @@
-// Checked proofs; prerequisites are imported by subject.
-import "../foundation/classical.tp";
-
-theorem double_negation_elim (P : Prop) (h : Prf (Not (Not P))) : Prf P
-  := or_elim P (Not P) P (excluded_middle P)
-    (fun (hp : Prf P) => hp)
-    (fun (hn : Prf (Not P)) => false_elim P (not_elim (Not P) h hn));

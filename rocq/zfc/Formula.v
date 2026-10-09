@@ -35,7 +35,7 @@ Fixpoint lift (cutoff amount : nat) (p : formula) : formula :=
   | Forall p => Forall (lift (S cutoff) amount p)
   end.
 
-(** Three initial ZFC sentences, independently of the pa checker. *)
+(** Three initial ZFC sentences, independently of the proofglyph checker. *)
 Definition extensionality :=
   Forall (Forall (Implies
     (Forall (Iff (Member 0 2) (Member 0 1))) (Equal 1 0))).

@@ -1,0 +1,33 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "logic.ht";
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+
+axiom Nat : Type;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom Eq : Nat -> Nat -> Prop;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom succ : Nat -> Nat;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom zero : Nat;
+
+// Peano axiom.
+axiom nat_induction (P : Nat -> Prop) : Prf (P zero)
+  -> (forall (x : Nat), Prf (P x) -> Prf (P (succ x)))
+  -> forall (x : Nat), Prf (P x);
+
+// Logical or equality inference rule.
+axiom eq_refl (a : Nat) : Prf (Eq a a);
+
+// Logical or equality inference rule.
+axiom eq_subst (P : Nat -> Prop) (a b : Nat)
+  : Prf (Eq a b) -> Prf (P a) -> Prf (P b);
+
+// Peano axiom.
+axiom succ_injective (a b : Nat) : Prf (Eq (succ a) (succ b)) -> Prf (Eq a b);
+
+// Peano axiom.
+axiom succ_not_zero (a : Nat) : Prf (Eq (succ a) zero) -> Prf False;

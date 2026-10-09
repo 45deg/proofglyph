@@ -1,0 +1,55 @@
+// Checked proofs; prerequisites are imported by subject.
+import "../foundation/logic.ht";
+
+theorem and_assoc_backward (A B C : Prop) (h : Prf (And A (And B C)))
+  : Prf (And (And A B) C)
+  := and_intro (And A B) C
+    (and_intro A B (and_left A (And B C) h) (and_left B C (and_right A (And B C) h)))
+    (and_right B C (and_right A (And B C) h));
+
+theorem and_assoc_forward (A B C : Prop) (h : Prf (And (And A B) C))
+  : Prf (And A (And B C))
+  := and_intro A (And B C) (and_left A B (and_left (And A B) C h))
+    (and_intro B C (and_right A B (and_left (And A B) C h)) (and_right (And A B) C h));
+
+theorem and_comm (A B : Prop) (h : Prf (And A B)) : Prf (And B A)
+  := and_intro B A (and_right A B h) (and_left A B h);
+
+theorem cases (A B C : Prop) (h : Prf (Or A B))
+  (f : Prf A -> Prf C) (g : Prf B -> Prf C) : Prf C := or_elim A B C h f g;
+
+theorem contraposition (A B : Prop) (f : Prf A -> Prf B) (nb : Prf (Not B))
+  : Prf (Not A) := not_intro A (fun (a : Prf A) => not_elim B nb (f a));
+
+theorem demorgan_and_backward (A B : Prop) (h : Prf (Or (Not A) (Not B)))
+  : Prf (Not (And A B))
+  := not_intro (And A B) (fun (ab : Prf (And A B)) => or_elim (Not A) (Not B) False h
+    (fun (na : Prf (Not A)) => not_elim A na (and_left A B ab))
+    (fun (nb : Prf (Not B)) => not_elim B nb (and_right A B ab)));
+
+theorem demorgan_or_backward (A B : Prop) (h : Prf (And (Not A) (Not B)))
+  : Prf (Not (Or A B))
+  := not_intro (Or A B) (fun (ab : Prf (Or A B)) => or_elim A B False ab
+    (fun (a : Prf A) => not_elim A (and_left (Not A) (Not B) h) a)
+    (fun (b : Prf B) => not_elim B (and_right (Not A) (Not B) h) b));
+
+theorem demorgan_or_forward (A B : Prop) (h : Prf (Not (Or A B)))
+  : Prf (And (Not A) (Not B))
+  := and_intro (Not A) (Not B)
+    (not_intro A (fun (a : Prf A) => not_elim (Or A B) h (or_left A B a)))
+    (not_intro B (fun (b : Prf B) => not_elim (Or A B) h (or_right A B b)));
+
+theorem duplicate (A B : Prop) : (Prf A -> Prf A -> Prf B) -> Prf A -> Prf B
+  := fun (f : Prf A -> Prf A -> Prf B) (a : Prf A) => f a a;
+
+theorem exchange (A B C : Prop)
+  : (Prf A -> Prf B -> Prf C) -> Prf B -> Prf A -> Prf C
+  := fun (f : Prf A -> Prf B -> Prf C) (b : Prf B) (a : Prf A) => f a b;
+
+theorem implication_composition (A B C : Prop)
+  : (Prf A -> Prf B) -> (Prf B -> Prf C) -> Prf A -> Prf C
+  := fun (f : Prf A -> Prf B) (g : Prf B -> Prf C) (a : Prf A) => g (f a);
+
+theorem or_comm (A B : Prop) (h : Prf (Or A B)) : Prf (Or B A)
+  := or_elim A B (Or B A) h
+    (fun (a : Prf A) => or_right B A a) (fun (b : Prf B) => or_left B A b);

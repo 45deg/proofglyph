@@ -1,5 +1,5 @@
 From Stdlib Require Import List Permutation PeanoNat Lia.
-From Tinyprover.Pa Require Import Syntax Substitution Program WellFormed Evaluation
+From Tinyprover.Proofglyph Require Import Syntax Substitution Program WellFormed Evaluation
   Confluence Generation Preservation TypedNormalization Checker.
 From Tinyprover.Calculi Require Import Calculi Encoding Verification Derivations CutElimination.
 Import ListNotations.

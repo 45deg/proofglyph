@@ -1,0 +1,38 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "peano.ht";
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom add : Nat -> Nat -> Nat;
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom add_succ (a b : Nat) : Prf (Eq (add (succ a) b) (succ (add a b)));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom add_zero (b : Nat) : Prf (Eq (add zero b) b);
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom mul : Nat -> Nat -> Nat;
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom pow : Nat -> Nat -> Nat;
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom pow_zero (a : Nat) : Prf (Eq (pow a zero) (succ zero));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom pow_succ (a n : Nat) : Prf (Eq (pow a (succ n)) (mul a (pow a n)));
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom mul_zero (b : Nat) : Prf (Eq (mul zero b) zero);
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom mul_succ (a b : Nat) : Prf (Eq (mul (succ a) b) (add b (mul a b)));
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom pred : Nat -> Nat;
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom pred_succ (n : Nat) : Prf (Eq (pred (succ n)) n);
+
+// Primitive-recursive defining equation; not an arithmetic lemma.
+axiom pred_zero : Prf (Eq (pred zero) zero);

@@ -1,0 +1,22 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "arithmetic.ht";
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom Even : Nat -> Prop;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom even_elim (n : Nat) (P : Prop) : Prf (Even n)
+  -> (forall (k : Nat), Prf (Eq n (add k k)) -> Prf P) -> Prf P;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom even_intro (n k : Nat) : Prf (Eq n (add k k)) -> Prf (Even n);
+
+// Vocabulary declaration; the defining rules are in separate theory files.
+axiom Odd : Nat -> Prop;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom odd_elim (n : Nat) (P : Prop) : Prf (Odd n)
+  -> (forall (k : Nat), Prf (Eq n (succ (add k k))) -> Prf P) -> Prf P;
+
+// Introduction/elimination rule for the explicit predicate definition.
+axiom odd_intro (n k : Nat) : Prf (Eq n (succ (add k k))) -> Prf (Odd n);

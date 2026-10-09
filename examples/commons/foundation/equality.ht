@@ -1,0 +1,9 @@
+// Trusted vocabulary, inference rules and explicit definitions.
+import "quantifiers.ht";
+
+axiom Eq : U -> U -> Prop;
+
+axiom eq_refl (a : U) : Prf (Eq a a);
+
+axiom eq_subst (P : U -> Prop) (a b : U)
+  : Prf (Eq a b) -> Prf (P a) -> Prf (P b);

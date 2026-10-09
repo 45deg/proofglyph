@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Pa Require Import Syntax Kernel Program WellFormed Checker.
+From Tinyprover.Proofglyph Require Import Syntax Kernel Program WellFormed Checker.
 From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates.
 From Tinyprover.ZfcDeep Require Import Artifact.
 Import ListNotations.

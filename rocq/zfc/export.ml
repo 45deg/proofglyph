@@ -1,7 +1,7 @@
 (* Untrusted artifact generator. Rocq independently checks the emitted AST.
-   The pa source is compiled with the same resolved declarations. *)
+   The proofglyph source is compiled with the same resolved declarations. *)
 open Tinyprover_core
-module Source = Tinyprover_tp.Source
+module Source = Tinyprover_hieratic.Source
 
 let rec term = function
   | Term.Type -> "tType" | Term.Kind -> "tKind"
@@ -16,7 +16,7 @@ let write path contents =
   Fun.protect ~finally:(fun () -> close_out_noerr c) (fun () -> output_string c contents)
 
 let () =
-  if Array.length Sys.argv <> 4 then failwith "usage: export PRELUDE.tp BASIC.tp OUTPUT_DIR";
+  if Array.length Sys.argv <> 4 then failwith "usage: export PRELUDE.ht BASIC.ht OUTPUT_DIR";
   let prelude = Source.compile_file Sys.argv.(1) in
   let full = Source.compile_file Sys.argv.(2) in
   let count = List.length prelude.declarations in
@@ -37,12 +37,12 @@ let () =
   let before = List.filteri (fun i _ -> i < count) encoded in
   let after = List.filteri (fun i _ -> i >= count) encoded in
   let out name data = write (Filename.concat Sys.argv.(3) name) data in
-  out "prelude.pa" prelude.assembly;
+  out "prelude.pg" prelude.assembly;
   let offset = String.length prelude.assembly in
   if String.sub full.assembly 0 offset <> prelude.assembly then failwith "assembly prefix mismatch";
-  out "proofs.pa" (String.sub full.assembly offset (String.length full.assembly - offset));
+  out "proofs.pg" (String.sub full.assembly offset (String.length full.assembly - offset));
   out "names.txt" (String.concat "\n" full.names ^ "\n");
-  out "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Pa Require Import Syntax Program.\nImport ListNotations.\n"
+  out "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\n"
     ^ "Definition prelude : list declaration := " ^ list before ^ ".\n"
     ^ "Definition proofs : list declaration := " ^ list after ^ ".\n");
   Printf.printf "exported %d prelude declarations and %d proved declarations\n" count (List.length body)

@@ -1,0 +1,64 @@
+// Checked proofs; prerequisites are imported by subject.
+import "binomial_theorem.ht";
+import "modular_sums.ht";
+import "prime_binomial.ht";
+
+theorem binomial_term_zero (x p k : Nat) (hp : Prf (Prime p))
+  (hk0 : Prf (Lt zero k)) (hkp : Prf (Lt k p))
+  : Prf (Cong (mul (choose p k) (pow x k)) zero p)
+  := divides_to_cong_zero p (mul (choose p k) (pow x k))
+       (divides_mul_right p (choose p k) (pow x k)
+         (prime_divides_choose p k hp hk0 hkp));
+
+theorem binomial_middle_zero (x p : Nat) (hp : Prf (Prime p))
+  : Prf (Cong
+      (sum_between zero p (fun (k : Nat) => mul (choose p k) (pow x k))) zero p)
+  := sum_between_cong_zero zero p p
+       (fun (k : Nat) => mul (choose p k) (pow x k))
+       (fun (k : Nat) (hk0 : Prf (Lt zero k)) (hkp : Prf (Lt k p))
+         => binomial_term_zero x p k hp hk0 hkp);
+
+theorem binomial_successor (x p : Nat) (hp : Prf (Prime p))
+  : Prf (Cong (pow (add x (succ zero)) p) (add (pow x p) (succ zero)) p)
+  := cong_trans (pow (add x (succ zero)) p)
+       (add (add (pow x p) (succ zero))
+         (sum_between zero p (fun (k : Nat) => mul (choose p k) (pow x k))))
+       (add (pow x p) (succ zero)) p
+       (eq_to_cong (pow (add x (succ zero)) p)
+         (add (add (pow x p) (succ zero))
+           (sum_between zero p (fun (k : Nat) => mul (choose p k) (pow x k)))) p
+         (binomial_at_one x p (prime_positive p hp)))
+       (cong_trans
+         (add (add (pow x p) (succ zero))
+           (sum_between zero p (fun (k : Nat) => mul (choose p k) (pow x k))))
+         (add (add (pow x p) (succ zero)) zero) (add (pow x p) (succ zero)) p
+         (cong_add (add (pow x p) (succ zero)) (add (pow x p) (succ zero))
+           (sum_between zero p (fun (k : Nat) => mul (choose p k) (pow x k)))
+           zero p (cong_refl (add (pow x p) (succ zero)) p) (binomial_middle_zero x p hp))
+         (eq_to_cong (add (add (pow x p) (succ zero)) zero) (add (pow x p) (succ zero)) p
+           (add_zero_right (add (pow x p) (succ zero)))));
+
+theorem fermat_step (p x : Nat) (hp : Prf (Prime p))
+  (ih : Prf (Cong (pow x p) x p))
+  : Prf (Cong (pow (succ x) p) (succ x) p)
+  := cong_trans (pow (succ x) p) (pow (add x (succ zero)) p) (succ x) p
+       (cong_pow (succ x) (add x (succ zero)) p p
+         (eq_to_cong (succ x) (add x (succ zero)) p (succ_add_one x)))
+       (cong_trans (pow (add x (succ zero)) p) (add (pow x p) (succ zero)) (succ x) p
+         (binomial_successor x p hp)
+         (cong_trans (add (pow x p) (succ zero)) (add x (succ zero)) (succ x) p
+           (cong_add (pow x p) x (succ zero) (succ zero) p ih (cong_refl (succ zero) p))
+           (cong_sym (succ x) (add x (succ zero)) p
+             (eq_to_cong (succ x) (add x (succ zero)) p (succ_add_one x)))));
+
+theorem fermat (p x : Nat) (hp : Prf (Prime p))
+  : Prf (Cong (pow x p) x p)
+  := nat_induction (fun (a : Nat) => Cong (pow a p) a p)
+       (eq_to_cong (pow zero p) zero p
+         (pow_zero_positive p (prime_positive p hp)))
+       (fun (a : Nat) (ih : Prf (Cong (pow a p) a p)) => fermat_step p a hp ih)
+       x;
+
+theorem fermat_sum (a b p : Nat) (h : Prf (Prime p))
+  : Prf (Cong (pow (add a b) p) (add a b) p)
+  := fermat p (add a b) h;
