@@ -3,12 +3,13 @@
 `examples/commons/` には、論理・等式・自然数・整数論などの規則・定義・定理を分野別のモジュールとして収録しています。算術の土台は Peano 公理、論理・等式の推論規則、および明示的な述語と再帰方程式の定義に限定し、すべての定理はこれらから導出された証明項として記述されています。
 
 - [命題論理](../examples/commons/logic/propositional.tp): 含意、連言、選言、対偶、構成的なド・モルガン則。古典論理と量化は別モジュール。
+- [普遍集合の非存在](../examples/commons/sets/russell.tp): 分出と論理規則から導くラッセルの議論。
 - [等式](../examples/commons/equality.tp): 固定した型 `U` 上の反射律と置換から導出する3定理。
 - [ライブラリの構成](../examples/commons/README.md): 加算、乗算、順序、整除性、合同式、素数、有限和など、用途に応じたモジュール。
 - [Peano の土台](../examples/commons/foundation/peano.tp): 自然数の記号、等式、帰納法、後者関数の単射性と0との区別。
 - [フェルマーの利用例](../examples/fermat_application.tp): 証明済みの小定理を import し、和に適用する定理。
 
-`examples/commons/foundation/` は前提となる語彙・公理・定義を含み、`examples/commons/logic/`、`examples/commons/equality.tp`、`examples/commons/nat/` はそれらに基づいて型検査される証明項です。証明ファイル自体には `axiom` を含みません。定義済みおよび証明済みの定数は不透明（opaque）として扱われ、定義や証明の本体は展開されません。そのため、項の計算や式の変形には等式の証明項を用います。
+`examples/commons/foundation/` は前提となる語彙・公理・定義を含み、`examples/commons/logic/`、`examples/commons/equality.tp`、`examples/commons/nat/`、`examples/commons/sets/` はそれらに基づいて型検査される証明項です。証明ファイル自体には `axiom` を含みません。定義済みおよび証明済みの定数は不透明（opaque）として扱われ、定義や証明の本体は展開されません。そのため、項の計算や式の変形には等式の証明項を用います。
 
 ## 実装した証明
 
@@ -35,6 +36,7 @@
 | 自然数 | `a^(m+n) = a^m a^n` | [pow_add](../examples/commons/nat/powers.tp) | `nat/powers.tp` |
 | 自然数 | 偶数同士・奇数同士の和は偶数 | [even_add](../examples/commons/nat/parity.tp), [odd_add](../examples/commons/nat/parity.tp) | `nat/parity.tp` |
 | 自然数 | `2Σ(k=1..n) k = n(n+1)` | [triangular_double](../examples/commons/nat/sums.tp) | `nat/sums.tp` |
+| 自然数 | `1 + 3 + … + (2n−1) = n²` | [odd_sum_square](../examples/commons/nat/sums.tp) | `nat/sums.tp` |
 | 整数論 | 整除性の推移律・和・積への保存 | [divides_trans](../examples/commons/nat/divisibility.tp), [divides_add](../examples/commons/nat/divisibility.tp), [divides_mul_right](../examples/commons/nat/divisibility.tp), [divides_mul_left](../examples/commons/nat/divisibility.tp) | `nat/divisibility.tp` |
 | 整数論 | 合同式の加算・乗算・累乗による保存 | [cong_add](../examples/commons/nat/congruence.tp), [cong_mul](../examples/commons/nat/congruence.tp), [cong_pow](../examples/commons/nat/congruence.tp) | `nat/congruence.tp` |
 | 整数論 | 除法の原理（商と余りの存在） | [division_algorithm](../examples/commons/nat/division.tp) | `nat/division.tp` |
@@ -46,26 +48,29 @@
 | 整数論 | √2 の無理性 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.tp), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.tp) | `nat/sqrt_two.tp` |
 | 整数論 | フェルマーの小定理と和への適用 | [fermat](../examples/commons/nat/fermat.tp), [fermat_sum](../examples/commons/nat/fermat.tp) | `nat/fermat.tp` |
 
+| 集合論 | ラッセルのパラドックスから普遍集合の非存在を示す | [no_universal_set](../examples/commons/sets/russell.tp) | `sets/russell.tp` |
+
 <!-- proof-catalog:end -->
 
 なお、`function_composition` は `f, g : U -> U` と `x : U` から合成関数 `g (f x) : U` を構築するプログラム項であり、命題の証明項ではありません。
 
 ## axiom の位置づけ
 
-ソースコード中の `axiom` は、不透明な記号や推論規則をシグネチャに登録する構文です。本ライブラリでは任意の補題を公理として仮定することはせず、以下の4種類に限定して使用しています。定義の自動展開を行わない LF の性質上、述語の定義規則や再帰方程式も `axiom` 構文で明示します。
+ソースコード中の `axiom` は、不透明な記号や推論規則をシグネチャに登録する構文です。本ライブラリでは任意の補題を公理として仮定することはせず、以下の5種類に限定して使用しています。定義の自動展開を行わない LF の性質上、述語の定義規則や再帰方程式も `axiom` 構文で明示します。
 
 | 種類 | 内容 |
 | --- | --- |
 | 語彙 | `Nat`, `zero`, `succ`, `Prop`, `Prf`, `Eq`、演算・述語の型 |
 | Peano と等式 | `nat_induction`, `succ_injective`, `succ_not_zero`, `eq_refl`, `eq_subst` |
 | 論理 | 連言・選言・偽・否定・含意・量化の導入／除去、古典論理の排中律 |
+| 集合 | 所属関係の語彙と、既存の集合の部分集合を作る分出 |
 | 定義 | 述語の導入／除去、加算などの再帰方程式、有限和による `convolution` の定義 |
 
 たとえば `prime_intro` / `prime_elim` は、素数を「1より大きく、各約数が1または自分自身である数」と定義します（ユークリッドの補題は公理ではなく定理として証明します）。また `coprime_intro` / `coprime_elim` は、共通の約数が1のみであることを定義します。
 
 `proven` は、明示したシグネチャの下で証明項の型検査に成功した状態を表します。Peano の構成や定義方程式はシグネチャとして外部から与えられており、カーネルの内部に特定の算術論理や簡約規則は組み込まれていません。
 
-自然数ライブラリには135個の `theorem` が含まれます。読み込まれる `axiom` は利用するモジュールに応じて決定され、Peano 公理に加えて演算や述語の語彙、論理規則、再帰方程式などが含まれます。
+自然数ライブラリには137個の `theorem` が含まれます。読み込まれる `axiom` は利用するモジュールに応じて決定され、Peano 公理に加えて演算や述語の語彙、論理規則、再帰方程式などが含まれます。
 
 ### 自然数と再帰関数
 
@@ -89,6 +94,10 @@ triangular (succ n) = add (triangular n) (succ n)
 ```
 
 加算・乗算の結合則や交換則、累乗の加法則、三角数の公式などは帰納法から導出されます。[強い帰納法](../examples/commons/nat/induction.tp) も、通常の Peano 帰納法と順序の定義から導出される定理です。
+
+### 奇数の和と平方数
+
+[奇数の和](../examples/commons/nat/sums.tp)は `1 + 3 + … + (2n−1) = n²` を Peano 帰納法で証明します。`sum n f` は添字 `0` から `n−1` までの和なので、各項を `succ (add k k)`（`2k+1`）とします。`n=0` では空の和と `0²` がともに0です。帰納段階では、補題 `square_succ` の `(n+1)² = n² + (2n+1)` を使います。これは、正方形に次の奇数個の点からなるL字の縁を加える見方に対応します。新しい公理は追加していません。
 
 ### 述語の定義
 
@@ -186,3 +195,11 @@ dune exec bin/main.exe -- check /tmp/euclid.pa
 ```
 
 回帰テストでは、カタログに記載されたすべての定理が `Proven` として正しく登録されることを確認します。前提として許可される語彙は指定の公理一覧に限定され、証明ファイル側での公理追加は禁止されます。また、前提を先頭に集めたシグネチャに対して証明部分を前提追加禁止（`--no-axioms` 同等）で再検証し、誤った結論や不正な証明項が適切に拒否されることを確認しています。
+
+## ラッセルの議論と普遍集合
+
+[Web用の証明](../examples/commons/sets/russell.tp)は、すべての集合を含む集合 `u` があると仮定し、分出で `r = {x ∈ u | x ∉ x}` を作ります。`r ∈ r` なら分出の条件から `r ∉ r` が得られるため、まず `r ∉ r` を証明できます。一方、普遍集合の仮定から `r ∈ u` なので、分出の逆向きの条件から `r ∈ r` が得られ、矛盾します。最終定理 `no_universal_set` は `¬∃u, ∀x, x ∈ u` を表します。
+
+前提は既存の論理・量化規則に加え、[集合の所属関係と分出](../examples/commons/foundation/sets.tp)です。分出は既存の集合の部分集合を作る規則で、任意の性質から無制限に集合を作る内包原理ではありません。このデモでは述語パラメータで分出の図式を表し、排中律・選択公理・普遍集合の非存在そのものは仮定しません。
+
+[既存のRocq/ZFC検証](../rocq/zfc/README.md)と同じラッセルの議論を、Webで読みやすい名前付きの証明項として別途記述しています。このWeb例はtinyproverのOCamlカーネルとブラウザ用検査器で検査しますが、Rocq側の一階論理AST・符号化との対応は証明していません。既存のRocq検証の対象は従来の証明項です。

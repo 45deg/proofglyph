@@ -70,3 +70,46 @@ for (const {path, source} of examples.filter(entry => entry.path.endsWith('.tp')
 assert.match(api.compileAt('examples/a.tp', 'import \"commons/nat/addition.tp\";').output,
   /^error: examples\/a\.tp:1:1: imports require compile_file or load$/);
 console.log('Sourcemap names, imported locations, errors and stale-map fallback passed.');
+
+const {toLatex} = require('./math.source.js');
+const katex = process.env.KATEX_TEST_MODULE ? require(process.env.KATEX_TEST_MODULE) : null;
+let renderedTypes = 0;
+for (const {path, source} of examples.filter(entry => entry.path.endsWith('.tp'))) {
+  const compiled = api.compileAt(path, source);
+  const entries = JSON.parse(api.checkMapped(compiled.output).entries);
+  assert.ok(entries.every(entry => ['assumption', 'proven'].includes(entry.origin)));
+  for (const entry of entries.filter(entry => entry.origin === 'proven')) {
+    const {latex} = toLatex(entry.type);
+    assert.ok(latex.length > 0, `${path}:${entry.name}`);
+    assert.doesNotMatch(latex, /undefined|NaN/);
+    if (katex) assert.ok(katex.renderToString(latex, {throwOnError: true, trust: false}).includes('<math'));
+    renderedTypes++;
+  }
+}
+function formula(path, name) {
+  const compiled = api.compileAt(path, sources.get(path));
+  const entry = JSON.parse(api.checkMapped(compiled.output).entries).find(entry => entry.name === name);
+  return toLatex(entry.type).latex;
+}
+assert.equal(formula('examples/commons/nat/sums.tp', 'odd_sum_square'),
+  String.raw`\forall n\in\mathbb{N},\; \sum_{k=0}^{n-1} \left(2 \cdot k+1\right) = {n}^2`);
+assert.equal(formula('examples/commons/sets/russell.tp', 'no_universal_set'),
+  String.raw`\neg \left(\exists x:U,\; \forall y:U,\; y \in x\right)`);
+assert.equal(formula('examples/commons/nat/prime_infinitude.tp', 'primes_infinite'),
+  String.raw`\forall n\in\mathbb{N},\; \exists m\in\mathbb{N},\; \mathrm{Prime}\left(m\right) \land n < m`);
+assert.equal(formula('examples/basics.tp', 'id'), String.raw`A \to A`);
+// Bound variables under two dependent binders must stay distinct.
+assert.equal(toLatex(['pi', ['const', 'U'], ['pi', ['const', 'U'],
+  ['app', ['app', ['const', 'Mem'], ['var', 1]], ['var', 0]]]]).latex,
+  String.raw`\forall x:U,\; \forall y:U,\; x \in y`);
+// Direct pa edits lose mapped mathematical names, so retain generic kernel constants.
+const raw = JSON.parse(api.check('*:#0#0>#0$0\\!').entries);
+assert.equal(toLatex(raw[1].type).latex, String.raw`\mathrm{c0} \to \mathrm{c0}`);
+console.log(`${renderedTypes} checked types formatted${katex ? ' and rendered with KaTeX' : ''}; formulas and binder scope passed.`);
+assert.equal(toLatex(['app', ['app', ['const', 'Imp'],
+  ['app', ['app', ['const', 'Imp'], ['const', 'A']], ['const', 'B']]], ['const', 'C']]).latex,
+  String.raw`\left(A \to B\right) \to C`);
+assert.equal(toLatex(['pi', ['const', 'Nat'], ['app', ['const', 'Prf'], ['const', 'P']]]).latex,
+  String.raw`\forall n\in\mathbb{N},\; P`);
+assert.equal(toLatex(['pi', ['const', 'U'], ['app', ['app', ['const', 'Mem'], ['var', 0]], ['const', 'x']]]).latex,
+  String.raw`\forall y:U,\; y \in x`);

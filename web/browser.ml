@@ -14,12 +14,14 @@ open Js_of_ocaml
     - [check(source)]: Verifies assembly without source mapping. *)
 
 (** Constructs a JS response object [{ok: bool, output: string, ?sourcemap: string}]. *)
-let response ?sourcemap ok output =
+let response ?sourcemap ?entries ok output =
   Js.Unsafe.obj (Array.of_list ([
     "ok", Js.Unsafe.inject (Js.bool ok);
     "output", Js.Unsafe.inject (Js.string output)
-  ] @ match sourcemap with None -> [] | Some value ->
-    ["sourcemap", Js.Unsafe.inject (Js.string value)]))
+  ] @ (match sourcemap with None -> [] | Some value ->
+    ["sourcemap", Js.Unsafe.inject (Js.string value)])
+    @ (match entries with None -> [] | Some value ->
+    ["entries", Js.Unsafe.inject (Js.string value)])))
 
 (** Exception handling wrapper returning [{ok: false, output: "error: ..."}]. *)
 let protect f input =
@@ -41,6 +43,19 @@ let check ?(mappings=[]) source =
   let output = Buffer.create 256 in
   let names index = match List.find_opt (fun (m : Source.mapping) -> m.constant = index) mappings with
     | Some m -> m.name | None -> "c" ^ string_of_int index in
+  (* Export the checked type itself; presentation never parses or guesses from titles. *)
+  let rec term_json = function
+    | Term.Type -> "[\"type\"]" | Term.Kind -> "[\"kind\"]"
+    | Term.Var n -> "[\"var\"," ^ string_of_int n ^ "]"
+    | Term.Const n -> "[\"const\"," ^ Source.json_string (names n) ^ "]"
+    | Term.App (f, x) -> pair "app" f x
+    | Term.Pi (a, b) -> pair "pi" a b
+    | Term.Lam (a, b) -> pair "lam" a b
+  and pair tag a b = "[" ^ Source.json_string tag ^ "," ^ term_json a ^ "," ^ term_json b ^ "]" in
+  let entries_json = "[" ^ String.concat "," (List.mapi (fun i (entry : Kernel.entry) ->
+    "{\"name\":" ^ Source.json_string (names i) ^ ",\"origin\":"
+    ^ Source.json_string (match entry.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
+    ^ ",\"type\":" ^ term_json entry.typ ^ "}") entries) ^ "]" in
   List.iteri (fun i (entry : Kernel.entry) ->
     Printf.bprintf output "%s [%s] : %s\n" (names i)
       (match entry.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
@@ -48,7 +63,7 @@ let check ?(mappings=[]) source =
   Printf.bprintf output "Accepted: %d declarations (%d assumptions).\n"
     (List.length entries)
     (List.length (List.filter (fun (e : Kernel.entry) -> e.origin = Kernel.Assumption) entries));
-  response true (Buffer.contents output)
+  response ~entries:entries_json true (Buffer.contents output)
 
 (** Verifies assembly using declaration names if it exactly matches the last compiled output. *)
 let check_mapped source =

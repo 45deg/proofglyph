@@ -57,7 +57,9 @@ dune build @web/browser
 python3 -m http.server 8765 --bind 127.0.0.1 --directory _build/default/web
 ```
 
-[http://127.0.0.1:8765](http://127.0.0.1:8765) を開いて利用します。成果物（`index.html`, `app.js`, `browser.bc.js`, `catalog.json`）は静的ファイルとして配信可能です。
+[http://127.0.0.1:8765](http://127.0.0.1:8765) を開いて利用します。成果物（`index.html`, `app.js`, `math.js`, `browser.bc.js`, `catalog.json`）は静的ファイルとして配信可能です。
+
+検査結果には、検査済みの型から生成した数式を表示します。選択した定理を先に表示し、依存する補題・定義は折りたたみます。数式表示には CDN から読み込む KaTeX 0.19.0 を使用し、読み込めない場合は TeX 表記を表示します。コンパイルと証明の検査は引き続きブラウザ内で完結します。
 
 ## 形式証明と信頼境界 (Rocq)
 

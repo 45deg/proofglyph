@@ -164,3 +164,45 @@ theorem triangular_double (n : Nat) : Prf (Eq (mul (succ (succ zero)) (triangula
     (succ x) (succ x)) (eq_sym (mul (succ x) (succ x)) (add (succ x) (mul x (succ x))) (mul_succ x (succ
     x))))) (add_comm (mul (succ x) (succ x)) (succ x))) (eq_sym (mul (succ x) (succ (succ x))) (add (succ x)
     (mul (succ x) (succ x))) (mul_succ_right (succ x) (succ x)))) n;
+
+// A square grows by the next odd number: (n+1)^2 = n^2 + (2n+1).
+theorem square_succ (n : Nat)
+  : Prf (Eq (mul (succ n) (succ n)) (add (mul n n) (succ (add n n))))
+  := eq_trans (mul (succ n) (succ n)) (add (succ n) (mul n (succ n)))
+    (add (mul n n) (succ (add n n))) (mul_succ n (succ n))
+    (eq_trans (add (succ n) (mul n (succ n))) (add (succ n) (add n (mul n n)))
+      (add (mul n n) (succ (add n n)))
+      (eq_cong (fun (z : Nat) => add (succ n) z)
+        (mul n (succ n)) (add n (mul n n)) (mul_succ_right n n))
+      (eq_trans (add (succ n) (add n (mul n n))) (add (add (succ n) n) (mul n n))
+        (add (mul n n) (succ (add n n)))
+        (eq_sym (add (add (succ n) n) (mul n n)) (add (succ n) (add n (mul n n)))
+          (add_assoc (succ n) n (mul n n)))
+        (eq_trans (add (add (succ n) n) (mul n n)) (add (mul n n) (add (succ n) n))
+          (add (mul n n) (succ (add n n)))
+          (add_comm (add (succ n) n) (mul n n))
+          (eq_cong (fun (z : Nat) => add (mul n n) z)
+            (add (succ n) n) (succ (add n n)) (add_succ n n)))));
+
+// sum n f sums f(0), ..., f(n-1). Thus f(k) = 2k+1 gives 1+3+...+(2n-1).
+// For n=0 the sum is empty. Induction adds the L-shaped border of the next square.
+// No additional axioms: use the existing sum equations and Peano induction.
+theorem odd_sum_square (n : Nat)
+  : Prf (Eq (sum n (fun (k : Nat) => succ (add k k))) (mul n n))
+  := nat_induction
+    (fun (x : Nat) => Eq (sum x (fun (k : Nat) => succ (add k k))) (mul x x))
+    (eq_trans (sum zero (fun (k : Nat) => succ (add k k))) zero (mul zero zero)
+      (sum_zero (fun (k : Nat) => succ (add k k)))
+      (eq_sym (mul zero zero) zero (mul_zero zero)))
+    (fun (x : Nat)
+      (ih : Prf (Eq (sum x (fun (k : Nat) => succ (add k k))) (mul x x))) =>
+      eq_trans (sum (succ x) (fun (k : Nat) => succ (add k k)))
+        (add (sum x (fun (k : Nat) => succ (add k k))) (succ (add x x)))
+        (mul (succ x) (succ x))
+        (sum_succ x (fun (k : Nat) => succ (add k k)))
+        (eq_trans (add (sum x (fun (k : Nat) => succ (add k k))) (succ (add x x)))
+          (add (mul x x) (succ (add x x))) (mul (succ x) (succ x))
+          (eq_cong (fun (z : Nat) => add z (succ (add x x)))
+            (sum x (fun (k : Nat) => succ (add k k))) (mul x x) ih)
+          (eq_sym (mul (succ x) (succ x)) (add (mul x x) (succ (add x x)))
+            (square_succ x)))) n;

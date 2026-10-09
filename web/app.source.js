@@ -8,14 +8,55 @@ const result = document.getElementById("result");
 const status = document.getElementById("status");
 const compileButton = document.getElementById("compile");
 const checkButton = document.getElementById("check");
+let selectedNames = new Set();
+
+function showText(text) {
+  const pre = document.createElement("pre");
+  pre.textContent = text;
+  result.replaceChildren(pre);
+}
+
+function showProofs(entries) {
+  result.replaceChildren();
+  const proofs = entries.filter(entry => entry.origin === "proven");
+  if (!proofs.length) { showText("検査成功（証明済みの宣言はありません）"); return; }
+  function card(entry, parent) {
+    const article = document.createElement("article");
+    article.className = "theorem";
+    const heading = document.createElement("h3");
+    heading.textContent = entry.name;
+    const state = document.createElement("span");
+    state.textContent = "検査成功";
+    heading.append(state);
+    const formula = document.createElement("div");
+    formula.className = "formula";
+    formula.tabIndex = 0;
+    const {latex} = globalThis.tinyproverMath.toLatex(entry.type);
+    if (globalThis.katex) {
+      try { globalThis.katex.render(latex, formula, {displayMode: true, output: "htmlAndMathml", throwOnError: true, trust: false}); }
+      catch (_) { formula.textContent = latex; }
+    } else { formula.textContent = latex; }
+    article.append(heading, formula);
+    parent.append(article);
+  }
+  const featured = proofs.filter(entry => selectedNames.has(entry.name));
+  if (!featured.length) { proofs.forEach(entry => card(entry, result)); return; }
+  featured.forEach(entry => card(entry, result));
+  const others = proofs.filter(entry => !selectedNames.has(entry.name));
+  if (others.length) {
+    const details = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = `補題・定義（${others.length}件）`;
+    details.append(summary);
+    others.forEach(entry => card(entry, details));
+    result.append(details);
+  }
+}
 
 function check() {
   const checked = (sourcemap ? globalThis.tinyprover.checkMapped : globalThis.tinyprover.check)(pa.value);
-  const proofs = checked.ok ? checked.output.split("\n").flatMap(line => {
-    const match = /^(\S+) \[proven\]/.exec(line);
-    return match ? [`${match[1]}: 検査成功`] : [];
-  }) : [];
-  result.value = checked.ok ? (proofs.join("\n") || "検査成功") : `検査失敗\n${checked.output}`;
+  if (checked.ok) showProofs(JSON.parse(checked.entries));
+  else showText(`検査失敗\n${checked.output}`);
   status.textContent = checked.ok ? "検査成功" : "検査失敗";
 }
 
@@ -24,7 +65,7 @@ function compile() {
   const compiled = globalThis.tinyprover.compileAt(sourcePath, tp.value);
   if (!compiled.ok) {
     pa.value = "";
-    result.value = compiled.output;
+    showText(compiled.output);
     status.textContent = "コンパイル失敗";
     return;
   }
@@ -35,12 +76,13 @@ function compile() {
 
 tp.addEventListener("input", () => {
   sourcemap = null;
-  result.value = "";
+  result.replaceChildren();
   status.textContent = "tp が変更されました。再コンパイルしてください。";
 });
 pa.addEventListener("input", () => {
   sourcemap = null;
-  result.value = "";
+  result.replaceChildren();
+  selectedNames = new Set();
   status.textContent = "pa が変更されました。再検査してください。";
 });
 async function initialize() {
@@ -96,7 +138,8 @@ if (globalThis.tinyprover) {
       status.textContent = `ソースが見つかりません: ${path}`;
       return;
     }
-    result.value = "";
+    result.replaceChildren();
+    selectedNames = new Set(catalog.proofs[name].filter(match => match.path === path).map(match => match.name));
     if (path.endsWith(".pa")) {
       sourcemap = null;
       tp.value = "";

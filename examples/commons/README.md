@@ -22,12 +22,13 @@ dune exec bin/main.exe -- check /tmp/addition.pa
 
 | 場所 | 内容 |
 | --- | --- |
-| [foundation/](foundation/) | 信頼する語彙、論理規則、Peano 公理、等式規則、述語と再帰関数の定義。分野別の15モジュール。 |
+| [foundation/](foundation/) | 信頼する語彙、論理規則、Peano 公理、等式規則、述語と再帰関数の定義、集合の分出。分野別の16モジュール。 |
 | [logic/propositional.tp](logic/propositional.tp) | 含意の合成、引数の交換・複製、連言・選言、対偶、構成的なド・モルガン則。 |
 | [logic/classical.tp](logic/classical.tp) | 排中律を使うド・モルガン則の方向。 |
 | [logic/quantifiers.tp](logic/quantifiers.tp) | 型 `U` 上の全称・存在量化、関数の合成。 |
 | [equality.tp](equality.tp) | 型 `U` 上の等式の対称律・推移律・関数による保存。 |
-| [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、135定理。 |
+| [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、137定理。 |
+| [sets/russell.tp](sets/russell.tp) | 分出から導く普遍集合の非存在。排中律・選択公理は不要。 |
 
 `foundation/` のファイルは `axiom` 宣言、残りは `theorem` 宣言を持ちます。`axiom` は記号や定義の方程式を登録するためにも使用し、数学的な補題を仮定する宣言は置いていません。各定理の詳細と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照してください。
 
@@ -44,7 +45,7 @@ dune exec bin/main.exe -- check /tmp/addition.pa
 | [ordered_multiplication.tp](nat/ordered_multiplication.tp) | 正の数による乗算の消去、積の正値性。 |
 | [powers.tp](nat/powers.tp) | 累乗の加法則、1の累乗、正指数の0の累乗。 |
 | [parity.tp](nat/parity.tp) | 偶数同士・奇数同士の和。 |
-| [sums.tp](nat/sums.tp) | 有限和の等式、添字の移動、三角数の公式。 |
+| [sums.tp](nat/sums.tp) | 有限和の等式、添字の移動、三角数の公式、奇数の和と平方数。 |
 | [divisibility.tp](nat/divisibility.tp) | 整除性の推移律、和・積への保存、加算からの消去。 |
 | [congruence.tp](nat/congruence.tp) | 合同式の等式法則、加算・乗算・累乗による保存。 |
 | [classical.tp](nat/classical.tp) | 排中律からの二重否定除去。 |

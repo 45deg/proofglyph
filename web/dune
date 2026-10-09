@@ -5,17 +5,18 @@
  (libraries tinyprover_core tinyprover_pa tinyprover_tp js_of_ocaml))
 
 (rule
- (targets index.html app.js catalog.json)
- (deps index.source.html app.source.js ../examples/catalog.json)
+ (targets index.html app.js math.js catalog.json)
+ (deps index.source.html app.source.js math.source.js ../examples/catalog.json)
  (action
   (progn
    (copy index.source.html index.html)
    (copy app.source.js app.js)
+   (copy math.source.js math.js)
    (copy ../examples/catalog.json catalog.json))))
 
 (alias
  (name browser)
- (deps browser.bc.js index.html app.js catalog.json))
+ (deps browser.bc.js index.html app.js math.js catalog.json))
 
 (executable
  (name bundle_examples)

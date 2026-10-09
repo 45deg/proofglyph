@@ -1,0 +1,17 @@
+// Trusted vocabulary and inference rules for the set-theory demo.
+import "quantifiers.tp";
+
+// U is the domain of sets; Mem x u means x belongs to u.
+axiom Mem : U -> U -> Prop;
+
+axiom Imp : Prop -> Prop -> Prop;
+axiom imp_intro (A B : Prop) : (Prf A -> Prf B) -> Prf (Imp A B);
+axiom imp_elim (A B : Prop) : Prf (Imp A B) -> Prf A -> Prf B;
+
+// Separation: a subset of u exists containing exactly the elements satisfying P.
+// This is a schema represented by a predicate parameter, not unrestricted comprehension.
+// No global function choosing the subset is assumed.
+axiom separation (u : U) (P : U -> Prop)
+  : Prf (Exists (fun (r : U) => All (fun (x : U) => And
+      (Imp (Mem x r) (And (Mem x u) (P x)))
+      (Imp (And (Mem x u) (P x)) (Mem x r)))));

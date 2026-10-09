@@ -405,6 +405,17 @@ let () =
              Buffer.add_char output '!');
         globals := (d.name,List.length !globals)::!globals)) declarations;
     verify (Buffer.contents output));
+  test "Russell derives no universal set from separation without classical choice" (fun () ->
+    let source = check_catalog ["../examples/commons/sets/russell.tp"]
+      ["russell_not_self"; "russell_contradiction"; "no_universal_set_at"; "no_universal_set"] in
+    assert (List.exists (fun (d:Source.declaration) -> d.name = "separation" && d.body = None) source);
+    assert (not (List.exists (fun (d:Source.declaration) ->
+      List.mem d.name ["excluded_middle"; "ax_choice"]) source));
+    (* The subset's forward condition gives non-membership, not a contradiction alone. *)
+    reject_loaded source (
+      "theorem invalid_russell (u r : U)"
+      ^ " (forward : forall (x : U), Prf (Mem x r) -> Prf (And (Mem x u) (Not (Mem x x))))"
+      ^ " : Prf False := russell_not_self u r forward;"));
   test "equality catalog derives laws from substitution" (fun () ->
     let source = check_catalog ["../examples/commons/equality.tp"] ["eq_sym"; "eq_trans"; "eq_cong"] in
     reject_loaded source (
@@ -413,7 +424,7 @@ let () =
     let source = check_catalog arithmetic_modules
       ["add_zero_left"; "add_zero_right"; "add_assoc"; "add_comm";
        "mul_add_left"; "mul_add_right"; "mul_assoc"; "mul_comm"; "pow_add";
-       "even_add"; "odd_add"; "triangular_double";
+       "even_add"; "odd_add"; "triangular_double"; "square_succ"; "odd_sum_square";
        "divides_trans"; "divides_add"; "divides_mul_right"; "divides_mul_left";
        "cong_add"; "cong_mul"; "cong_pow"; "prime_divides_choose";
        "binomial_theorem"; "primes_infinite"; "sqrt_two_irrational";
@@ -431,6 +442,10 @@ let () =
       ^ " : Prf (Eq (pow (add a b) n)"
       ^ " (convolution n (fun (k : Nat) => pow a k) (fun (k : Nat) => pow b k)))"
       ^ " := binomial_theorem a b n;");
+    reject_loaded source (
+      "\ntheorem invalid_odd_sum (n : Nat)"
+      ^ " : Prf (Eq (sum n (fun (k : Nat) => succ (add k k))) (mul (succ n) (succ n)))"
+      ^ " := odd_sum_square n;");
     reject_loaded source (
       "\ntheorem invalid_comm (a b : Nat) : Prf (Eq (add a b) (add b a))"
       ^ " := eq_refl (add a b);");
