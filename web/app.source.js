@@ -10,6 +10,70 @@ const compileButton = document.getElementById("compile");
 const checkButton = document.getElementById("check");
 let selectedNames = new Set();
 
+// Native textarea resizing sets an inline width. Let the grid follow that width
+// so a resized editor does not overlap the adjacent pane.
+const editorResize = new ResizeObserver(entries => {
+  if (window.matchMedia("(max-width: 640px)").matches) return;
+  for (const {target} of entries) {
+    if (!target.style.width) continue;
+    target.closest(".panes").style.setProperty(`--${target.id}-width`, target.style.width);
+    target.style.width = "";
+  }
+});
+editorResize.observe(hieratic);
+editorResize.observe(proofglyph);
+
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function selectTab(id, focus = false) {
+  const active = tabs.find(tab => tab.getAttribute("aria-controls") === id);
+  if (!active) return;
+  for (const tab of tabs) {
+    const selected = tab === active;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    document.getElementById(tab.getAttribute("aria-controls")).hidden = !selected;
+  }
+  if (focus) active.focus();
+}
+function selectHashTab() {
+  const target = document.getElementById(location.hash.slice(1));
+  const panel = target?.closest('[role="tabpanel"]');
+  selectTab(panel?.id || "workspace");
+}
+function activateTab(id, focus = false) {
+  selectTab(id, focus);
+  if (location.hash !== `#${id}`) history.pushState(null, "", `#${id}`);
+}
+tabs.forEach((tab, index) => {
+  tab.addEventListener("click", () => activateTab(tab.getAttribute("aria-controls")));
+  tab.addEventListener("keydown", event => {
+    let next;
+    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+    if (event.key === "ArrowLeft") next = (index + tabs.length - 1) % tabs.length;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = tabs.length - 1;
+    if (next === undefined) return;
+    event.preventDefault();
+    const id = tabs[next].getAttribute("aria-controls");
+    activateTab(id, true);
+  });
+});
+window.addEventListener("hashchange", selectHashTab);
+selectHashTab();
+
+document.querySelectorAll("[data-snippet]").forEach(button => {
+  button.addEventListener("click", () => {
+    if (!globalThis.proofglyph) return;
+    hieratic.value = document.getElementById(button.dataset.snippet).textContent;
+    sourcePath = "examples/browser.ht";
+    selectedNames = new Set();
+    example.value = "";
+    compile();
+    activateTab("workspace");
+    hieratic.focus();
+  });
+});
+
 function showText(text) {
   const pre = document.createElement("pre");
   pre.textContent = text;
@@ -77,13 +141,13 @@ function compile() {
 hieratic.addEventListener("input", () => {
   sourcemap = null;
   result.replaceChildren();
-  status.textContent = "hieratic が変更されました。再コンパイルしてください。";
+  status.textContent = "Hieratic の入力が変更されました。「コンパイルして検査」を実行してください。";
 });
 proofglyph.addEventListener("input", () => {
   sourcemap = null;
   result.replaceChildren();
   selectedNames = new Set();
-  status.textContent = "proofglyph が変更されました。再検査してください。";
+  status.textContent = "Proofglyph の入力が変更されました。「記号列を検査」を実行してください。";
 });
 async function initialize() {
 if (globalThis.proofglyph) {
@@ -154,7 +218,7 @@ if (globalThis.proofglyph) {
   });
 
 } else {
-  status.textContent = "読み込みに失敗しました。";
+  status.textContent = "初期化に失敗しました。";
 }
 
 }

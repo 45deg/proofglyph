@@ -29,6 +29,16 @@ assert.deepEqual(catalog, require('../examples/catalog.json'));
 console.log('Catalog names and source locations passed.');
 
 const fs = require('node:fs');
+const html = fs.readFileSync(require('node:path').join(__dirname, 'index.source.html'), 'utf8');
+const snippets = [...html.matchAll(/<code id="(snippet-[^"]+)">([\s\S]*?)<\/code>/g)];
+assert.equal(snippets.length, 5);
+for (const [, name, encoded] of snippets) {
+  const source = encoded.replaceAll('&gt;', '>').replaceAll('&lt;', '<').replaceAll('&amp;', '&');
+  const compiled = api.compileAt('examples/browser.ht', source);
+  assert.equal(compiled.ok, true, `${name}: ${compiled.output}`);
+  assert.equal(api.check(compiled.output).ok, true, name);
+}
+console.log('All 5 documentation examples compiled and checked.');
 const document = fs.readFileSync(require('node:path').join(__dirname, '../docs/proofs.md'), 'utf8');
 const startMarker = '<!-- proof-catalog:start -->';
 const endMarker = '<!-- proof-catalog:end -->';
