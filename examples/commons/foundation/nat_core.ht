@@ -1,0 +1,24 @@
+// Primitive natural-number and equality principles.
+// Induction, equality reflexivity/substitution, and successor disjointness remain axioms.
+// Successor injectivity is derived from primitive recursion in peano.ht.
+
+import "logic.ht";
+
+symbol Nat : Type;
+
+symbol Eq : Nat -> Nat -> Prop;
+
+symbol succ : Nat -> Nat;
+
+symbol zero : Nat;
+
+axiom nat_induction (P : Nat -> Prop) : Prf (P zero)
+  -> (forall (x : Nat), Prf (P x) -> Prf (P (succ x)))
+  -> forall (x : Nat), Prf (P x);
+
+axiom eq_refl (a : Nat) : Prf (Eq a a);
+
+axiom eq_subst (P : Nat -> Prop) (a b : Nat)
+  : Prf (Eq a b) -> Prf (P a) -> Prf (P b);
+
+axiom succ_not_zero (a : Nat) : Prf (Eq (succ a) zero) -> Prf False;

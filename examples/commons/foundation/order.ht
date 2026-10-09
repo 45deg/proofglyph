@@ -1,22 +1,19 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definitions of natural-number order; no order-specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "arithmetic.ht";
+import "nat_logic.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Lt : Nat -> Nat -> Prop;
+def Lt (a b : Nat) : Prop := Exists (fun (k : Nat) => Eq b (add a (succ k)));
+def Le (a b : Nat) : Prop := Exists (fun (k : Nat) => Eq b (add a k));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom lt_intro (a b k : Nat) : Prf (Eq b (add a (succ k))) -> Prf (Lt a b);
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom lt_elim (a b : Nat) (P : Prop) : Prf (Lt a b)
-  -> (forall (k : Nat), Prf (Eq b (add a (succ k))) -> Prf P) -> Prf P;
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Le : Nat -> Nat -> Prop;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom le_elim (a b : Nat) (P : Prop) : Prf (Le a b)
-  -> (forall (k : Nat), Prf (Eq b (add a k)) -> Prf P) -> Prf P;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom le_intro (a b k : Nat) : Prf (Eq b (add a k)) -> Prf (Le a b);
+theorem lt_intro (a b k : Nat) (h : Prf (Eq b (add a (succ k)))) : Prf (Lt a b)
+  := exists_intro (fun (k : Nat) => Eq b (add a (succ k))) k h;
+theorem lt_elim (a b : Nat) (P : Prop) (h : Prf (Lt a b))
+  (use : forall (k : Nat), Prf (Eq b (add a (succ k))) -> Prf P) : Prf P
+  := exists_elim (fun (k : Nat) => Eq b (add a (succ k))) P h use;
+theorem le_elim (a b : Nat) (P : Prop) (h : Prf (Le a b))
+  (use : forall (k : Nat), Prf (Eq b (add a k)) -> Prf P) : Prf P
+  := exists_elim (fun (k : Nat) => Eq b (add a k)) P h use;
+theorem le_intro (a b k : Nat) (h : Prf (Eq b (add a k))) : Prf (Le a b)
+  := exists_intro (fun (k : Nat) => Eq b (add a k)) k h;

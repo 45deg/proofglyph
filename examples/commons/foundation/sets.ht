@@ -1,16 +1,14 @@
-// Trusted vocabulary and inference rules for the set-theory demo.
+// Axiom schema of separation for the set-theory demo.
+// U is the domain of sets; Mem x u means x belongs to u.
+// Implication and its primitive rules are imported from logic.ht.
+// separation asserts a subset of u containing exactly the elements satisfying P.
+// The predicate parameter represents the schema; this is not unrestricted
+// comprehension, and no global function choosing the subset is assumed.
+
 import "quantifiers.ht";
 
-// U is the domain of sets; Mem x u means x belongs to u.
-axiom Mem : U -> U -> Prop;
+symbol Mem : U -> U -> Prop;
 
-axiom Imp : Prop -> Prop -> Prop;
-axiom imp_intro (A B : Prop) : (Prf A -> Prf B) -> Prf (Imp A B);
-axiom imp_elim (A B : Prop) : Prf (Imp A B) -> Prf A -> Prf B;
-
-// Separation: a subset of u exists containing exactly the elements satisfying P.
-// This is a schema represented by a predicate parameter, not unrestricted comprehension.
-// No global function choosing the subset is assumed.
 axiom separation (u : U) (P : U -> Prop)
   : Prf (Exists (fun (r : U) => All (fun (x : U) => And
       (Imp (Mem x r) (And (Mem x u) (P x)))

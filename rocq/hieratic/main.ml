@@ -1,7 +1,7 @@
 (* Lexing, parsing, import graph expansion and compilation are extracted from
    Rocq. Host file I/O and canonical path resolution remain trusted. *)
 let usage () =
-  prerr_endline "Usage: hieratic (check|check-proofglyph|compile) FILE [--no-axioms] [--fuel N]\n       compile also accepts [-o FILE]; default output is stdout";
+  prerr_endline "Usage: hieratic (check|check-proofglyph|compile) FILE [--no-axioms] [--fuel N] [--elaborate]\n       compile also accepts [-o FILE]; default output is stdout";
   exit 2
 
 let reject () =
@@ -20,10 +20,11 @@ let run () =
   if Array.length Sys.argv < 3 then usage ();
   let command = Sys.argv.(1) in
   if not (List.mem command ["check"; "check-proofglyph"; "compile"]) then usage ();
-  let allow = ref true and fuel = ref 2048 and output = ref None in
+  let allow = ref true and fuel = ref 2048 and output = ref None and elaborate = ref false in
   let rec options i =
     if i < Array.length Sys.argv then
       match Sys.argv.(i) with
+      | "--elaborate" when command <> "check-proofglyph" -> elaborate := true; options (i + 1)
       | "--no-axioms" -> allow := false; options (i + 1)
       | "-o" when command = "compile" && i + 1 < Array.length Sys.argv && !output = None ->
           output := Some Sys.argv.(i + 1); options (i + 2)
@@ -41,6 +42,16 @@ let run () =
     match Frontend.check_proofglyph fuel !allow bytes with
     | None -> reject ()
     | Some signature -> Printf.printf "Accepted %d declarations\n" (List.length signature))
+  else if !elaborate then (
+    (* Host elaboration is not covered by the extracted frontend proofs.
+       The unchanged extracted checker independently verifies every output byte. *)
+    let compiled = Adapter.Source.compile_file Sys.argv.(2) in
+    let bytes = Adapter.chars compiled.assembly in
+    match Frontend.check_proofglyph fuel !allow bytes with
+    | None -> reject ()
+    | Some signature ->
+        if command = "compile" then write_output !output compiled.assembly
+        else Printf.printf "Accepted %d declarations\n" (List.length signature))
   else (
     let entry, inputs, resolve = Adapter.load_inputs Sys.argv.(2) in
     if command = "compile" then (

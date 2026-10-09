@@ -3,7 +3,7 @@ module Source = Proofglyph_hieratic.Source
 (** {1 Example Bundler and Catalog Generator}
 
     Processes source files under [examples/] for web demo and documentation:
-    - Default mode: recursively inlines imports in .ht files into self-contained text
+    - Default mode: preserves original source files and their import statements
       and emits the [Examples_data.files] OCaml source for the browser demo.
     - [--catalog] mode: cross-references examples against [docs/proofs.md] to output
       the JSON proof catalog. *)
@@ -21,47 +21,6 @@ let rec files path =
     |> List.concat_map (fun name -> files (Filename.concat path name))
   else if Filename.check_suffix path ".ht" || Filename.check_suffix path ".pg" then [path]
   else []
-
-(** Expands imports in-place in the source text, removing duplicates and repetitive headers.
-    Uses token byte offsets to preserve the original whitespace and layout as much as possible. *)
-let expand path =
-  let seen = Hashtbl.create 16 in
-  let rec visit active path =
-    let path = Unix.realpath path in
-    if List.mem path active then failwith ("import cycle: " ^ path);
-    if Hashtbl.mem seen path then "" else (
-      let source = read path in
-      let tokens = Source.lex ~file:path source in
-      let line_starts = ref [0] in
-      String.iteri (fun i c -> if c = '\n' then line_starts := (i+1) :: !line_starts) source;
-      let line_starts = Array.of_list (List.rev !line_starts) in
-      let offset (token : Source.token) = line_starts.(token.line - 1) + token.col - 1 in
-      let output = Buffer.create (String.length source) in
-      let copied = ref 0 in
-      Array.iteri (fun i (token : Source.token) ->
-        if token.text = "import" then (
-          let start = offset token in
-          Buffer.add_substring output source !copied (start - !copied);
-          let relative = tokens.(i+1).text in
-          let relative = String.sub relative 1 (String.length relative - 2) in
-          let target = if Filename.is_relative relative then
-            Filename.concat (Filename.dirname path) relative else relative in
-          Buffer.add_string output (visit (path :: active) target);
-          Buffer.add_char output '\n';
-          copied := offset tokens.(i+2) + 1)) tokens;
-      Buffer.add_substring output source !copied (String.length source - !copied);
-      Hashtbl.add seen path ();
-      Buffer.contents output)
-  in
-  (* Pre-validate imports using standard parser and filesystem rules *)
-  ignore (Source.load path);
-  visit [] path |> String.split_on_char '\n'
-  |> List.filter (fun line ->
-    let line = String.trim line in
-    line <> "// Checked proofs; prerequisites are imported by subject."
-    && line <> "// Trusted vocabulary, inference rules and explicit definitions.")
-  |> String.concat "\n"
-  |> String.trim
 
 let quote = Source.json_string
 
@@ -120,8 +79,5 @@ let () =
   else (
     print_endline "let files = [";
     List.iter (fun (path, source) ->
-      let source = if Filename.check_suffix path ".ht" then
-        expand (Filename.concat root (String.sub path 9 (String.length path - 9)))
-        else source in
       Printf.printf "  (%S, %S);\n" path source) sources;
     print_endline "]")

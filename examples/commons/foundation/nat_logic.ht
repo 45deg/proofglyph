@@ -1,50 +1,40 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Primitive universal quantification over numbers, sequences and binary functions.
+// Exists is defined using AllProp, AllNat and implication; its rules are proved.
+// The primitive implication rules are imported from logic.ht.
+
 import "peano.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Imp : Prop -> Prop -> Prop;
+symbol AllNat : (Nat -> Prop) -> Prop;
 
-// Logical or equality inference rule.
-axiom imp_elim (A B : Prop) : Prf (Imp A B) -> Prf A -> Prf B;
-
-// Logical or equality inference rule.
-axiom imp_intro (A B : Prop) : (Prf A -> Prf B) -> Prf (Imp A B);
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom AllNat : (Nat -> Prop) -> Prop;
-
-// Logical or equality inference rule.
 axiom all_nat_intro (P : Nat -> Prop) : (forall (n : Nat), Prf (P n)) -> Prf (AllNat P);
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom AllSeq : ((Nat -> Nat) -> Prop) -> Prop;
+symbol AllSeq : ((Nat -> Nat) -> Prop) -> Prop;
 
-// Logical or equality inference rule.
 axiom all_nat_elim (P : Nat -> Prop) : Prf (AllNat P) -> forall (n : Nat), Prf (P n);
 
-// Logical or equality inference rule.
 axiom all_seq_elim (P : (Nat -> Nat) -> Prop) : Prf (AllSeq P) -> forall (f : Nat -> Nat), Prf (P f);
 
-// Logical or equality inference rule.
 axiom all_seq_intro (P : (Nat -> Nat) -> Prop) : (forall (f : Nat -> Nat), Prf (P f)) -> Prf (AllSeq P);
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom AllBi : ((Nat -> Nat -> Nat) -> Prop) -> Prop;
+symbol AllBi : ((Nat -> Nat -> Nat) -> Prop) -> Prop;
 
-// Logical or equality inference rule.
 axiom all_bi_elim (P : (Nat -> Nat -> Nat) -> Prop) : Prf (AllBi P) -> forall (h : Nat -> Nat -> Nat), Prf
     (P h);
 
-// Logical or equality inference rule.
 axiom all_bi_intro (P : (Nat -> Nat -> Nat) -> Prop) : (forall (h : Nat -> Nat -> Nat), Prf (P h)) -> Prf
     (AllBi P);
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Exists : (Nat -> Prop) -> Prop;
-
-// Logical or equality inference rule.
-axiom exists_elim (P : Nat -> Prop) (C : Prop) : Prf (Exists P)
-  -> (forall (x : Nat), Prf (P x) -> Prf C) -> Prf C;
-
-// Logical or equality inference rule.
-axiom exists_intro (P : Nat -> Prop) (x : Nat) : Prf (P x) -> Prf (Exists P);
+// Existential quantification is defined by its continuation encoding.
+def Exists (P : Nat -> Prop) : Prop :=
+  AllProp (fun (C : Prop) => Imp (AllNat (fun (x : Nat) => Imp (P x) C)) C);
+theorem exists_intro (P : Nat -> Prop) (x : Nat) (h : Prf (P x)) : Prf (Exists P) :=
+  all_prop_intro (fun (C : Prop) => Imp (AllNat (fun (y : Nat) => Imp (P y) C)) C)
+    (fun (C : Prop) => imp_intro (AllNat (fun (y : Nat) => Imp (P y) C)) C
+      (fun (f : Prf (AllNat (fun (y : Nat) => Imp (P y) C))) =>
+        imp_elim (P x) C (all_nat_elim (fun (y : Nat) => Imp (P y) C) f x) h));
+theorem exists_elim (P : Nat -> Prop) (C : Prop) (h : Prf (Exists P))
+  (f : forall (x : Nat), Prf (P x) -> Prf C) : Prf C :=
+  imp_elim (AllNat (fun (x : Nat) => Imp (P x) C)) C
+    (all_prop_elim (fun (D : Prop) => Imp (AllNat (fun (x : Nat) => Imp (P x) D)) D) h C)
+    (all_nat_intro (fun (x : Nat) => Imp (P x) C)
+      (fun (x : Nat) => imp_intro (P x) C (f x)));

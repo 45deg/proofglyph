@@ -1,7 +1,10 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Inference rules of equality on the domain U.
+// Eq is predicate vocabulary; eq_refl is reflexivity and eq_subst is substitution.
+// Symmetry and transitivity are proved separately.
+
 import "quantifiers.ht";
 
-axiom Eq : U -> U -> Prop;
+symbol Eq : U -> U -> Prop;
 
 axiom eq_refl (a : U) : Prf (Eq a a);
 

@@ -32,7 +32,7 @@ type expr =
 type 'a parsed_declaration = {
   name : string;          (** Declared identifier name. *)
   typ : 'a;               (** Declared type expression. *)
-  body : 'a option;       (** Definition or proof term, or [None] for [axiom]. *)
+  body : 'a option;       (** Definition or proof term, or [None] for [axiom] / [symbol]. *)
   at : token;             (** Token pointing to the declaration keyword (for diagnostics). *)
 }
 type declaration = expr parsed_declaration
@@ -80,7 +80,7 @@ let lex ?file s =
   in loop 0 1 1 []
 
 (** Reserved keyword list. *)
-let reserved = ["axiom";"def";"theorem";"import";"forall";"fun";"Type";"Kind"]
+let reserved = ["axiom";"symbol";"def";"theorem";"import";"forall";"fun";"Type";"Kind"]
 
 (** Checks if a string is a valid non-keyword identifier. *)
 let is_name s = String.length s > 0 &&
@@ -169,12 +169,12 @@ let parse_items_with syntax ?file source =
         expect ";";
         declarations (Import(at,path)::acc))
       else (
-      if not (List.mem at.text ["axiom";"def";"theorem"]) then
-        error at "expected import, axiom, def, or theorem";
+      if not (List.mem at.text ["axiom";"symbol";"def";"theorem"]) then
+        error at "expected import, symbol, axiom, def, or theorem";
       let n = name () in
       let ps = parameters () in
       expect ":"; let result = term () in
-      let body = if at.text="axiom" then None else (
+      let body = if List.mem at.text ["axiom";"symbol"] then None else (
         expect ":="; let b = term () in
         Some (syntax.lambda_expr ps b)) in
       expect ";";
@@ -234,7 +234,19 @@ let load path = load_with default_syntax path
     - Scopes local variables from innermost outward to de Bruijn indices ([Term.Var i]).
     - Scopes global constants against prior declarations [globals] to constant indices ([Term.Const i]).
     - Rejects unknown names, forward references, and duplicate names. *)
-let resolve globals at expr =
+let resolve ?(definitions=[]) ?(budget=ref 1_000_000) ?(reduce=true) globals at expr =
+  let rec normal term =
+    match term with
+    | Term.App (f, x) ->
+        let f = normal f and x = normal x in
+        (match f with Term.Lam (_, body) ->
+            decr budget;
+            if !budget < 0 then error at "definition expansion budget exhausted";
+            normal (Term.instantiate body x)
+          | _ -> Term.App (f, x))
+    | Term.Pi (a, b) -> Term.Pi (normal a, normal b)
+    | Term.Lam (a, b) -> Term.Lam (normal a, normal b)
+    | term -> term in
   let rec go locals = function
     | Universe -> Term.Type | Top -> Term.Kind
     | Name n ->
@@ -244,11 +256,13 @@ let resolve globals at expr =
         in (match find 0 locals with
           | Some i -> Term.Var i
           | None -> (match List.assoc_opt n globals with
-            | Some i -> Term.Const i | None -> error at ("unknown name: " ^ n)))
+            | Some i -> (match List.assoc_opt n definitions with Some body -> body | None -> Term.Const i)
+            | None -> error at ("unknown name: " ^ n)))
     | Apply(f,x) -> Term.App(go locals f,go locals x)
     | Product(x,a,b) -> Term.Pi(go locals a,go (x::locals) b)
     | Lambda(x,a,b) -> Term.Lam(go locals a,go (Some x::locals) b)
-  in go [] expr
+  in let term = go [] expr in
+  if definitions = [] || not reduce then term else normal term
 
 (** Source mapping entry associating a byte range in the generated assembly with source location. *)
 type mapping = {
@@ -266,6 +280,7 @@ type compiled = {
   assembly : string;              (** Serialized .pg assembly instructions. *)
   names : string list;            (** Declared constant names in registration order. *)
   declarations : declaration list;(** Expanded declaration ASTs. *)
+  display_types : Term.t list;     (** Original named types; definitions expand during checking. *)
   sourcemap : mapping list;       (** Declaration-level source mappings. *)
 }
 
@@ -315,30 +330,49 @@ let annotate_assembly_error mappings message =
     @raise Error if verification fails (annotated with source location). *)
 let compile_declarations ?(fuel=1_000_000) declarations =
   let globals = ref [] in
+  let definitions = ref [] and display_types = ref [] in
+  let budget = ref fuel in
   let names = ref [] in
-  let output = Buffer.create 256 in
-  let mappings = ref [] in
+  let output = Buffer.create 256 and raw_output = Buffer.create 256 in
+  let mappings = ref [] and raw_mappings = ref [] in
   List.iteri (fun constant (d:declaration) ->
-    let start_byte = Buffer.length output in
+    let start_byte = Buffer.length output and raw_start = Buffer.length raw_output in
     if List.mem_assoc d.name !globals then error d.at ("duplicate declaration: " ^ d.name);
-    let typ = resolve !globals d.at d.typ in
+    display_types := resolve !globals d.at d.typ :: !display_types;
+    let typ = resolve ~definitions:!definitions ~budget !globals d.at d.typ in
     Buffer.add_string output (Proofglyph_language.Writer.encode typ);
+    Buffer.add_string raw_output (Proofglyph_language.Writer.encode
+      (resolve ~definitions:!definitions ~reduce:false !globals d.at d.typ));
     (match d.body with
-     | None -> Buffer.add_char output ':'
-     | Some b -> Buffer.add_string output (Proofglyph_language.Writer.encode (resolve !globals d.at b));
-         Buffer.add_char output '!');
+     | None -> Buffer.add_char output ':'; Buffer.add_char raw_output ':'
+     | Some b ->
+         let body = resolve ~definitions:!definitions ~budget !globals d.at b in
+         Buffer.add_string output (Proofglyph_language.Writer.encode body);
+         Buffer.add_char output '!';
+         Buffer.add_string raw_output (Proofglyph_language.Writer.encode
+           (resolve ~definitions:!definitions ~reduce:false !globals d.at b));
+         Buffer.add_char raw_output '!';
+         if d.at.text = "def" then definitions := (d.name, body) :: !definitions);
     let end_byte = Buffer.length output in
     mappings := {constant; name=d.name; file=d.at.file; line=d.at.line;
       column=d.at.col; start_byte; end_byte} :: !mappings;
+    raw_mappings := {constant; name=d.name; file=d.at.file; line=d.at.line;
+      column=d.at.col; start_byte=raw_start; end_byte=Buffer.length raw_output} :: !raw_mappings;
     Buffer.add_char output '\n';
+    Buffer.add_char raw_output '\n';
     globals := (d.name,constant)::!globals;
     names := d.name :: !names) declarations;
   let assembly = Buffer.contents output in
+  (* Check before beta reduction as well: an ill-typed erased argument must not
+     become accepted merely because compilation simplifies a redex. *)
+  (try Assembly.run (Kernel.create ~fuel ()) (Buffer.contents raw_output)
+   with Assembly.Error message ->
+     raise (Error (annotate_assembly_error (List.rev !raw_mappings) message)));
   (* Verify precisely the serialized output through the independent assembly reader and kernel *)
   (try Assembly.run (Kernel.create ~fuel ()) assembly
    with Assembly.Error message ->
      raise (Error (annotate_assembly_error (List.rev !mappings) message)));
-  {assembly; names=List.rev !names; declarations; sourcemap=List.rev !mappings}
+  {assembly; display_types=List.rev !display_types; names=List.rev !names; declarations; sourcemap=List.rev !mappings}
 
 (** Compiles source code from a string into verified assembly and source mappings. *)
 let compile ?fuel ?file source = compile_declarations ?fuel (parse ?file source)

@@ -1,14 +1,21 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definition of congruence; no congruence-specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "arithmetic.ht";
+import "nat_logic.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Cong : Nat -> Nat -> Nat -> Prop;
+def Cong (a b m : Nat) : Prop := Exists (fun (x : Nat) => Exists (fun (y : Nat)
+  => Eq (add a (mul m x)) (add b (mul m y))));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom cong_intro (a b m x y : Nat)
-  : Prf (Eq (add a (mul m x)) (add b (mul m y))) -> Prf (Cong a b m);
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom cong_elim (a b m : Nat) (P : Prop) : Prf (Cong a b m)
-  -> (forall (x y : Nat), Prf (Eq (add a (mul m x)) (add b (mul m y))) -> Prf P)
-  -> Prf P;
+theorem cong_intro (a b m x y : Nat)
+  (h : Prf (Eq (add a (mul m x)) (add b (mul m y)))) : Prf (Cong a b m)
+  := exists_intro (fun (x : Nat) => Exists (fun (y : Nat)
+    => Eq (add a (mul m x)) (add b (mul m y)))) x
+    (exists_intro (fun (y : Nat) => Eq (add a (mul m x)) (add b (mul m y))) y h);
+theorem cong_elim (a b m : Nat) (P : Prop) (h : Prf (Cong a b m))
+  (use : forall (x y : Nat), Prf (Eq (add a (mul m x)) (add b (mul m y))) -> Prf P) : Prf P
+  := exists_elim (fun (x : Nat) => Exists (fun (y : Nat)
+    => Eq (add a (mul m x)) (add b (mul m y)))) P h
+    (fun (x : Nat) (hx : Prf (Exists (fun (y : Nat)
+      => Eq (add a (mul m x)) (add b (mul m y)))))
+      => exists_elim (fun (y : Nat) => Eq (add a (mul m x)) (add b (mul m y))) P hx (use x));

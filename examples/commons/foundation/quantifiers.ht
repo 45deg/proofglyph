@@ -1,17 +1,28 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Primitive universal quantification over a domain U.
+// Existential quantification is a definition using AllProp, All and implication.
+// Its introduction and elimination rules are checked proofs.
+
 import "logic.ht";
 
-axiom U : Type;
+symbol U : Type;
 
-axiom Exists : (U -> Prop) -> Prop;
-
-axiom exists_intro (P : U -> Prop) (x : U) : Prf (P x) -> Prf (Exists P);
-
-axiom All : (U -> Prop) -> Prop;
+symbol All : (U -> Prop) -> Prop;
 
 axiom all_elim (P : U -> Prop) : Prf (All P) -> forall (x : U), Prf (P x);
 
 axiom all_intro (P : U -> Prop) : (forall (x : U), Prf (P x)) -> Prf (All P);
 
-axiom exists_elim (P : U -> Prop) (C : Prop) : Prf (Exists P)
-  -> (forall (x : U), Prf (P x) -> Prf C) -> Prf C;
+// Existential quantification is defined by its continuation encoding.
+def Exists (P : U -> Prop) : Prop :=
+  AllProp (fun (C : Prop) => Imp (All (fun (x : U) => Imp (P x) C)) C);
+theorem exists_intro (P : U -> Prop) (x : U) (h : Prf (P x)) : Prf (Exists P) :=
+  all_prop_intro (fun (C : Prop) => Imp (All (fun (y : U) => Imp (P y) C)) C)
+    (fun (C : Prop) => imp_intro (All (fun (y : U) => Imp (P y) C)) C
+      (fun (f : Prf (All (fun (y : U) => Imp (P y) C))) =>
+        imp_elim (P x) C (all_elim (fun (y : U) => Imp (P y) C) f x) h));
+theorem exists_elim (P : U -> Prop) (C : Prop) (h : Prf (Exists P))
+  (f : forall (x : U), Prf (P x) -> Prf C) : Prf C :=
+  imp_elim (All (fun (x : U) => Imp (P x) C)) C
+    (all_prop_elim (fun (D : Prop) => Imp (All (fun (x : U) => Imp (P x) D)) D) h C)
+    (all_intro (fun (x : U) => Imp (P x) C)
+      (fun (x : U) => imp_intro (P x) C (f x)));

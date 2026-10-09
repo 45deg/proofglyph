@@ -1,27 +1,37 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definitions of primality and coprimality; no predicate-specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "divisibility.ht";
 import "order.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Prime : Nat -> Prop;
+def Prime (p : Nat) : Prop := And (Lt (succ zero) p)
+  (AllNat (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p))));
+def Coprime (a b : Nat) : Prop := AllNat (fun (d : Nat)
+  => Imp (Divides d a) (Imp (Divides d b) (Eq d (succ zero))));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom prime_elim (p : Nat) (P : Prop) : Prf (Prime p)
-  -> (Prf (Lt (succ zero) p) -> (forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d
-    p))) -> Prf P) -> Prf P;
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Coprime : Nat -> Nat -> Prop;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom coprime_elim (a b : Nat) : Prf (Coprime a b)
-  -> forall (d : Nat), Prf (Divides d a) -> Prf (Divides d b) -> Prf (Eq d (succ zero));
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom prime_intro (p : Nat) : Prf (Lt (succ zero) p)
-  -> (forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p))) -> Prf (Prime p);
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom coprime_intro (a b : Nat)
-  : (forall (d : Nat), Prf (Divides d a) -> Prf (Divides d b) -> Prf (Eq d (succ zero))) -> Prf (Coprime a
-    b);
+theorem prime_elim (p : Nat) (P : Prop) (h : Prf (Prime p))
+  (use : Prf (Lt (succ zero) p) ->
+    (forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p))) -> Prf P) : Prf P
+  := use (and_left (Lt (succ zero) p)
+    (AllNat (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p)))) h)
+    (fun (d : Nat) (hd : Prf (Divides d p)) =>
+      imp_elim (Divides d p) (Or (Eq d (succ zero)) (Eq d p))
+        (all_nat_elim (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p)))
+          (and_right (Lt (succ zero) p)
+            (AllNat (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p)))) h) d) hd);
+theorem coprime_elim (a b : Nat) (h : Prf (Coprime a b)) (d : Nat)
+  (ha : Prf (Divides d a)) (hb : Prf (Divides d b)) : Prf (Eq d (succ zero))
+  := imp_elim (Divides d b) (Eq d (succ zero))
+    (imp_elim (Divides d a) (Imp (Divides d b) (Eq d (succ zero)))
+      (all_nat_elim (fun (d : Nat) => Imp (Divides d a) (Imp (Divides d b) (Eq d (succ zero)))) h d) ha) hb;
+theorem prime_intro (p : Nat) (hp : Prf (Lt (succ zero) p))
+  (hd : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p))) : Prf (Prime p)
+  := and_intro (Lt (succ zero) p)
+    (AllNat (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p)))) hp
+    (all_nat_intro (fun (d : Nat) => Imp (Divides d p) (Or (Eq d (succ zero)) (Eq d p)))
+      (fun (d : Nat) => imp_intro (Divides d p) (Or (Eq d (succ zero)) (Eq d p)) (hd d)));
+theorem coprime_intro (a b : Nat)
+  (h : forall (d : Nat), Prf (Divides d a) -> Prf (Divides d b) -> Prf (Eq d (succ zero))) : Prf (Coprime a b)
+  := all_nat_intro (fun (d : Nat) => Imp (Divides d a) (Imp (Divides d b) (Eq d (succ zero))))
+    (fun (d : Nat) => imp_intro (Divides d a) (Imp (Divides d b) (Eq d (succ zero)))
+      (fun (ha : Prf (Divides d a)) => imp_intro (Divides d b) (Eq d (succ zero)) (h d ha)));

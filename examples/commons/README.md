@@ -22,7 +22,7 @@ dune exec bin/main.exe -- check /tmp/addition.pg
 
 | 場所 | 内容 |
 | --- | --- |
-| [foundation/](foundation/) | 信頼する語彙、論理規則、Peano 公理、等式規則、述語と再帰関数の定義、集合の分出。分野別の16モジュール。 |
+| [foundation/](foundation/) | 信頼する語彙、論理規則、Peano 公理、等式規則、述語と再帰関数の定義、集合の分出。分野別の17モジュール。 |
 | [logic/propositional.ht](logic/propositional.ht) | 含意の合成、引数の交換・複製、連言・選言、対偶、構成的なド・モルガン則。 |
 | [logic/classical.ht](logic/classical.ht) | 排中律を使うド・モルガン則の方向。 |
 | [logic/quantifiers.ht](logic/quantifiers.ht) | 型 `U` 上の全称・存在量化、関数の合成。 |
@@ -30,7 +30,7 @@ dune exec bin/main.exe -- check /tmp/addition.pg
 | [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、137定理。 |
 | [sets/russell.ht](sets/russell.ht) | 分出から導く普遍集合の非存在。排中律・選択公理は不要。 |
 
-`foundation/` のファイルは `axiom` 宣言、残りは `theorem` 宣言を持ちます。`axiom` は記号や定義の方程式を登録するためにも使用し、数学的な補題を仮定する宣言は置いていません。各定理の詳細と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照してください。
+`foundation/` では、未定義の型・論理記号を `symbol`、信頼する論理・等式・Peano・再帰・分出の原理を `axiom`、演算や述語を `def`、定義から導く規則や方程式を `theorem` で記述します。`And`・`Or`・`Not`・`False`・`Exists`・`Divides`・`Prime`・順序・偶奇・合同式などの導入除去規則や、加算・乗算・累乗・和・二項係数などの方程式は証明済みです。再帰の公理は `recursion.ht` と `sums.ht` に明示し、Peano 公理だけから導出したとは主張しません。`symbol` もカーネル上では前提として数えます。各定理の詳細と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照してください。
 
 `import` は同じ実体ファイルを1度だけ読み込みます。名前空間は共通なので、型 `U` 上の `Eq`・量化と、自然数上の同名のシグネチャは別々に利用します。自然数の等式には `nat/basic.ht` を使用してください。
 

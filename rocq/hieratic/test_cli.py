@@ -16,6 +16,8 @@ def run(args, code=0):
 examples = sorted((ROOT.parent.parent / "examples").rglob("*.ht"))
 assert examples, "no example sources found"
 subprocess.run([str(ROOT / "_build" / "test_frontend"), *map(str, examples)], check=True)
+for example in examples:
+    run(["check", example, "--elaborate"])
 run([], 2)
 with tempfile.TemporaryDirectory(prefix="hieratic-") as tmp:
     directory = Path(tmp)

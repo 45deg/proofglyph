@@ -181,10 +181,16 @@ let () =
   if F.compile (Adapter.nat_of_int 0) true axiom <> None then failwith "zero fuel accepted";
   if F.compile fuel false [] <> Some ([], []) then failwith "empty program rejected";
   Array.iteri (fun i path -> if i > 0 then (
-    let ds = S.load path and raw = Adapter.load_raw path in
-    if F.desugar_program raw <> Adapter.declarations ds then failwith (path ^ ": imported desugaring mismatch");
-    let expected = reference ds in
-    if F.compile_surface_proofglyph fuel true raw <> Some (F.encode_proofglyph expected, List.map F.declared_type expected) then
-      failwith (path ^ ": surface compilation mismatch");
-    compare path ds)) Sys.argv;
+    (* New symbol/transparent-def syntax uses host elaboration. Check the emitted
+       bytes with the independent extracted codec and kernel, rather than claiming
+       that the legacy verified source parser implements this extension. *)
+    let compiled = S.compile_file path in
+    let bytes = Adapter.chars compiled.assembly in
+    match F.decode_proofglyph bytes, F.check_proofglyph fuel true bytes with
+    | Some declarations, Some signature ->
+        if signature <> List.map F.declared_type declarations then
+          failwith (path ^ ": elaborated signature mismatch");
+        if F.decode_proofglyph (F.encode_proofglyph declarations) <> Some declarations then
+          failwith (path ^ ": elaborated bytes failed roundtrip")
+    | _ -> failwith (path ^ ": elaborated bytes rejected"))) Sys.argv;
   Printf.printf "Frontend fixtures and %d imported .ht files passed\n" (Array.length Sys.argv - 1)

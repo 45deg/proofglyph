@@ -1,14 +1,28 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definition of rational representability of sqrt(2); no specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "order.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom RationalRootTwo : Prop;
+def RationalRootTwo : Prop := Exists (fun (a : Nat) => Exists (fun (b : Nat)
+  => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom rational_root_two_elim (P : Prop) : Prf RationalRootTwo
-  -> (forall (a b : Nat), Prf (Lt zero b) -> Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) -> Prf P)
-    -> Prf P;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom rational_root_two_intro (a b : Nat) : Prf (Lt zero b)
-  -> Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) -> Prf RationalRootTwo;
+theorem rational_root_two_elim (P : Prop) (h : Prf RationalRootTwo)
+  (use : forall (a b : Nat), Prf (Lt zero b)
+    -> Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) -> Prf P) : Prf P
+  := exists_elim (fun (a : Nat) => Exists (fun (b : Nat)
+    => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))))) P h
+    (fun (a : Nat) (ha : Prf (Exists (fun (b : Nat)
+      => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))))))
+      => exists_elim (fun (b : Nat)
+        => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) P ha
+        (fun (b : Nat) (hb : Prf (And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))))
+          => use a b
+            (and_left (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) hb)
+            (and_right (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) hb)));
+theorem rational_root_two_intro (a b : Nat) (hb : Prf (Lt zero b))
+  (he : Prf (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) : Prf RationalRootTwo
+  := exists_intro (fun (a : Nat) => Exists (fun (b : Nat)
+    => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))))) a
+    (exists_intro (fun (b : Nat)
+      => And (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b)))) b
+      (and_intro (Lt zero b) (Eq (mul a a) (mul (succ (succ zero)) (mul b b))) hb he));

@@ -69,16 +69,39 @@ assert.match(api.checkMapped(mapped.output).output, /c1 \[proven\]/);
 assert.equal(api.checkMapped('$0:').ok, false);
 const imported = api.compileAt('examples/commons/nat/addition.ht', sources.get('examples/commons/nat/addition.ht'));
 assert.match(api.checkMapped(imported.output).output, /add_comm \[proven\]/);
-assert.ok(JSON.parse(imported.sourcemap).mappings.every(m => m.file === 'examples/commons/nat/addition.ht'));
+assert.ok(JSON.parse(imported.sourcemap).mappings.some(m => m.file === 'examples/commons/foundation/logic.ht'));
+assert.ok(JSON.parse(imported.sourcemap).mappings.some(m => m.file === 'examples/commons/nat/addition.ht'));
 for (const m of JSON.parse(imported.sourcemap).mappings) {
-  assert.match(sources.get(m.file).split('\n')[m.line - 1], new RegExp(`^(axiom|def|theorem) ${m.name}\\b`));
+  assert.match(sources.get(m.file).split('\n')[m.line - 1], new RegExp(`^(symbol|axiom|def|theorem) ${m.name}\\b`));
 }
-for (const {path, source} of examples.filter(entry => entry.path.endsWith('.ht'))) {
-  assert.doesNotMatch(source, /^\s*import\s/m, path);
-  assert.equal(api.compileAt(path, source).ok, true, `${path} compiles without an import resolver`);
-}
-assert.match(api.compileAt('examples/a.ht', 'import \"commons/nat/addition.ht\";').output,
-  /^error: examples\/a\.ht:1:1: imports require compile_file or load$/);
+assert.match(sources.get('examples/commons/nat/addition.ht'), /^import /m);
+const projectPaths = api.projectFiles('examples/commons/nat/addition.ht', '[]');
+assert.equal(projectPaths.ok, true);
+const paths = JSON.parse(projectPaths.output);
+assert.equal(paths[0], 'examples/commons/nat/addition.ht');
+assert.equal(new Set(paths).size, paths.length);
+assert.ok(paths.includes('examples/commons/foundation/logic.ht'));
+const editedFiles = JSON.stringify([
+  {path: 'examples/edit/root.ht', source: 'import "./base.ht"; import "../edit/base.ht"; theorem id (x : A) : A := x;'},
+  {path: 'examples/edit/base.ht', source: '// Vocabulary for this example.\naxiom A : Type;'}
+]);
+const edited = api.compileProject('examples/edit/root.ht', editedFiles);
+assert.equal(edited.ok, true, edited.output);
+assert.match(api.checkMapped(edited.output).output, /id \[proven\]/);
+assert.deepEqual(JSON.parse(edited.sourcemap).mappings.map(m => [m.file, m.line]),
+  [['examples/edit/base.ht', 2], ['examples/edit/root.ht', 1]]);
+const broken = editedFiles.replace('axiom A : Type;', 'axiom B : Type;');
+assert.equal(api.compileProject('examples/edit/root.ht', broken).ok, false);
+assert.match(api.checkMapped(edited.output).output, /c1 \[proven\]/);
+const cycle = JSON.stringify([
+  {path: 'examples/cycle.ht', source: 'import "./cycle.ht";'}
+]);
+assert.match(api.compileProject('examples/cycle.ht', cycle).output, /import cycle/);
+assert.match(api.compileProject('examples/a.ht', JSON.stringify([
+  {path: 'examples/a.ht', source: 'import "/absolute.ht";'}
+])).output, /absolute imports/);
+assert.match(api.compileAt('examples/a.ht', 'import "missing.ht";').output,
+  /^error: examples\/a\.ht:1:1: source not found/);
 console.log('Sourcemap names, imported locations, errors and stale-map fallback passed.');
 
 const {toLatex} = require('./math.source.js');
@@ -89,7 +112,7 @@ for (const {path, source} of examples.filter(entry => entry.path.endsWith('.ht')
   const entries = JSON.parse(api.checkMapped(compiled.output).entries);
   assert.ok(entries.every(entry => ['assumption', 'proven'].includes(entry.origin)));
   for (const entry of entries.filter(entry => entry.origin === 'proven')) {
-    const {latex} = toLatex(entry.type);
+    const {latex} = toLatex(entry.surfaceType ?? entry.type);
     assert.ok(latex.length > 0, `${path}:${entry.name}`);
     assert.doesNotMatch(latex, /undefined|NaN/);
     if (katex) assert.ok(katex.renderToString(latex, {throwOnError: true, trust: false}).includes('<math'));
@@ -99,7 +122,7 @@ for (const {path, source} of examples.filter(entry => entry.path.endsWith('.ht')
 function formula(path, name) {
   const compiled = api.compileAt(path, sources.get(path));
   const entry = JSON.parse(api.checkMapped(compiled.output).entries).find(entry => entry.name === name);
-  return toLatex(entry.type).latex;
+  return toLatex(entry.surfaceType ?? entry.type).latex;
 }
 assert.equal(formula('examples/commons/nat/sums.ht', 'odd_sum_square'),
   String.raw`\forall n\in\mathbb{N},\; \sum_{k=0}^{n-1} \left(2 \cdot k+1\right) = {n}^2`);
@@ -114,6 +137,7 @@ assert.equal(toLatex(['pi', ['const', 'U'], ['pi', ['const', 'U'],
   String.raw`\forall x:U,\; \forall y:U,\; x \in y`);
 // Direct proofglyph edits lose mapped mathematical names, so retain generic kernel constants.
 const raw = JSON.parse(api.check('*:#0#0>#0$0\\!').entries);
+assert.ok(raw.every(entry => entry.surfaceType === undefined));
 assert.equal(toLatex(raw[1].type).latex, String.raw`\mathrm{c0} \to \mathrm{c0}`);
 console.log(`${renderedTypes} checked types formatted${katex ? ' and rendered with KaTeX' : ''}; formulas and binder scope passed.`);
 assert.equal(toLatex(['app', ['app', ['const', 'Imp'],
@@ -123,3 +147,13 @@ assert.equal(toLatex(['pi', ['const', 'Nat'], ['app', ['const', 'Prf'], ['const'
   String.raw`\forall n\in\mathbb{N},\; P`);
 assert.equal(toLatex(['pi', ['const', 'U'], ['app', ['app', ['const', 'Mem'], ['var', 0]], ['const', 'x']]]).latex,
   String.raw`\forall y:U,\; y \in x`);
+
+const divides = api.compileAt('examples/commons/foundation/divisibility.ht', sources.get('examples/commons/foundation/divisibility.ht'));
+const dividesEntries = JSON.parse(api.checkMapped(divides.output).entries);
+assert.equal(dividesEntries.find(entry => entry.name === 'Divides').origin, 'proven');
+assert.equal(dividesEntries.find(entry => entry.name === 'divides_elim').origin, 'proven');
+assert.equal(dividesEntries.find(entry => entry.name === 'divides_intro').origin, 'proven');
+assert.notDeepEqual(dividesEntries.find(entry => entry.name === 'divides_elim').type,
+  dividesEntries.find(entry => entry.name === 'divides_elim').surfaceType);
+assert.equal(api.compileAt('examples/erased.ht', 'symbol A : Type; symbol B : Type; symbol a : A; def id (x : A) : A := x; theorem bad : A := (fun (x : B) => a) a;').ok, false);
+console.log('Defined predicates, proved rules, surface types and erased-argument rejection passed.');

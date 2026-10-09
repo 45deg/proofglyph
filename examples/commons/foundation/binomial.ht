@@ -1,32 +1,45 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definitions of binomial coefficients, diagonal sums and convolution.
+// Their equations are proved from sequence/function recursion and reflexivity.
+
 import "arithmetic.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom choose : Nat -> Nat -> Nat;
+def choose_base (k : Nat) : Nat := nat_rec (succ zero) (fun (i r : Nat) => zero) k;
+def choose_step (n : Nat) (previous : Nat -> Nat) (k : Nat) : Nat
+  := nat_rec (succ zero) (fun (j r : Nat) => add (previous j) (previous (succ j))) k;
+def choose (n k : Nat) : Nat := nat_rec_seq choose_base choose_step n k;
+def diagonal_base (h : Nat -> Nat -> Nat) : Nat := h zero zero;
+def diagonal_step (n : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) : Nat
+  := add (previous (fun (i j : Nat) => h i (succ j))) (h (succ n) zero);
+def diagonal (n : Nat) (h : Nat -> Nat -> Nat) : Nat
+  := nat_rec_diagonal diagonal_base diagonal_step n h;
+def convolution (n : Nat) (f g : Nat -> Nat) : Nat
+  := diagonal n (fun (i j : Nat) => mul (choose n i) (mul (f i) (g j)));
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom convolution : Nat -> (Nat -> Nat) -> (Nat -> Nat) -> Nat;
-
-// Primitive-recursive defining equation; not an arithmetic lemma.
-axiom choose_pascal (n k : Nat) : Prf (Eq (choose (succ n) (succ k)) (add (choose n k) (choose n (succ
-    k))));
-
-// Primitive-recursive defining equation; not an arithmetic lemma.
-axiom choose_zero_column (n : Nat) : Prf (Eq (choose n zero) (succ zero));
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom diagonal : Nat -> (Nat -> Nat -> Nat) -> Nat;
-
-// Definition by an explicit binomial-weighted diagonal sum.
-axiom convolution_definition (n : Nat) (f g : Nat -> Nat)
-  : Prf (Eq (convolution n f g) (diagonal n (fun (i j : Nat) => mul (choose n i) (mul (f i) (g j)))));
-
-// Primitive-recursive defining equation; not an arithmetic lemma.
-axiom diagonal_succ (n : Nat) (h : Nat -> Nat -> Nat) : Prf (Eq (diagonal (succ n) h) (add (diagonal n (fun
-    (i j : Nat) => h i (succ j))) (h (succ n) zero)));
-
-// Primitive-recursive defining equation; not an arithmetic lemma.
-axiom choose_zero_row (k : Nat) : Prf (Eq (choose zero (succ k)) zero);
-
-// Primitive-recursive defining equation; not an arithmetic lemma.
-axiom diagonal_zero (h : Nat -> Nat -> Nat) : Prf (Eq (diagonal zero h) (h zero zero));
+theorem choose_pascal (n k : Nat)
+  : Prf (Eq (choose (succ n) (succ k)) (add (choose n k) (choose n (succ k))))
+  := rec_eq_trans (choose (succ n) (succ k)) (choose_step n (choose n) (succ k))
+    (add (choose n k) (choose n (succ k)))
+    (nat_rec_seq_succ choose_base choose_step n (succ k))
+    (nat_rec_succ (succ zero) (fun (j r : Nat) => add (choose n j) (choose n (succ j))) k);
+theorem choose_zero_column (n : Nat) : Prf (Eq (choose n zero) (succ zero))
+  := nat_induction (fun (n : Nat) => Eq (choose n zero) (succ zero))
+    (rec_eq_trans (choose zero zero) (choose_base zero) (succ zero)
+      (nat_rec_seq_zero choose_base choose_step zero)
+      (nat_rec_zero (succ zero) (fun (i r : Nat) => zero)))
+    (fun (n : Nat) (ih : Prf (Eq (choose n zero) (succ zero)))
+      => rec_eq_trans (choose (succ n) zero) (choose_step n (choose n) zero) (succ zero)
+        (nat_rec_seq_succ choose_base choose_step n zero)
+        (nat_rec_zero (succ zero) (fun (j r : Nat) => add (choose n j) (choose n (succ j))))) n;
+theorem choose_zero_row (k : Nat) : Prf (Eq (choose zero (succ k)) zero)
+  := rec_eq_trans (choose zero (succ k)) (choose_base (succ k)) zero
+    (nat_rec_seq_zero choose_base choose_step (succ k))
+    (nat_rec_succ (succ zero) (fun (i r : Nat) => zero) k);
+theorem diagonal_succ (n : Nat) (h : Nat -> Nat -> Nat)
+  : Prf (Eq (diagonal (succ n) h)
+      (add (diagonal n (fun (i j : Nat) => h i (succ j))) (h (succ n) zero)))
+  := nat_rec_diagonal_succ diagonal_base diagonal_step n h;
+theorem diagonal_zero (h : Nat -> Nat -> Nat) : Prf (Eq (diagonal zero h) (h zero zero))
+  := nat_rec_diagonal_zero diagonal_base diagonal_step h;
+theorem convolution_definition (n : Nat) (f g : Nat -> Nat)
+  : Prf (Eq (convolution n f g) (diagonal n (fun (i j : Nat) => mul (choose n i) (mul (f i) (g j)))))
+  := eq_refl (convolution n f g);

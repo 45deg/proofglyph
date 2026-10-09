@@ -1,12 +1,14 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definition of divisibility; no predicate-specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "arithmetic.ht";
+import "nat_logic.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Divides : Nat -> Nat -> Prop;
+def Divides (d a : Nat) : Prop := Exists (fun (k : Nat) => Eq a (mul d k));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom divides_elim (d a : Nat) (P : Prop) : Prf (Divides d a)
-  -> (forall (k : Nat), Prf (Eq a (mul d k)) -> Prf P) -> Prf P;
+theorem divides_elim (d a : Nat) (P : Prop) (h : Prf (Divides d a))
+  (use : forall (k : Nat), Prf (Eq a (mul d k)) -> Prf P) : Prf P
+  := exists_elim (fun (k : Nat) => Eq a (mul d k)) P h use;
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom divides_intro (d a k : Nat) : Prf (Eq a (mul d k)) -> Prf (Divides d a);
+theorem divides_intro (d a k : Nat) (h : Prf (Eq a (mul d k))) : Prf (Divides d a)
+  := exists_intro (fun (k : Nat) => Eq a (mul d k)) k h;

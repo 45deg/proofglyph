@@ -1,22 +1,19 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Definitions of parity; no parity-specific axioms.
+// Definitions are expanded by Hieratic; every theorem is checked by the kernel.
+
 import "arithmetic.ht";
+import "nat_logic.ht";
 
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Even : Nat -> Prop;
+def Even (n : Nat) : Prop := Exists (fun (k : Nat) => Eq n (add k k));
+def Odd (n : Nat) : Prop := Exists (fun (k : Nat) => Eq n (succ (add k k)));
 
-// Introduction/elimination rule for the explicit predicate definition.
-axiom even_elim (n : Nat) (P : Prop) : Prf (Even n)
-  -> (forall (k : Nat), Prf (Eq n (add k k)) -> Prf P) -> Prf P;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom even_intro (n k : Nat) : Prf (Eq n (add k k)) -> Prf (Even n);
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Odd : Nat -> Prop;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom odd_elim (n : Nat) (P : Prop) : Prf (Odd n)
-  -> (forall (k : Nat), Prf (Eq n (succ (add k k))) -> Prf P) -> Prf P;
-
-// Introduction/elimination rule for the explicit predicate definition.
-axiom odd_intro (n k : Nat) : Prf (Eq n (succ (add k k))) -> Prf (Odd n);
+theorem even_elim (n : Nat) (P : Prop) (h : Prf (Even n))
+  (use : forall (k : Nat), Prf (Eq n (add k k)) -> Prf P) : Prf P
+  := exists_elim (fun (k : Nat) => Eq n (add k k)) P h use;
+theorem even_intro (n k : Nat) (h : Prf (Eq n (add k k))) : Prf (Even n)
+  := exists_intro (fun (k : Nat) => Eq n (add k k)) k h;
+theorem odd_elim (n : Nat) (P : Prop) (h : Prf (Odd n))
+  (use : forall (k : Nat), Prf (Eq n (succ (add k k))) -> Prf P) : Prf P
+  := exists_elim (fun (k : Nat) => Eq n (succ (add k k))) P h use;
+theorem odd_intro (n k : Nat) (h : Prf (Eq n (succ (add k k)))) : Prf (Odd n)
+  := exists_intro (fun (k : Nat) => Eq n (succ (add k k))) k h;

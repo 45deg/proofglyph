@@ -1,4 +1,6 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Axiom of classical logic: excluded middle (A or not A).
+// This extends the intuitionistic rules imported from logic.ht.
+
 import "logic.ht";
 
 axiom excluded_middle (A : Prop) : Prf (Or A (Not A));

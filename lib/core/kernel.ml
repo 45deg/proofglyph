@@ -60,7 +60,7 @@ let rec normal k t =
     Normalizes both sides to full β-normal form and performs structural syntactic comparison.
     Since de Bruijn indices are used, α-equivalence corresponds to syntactic equality.
     Note: neither η-equivalence nor constant unfolding is supported. *)
-let equal k a b = normal k a = normal k b
+let equal k a b = a = b || normal k a = normal k b
 
 (** Type inference for term [t] under local context [ctx].
     Enforces LF / λΠ typing rules:

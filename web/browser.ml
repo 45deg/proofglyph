@@ -10,6 +10,8 @@ open Js_of_ocaml
     Exposes the following API on the global [window.proofglyph] object:
     - [examples]: Bundled example file list (JSON array).
     - [compileAt(path, source)]: Compiles source with virtual file path, returning assembly and sourcemap.
+    - [compileProject(path, filesJSON)]: Compiles bundled and edited files with imports.
+    - [projectFiles(path, filesJSON)]: Lists the entry file and its transitive imports.
     - [checkMapped(source)]: Verifies assembly using declaration names if it matches the last compile output.
     - [check(source)]: Verifies assembly without source mapping. *)
 
@@ -35,7 +37,7 @@ let last_compiled : Source.compiled option ref = ref None
 
 (** Verifies .pg assembly and formats the output string.
     If [mappings] are provided, constant indices are replaced with original declaration names. *)
-let check ?(mappings=[]) source =
+let check ?(mappings=[]) ?(display_types=[]) source =
   let kernel = Kernel.create () in
   (try Assembly.run kernel source with Assembly.Error message ->
     raise (Assembly.Error (Source.annotate_assembly_error mappings message)));
@@ -55,7 +57,9 @@ let check ?(mappings=[]) source =
   let entries_json = "[" ^ String.concat "," (List.mapi (fun i (entry : Kernel.entry) ->
     "{\"name\":" ^ Source.json_string (names i) ^ ",\"origin\":"
     ^ Source.json_string (match entry.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
-    ^ ",\"type\":" ^ term_json entry.typ ^ "}") entries) ^ "]" in
+    ^ ",\"type\":" ^ term_json entry.typ
+    ^ (match List.nth_opt display_types i with None -> "" | Some typ ->
+      ",\"surfaceType\":" ^ term_json typ) ^ "}") entries) ^ "]" in
   List.iteri (fun i (entry : Kernel.entry) ->
     Printf.bprintf output "%s [%s] : %s\n" (names i)
       (match entry.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
@@ -67,18 +71,65 @@ let check ?(mappings=[]) source =
 
 (** Verifies assembly using declaration names if it exactly matches the last compiled output. *)
 let check_mapped source =
-  let mappings = match !last_compiled with
-    | Some compiled when compiled.assembly = source -> compiled.sourcemap
-    | _ -> [] in
-  check ~mappings source
+  let mappings, display_types = match !last_compiled with
+    | Some compiled when compiled.assembly = source -> compiled.sourcemap, compiled.display_types
+    | _ -> [], [] in
+  check ~mappings ~display_types source
 
-(** Compiles source under virtual path [path].
-    Rejects import statements because the browser environment lacks a filesystem (requires expanded sources). *)
-let compile_at path source =
+(** Normalize virtual paths without consulting the host filesystem. *)
+let normalize path =
+  if not (Filename.is_relative path) then raise (Source.Error "absolute paths are not supported");
+  let rec fold stack = function
+    | [] -> String.concat "/" (List.rev stack)
+    | "" :: rest | "." :: rest -> fold stack rest
+    | ".." :: rest -> (match stack with
+        | [] -> raise (Source.Error "import path escapes the virtual workspace")
+        | _ :: tail -> fold tail rest)
+    | part :: rest -> fold (part :: stack) rest in
+  fold [] (String.split_on_char '/' path)
+
+let project_files json =
+  let array = Js.to_array (Js.Unsafe.coerce (Js.Unsafe.meth_call Js._JSON "parse" [|Js.Unsafe.inject (Js.string json)|])) in
+  Array.to_list array |> List.map (fun entry ->
+    let field name = Js.to_string (Js.Unsafe.get entry name) in
+    normalize (field "path"), field "source")
+
+(** Resolve imports using bundled files plus edited sources. Keep original locations. *)
+let load_project path edits =
+  let files = Hashtbl.create 64 in
+  List.iter (fun (path, source) -> Hashtbl.replace files (normalize path) source) Examples_data.files;
+  List.iter (fun (path, source) -> Hashtbl.replace files path source) edits;
+  let seen = Hashtbl.create 16 and paths = ref [] in
+  let rec visit active at path =
+    let report message = match at with
+      | Some token -> Source.error token message
+      | None -> raise (Source.Error (path ^ ": " ^ message)) in
+    let path = try normalize path with Source.Error message -> report message in
+    if List.mem path active then report ("import cycle: " ^ String.concat " -> " (List.rev (path :: active)));
+    if Hashtbl.mem seen path then [] else (
+      let source = match Hashtbl.find_opt files path with
+        | Some source -> source | None -> report ("source not found: " ^ path) in
+      paths := path :: !paths;
+      let declarations = Source.parse_items ~file:path source |> List.concat_map (function
+        | Source.Declaration declaration -> [declaration]
+        | Source.Import (token, relative) ->
+            if not (Filename.is_relative relative) then report "absolute imports are not supported";
+            visit (path :: active) (Some token) (Filename.concat (Filename.dirname path) relative)) in
+      Hashtbl.add seen path ();
+      declarations) in
+  let declarations = visit [] None path in
+  declarations, List.rev !paths
+
+let compile_project path edits =
   last_compiled := None;
-  let compiled = Source.compile ~file:path source in
+  let declarations, _ = load_project path edits in
+  let compiled = Source.compile_declarations declarations in
   last_compiled := Some compiled;
   response ~sourcemap:(Source.sourcemap_json compiled) true compiled.assembly
+
+let compile_at path source =
+  last_compiled := None;
+  compile_project path [normalize path, source]
 
 (** Serialized JSON array of bundled example files. *)
 let examples_json =
@@ -90,6 +141,12 @@ let () =
   Js.export "proofglyph" (Js.Unsafe.obj [|
     "examples", Js.Unsafe.inject (Js.string examples_json);
     "compileAt", Js.Unsafe.inject (Js.wrap_callback (fun path input -> protect (compile_at (Js.to_string path)) input));
+    "compileProject", Js.Unsafe.inject (Js.wrap_callback (fun path input ->
+      protect (fun json -> last_compiled := None; compile_project (Js.to_string path) (project_files json)) input));
+    "projectFiles", Js.Unsafe.inject (Js.wrap_callback (fun path input ->
+      protect (fun json ->
+        let _, paths = load_project (Js.to_string path) (project_files json) in
+        response true ("[" ^ String.concat "," (List.map Source.json_string paths) ^ "]")) input));
     "checkMapped", Js.Unsafe.inject (Js.wrap_callback (protect check_mapped));
-    "check", Js.Unsafe.inject (Js.wrap_callback (protect (check ~mappings:[])))
+    "check", Js.Unsafe.inject (Js.wrap_callback (protect (check ~mappings:[] ~display_types:[])))
   |])

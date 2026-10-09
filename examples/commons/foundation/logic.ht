@@ -1,32 +1,52 @@
-// Trusted vocabulary, inference rules and explicit definitions.
+// Primitive logical principles: implication and universal quantification over propositions.
+// And, Or, False and Not use Church encodings. All their inference rules below
+// are checked proofs, rather than additional axioms. Excluded middle is separate.
+// symbol declares vocabulary; axiom declares a trusted principle.
 
-axiom Prop : Type;
+symbol Prop : Type;
+symbol Prf : Prop -> Type;
+symbol Imp : Prop -> Prop -> Prop;
+axiom imp_intro (A B : Prop) : (Prf A -> Prf B) -> Prf (Imp A B);
+axiom imp_elim (A B : Prop) : Prf (Imp A B) -> Prf A -> Prf B;
+symbol AllProp : (Prop -> Prop) -> Prop;
+axiom all_prop_intro (P : Prop -> Prop) : (forall (A : Prop), Prf (P A)) -> Prf (AllProp P);
+axiom all_prop_elim (P : Prop -> Prop) : Prf (AllProp P) -> forall (A : Prop), Prf (P A);
 
-axiom Prf : Prop -> Type;
+def And (A B : Prop) : Prop := AllProp (fun (C : Prop) => Imp (Imp A (Imp B C)) C);
+theorem and_intro (A B : Prop) (a : Prf A) (b : Prf B) : Prf (And A B) :=
+  all_prop_intro (fun (C : Prop) => Imp (Imp A (Imp B C)) C)
+    (fun (C : Prop) => imp_intro (Imp A (Imp B C)) C
+      (fun (f : Prf (Imp A (Imp B C))) => imp_elim B C (imp_elim A (Imp B C) f a) b));
+theorem and_left (A B : Prop) (h : Prf (And A B)) : Prf A :=
+  imp_elim (Imp A (Imp B A)) A
+    (all_prop_elim (fun (C : Prop) => Imp (Imp A (Imp B C)) C) h A)
+    (imp_intro A (Imp B A) (fun (a : Prf A) => imp_intro B A (fun (b : Prf B) => a)));
+theorem and_right (A B : Prop) (h : Prf (And A B)) : Prf B :=
+  imp_elim (Imp A (Imp B B)) B
+    (all_prop_elim (fun (C : Prop) => Imp (Imp A (Imp B C)) C) h B)
+    (imp_intro A (Imp B B) (fun (a : Prf A) => imp_intro B B (fun (b : Prf B) => b)));
 
-axiom And : Prop -> Prop -> Prop;
+def Or (A B : Prop) : Prop := AllProp (fun (C : Prop) => Imp (Imp A C) (Imp (Imp B C) C));
+theorem or_elim (A B C : Prop) (h : Prf (Or A B))
+  (left : Prf A -> Prf C) (right : Prf B -> Prf C) : Prf C :=
+  imp_elim (Imp B C) C
+    (imp_elim (Imp A C) (Imp (Imp B C) C)
+      (all_prop_elim (fun (D : Prop) => Imp (Imp A D) (Imp (Imp B D) D)) h C)
+      (imp_intro A C left)) (imp_intro B C right);
+theorem or_left (A B : Prop) (a : Prf A) : Prf (Or A B) :=
+  all_prop_intro (fun (C : Prop) => Imp (Imp A C) (Imp (Imp B C) C))
+    (fun (C : Prop) => imp_intro (Imp A C) (Imp (Imp B C) C)
+      (fun (left : Prf (Imp A C)) => imp_intro (Imp B C) C
+        (fun (right : Prf (Imp B C)) => imp_elim A C left a)));
+theorem or_right (A B : Prop) (b : Prf B) : Prf (Or A B) :=
+  all_prop_intro (fun (C : Prop) => Imp (Imp A C) (Imp (Imp B C) C))
+    (fun (C : Prop) => imp_intro (Imp A C) (Imp (Imp B C) C)
+      (fun (left : Prf (Imp A C)) => imp_intro (Imp B C) C
+        (fun (right : Prf (Imp B C)) => imp_elim B C right b)));
 
-axiom and_intro (A B : Prop) : Prf A -> Prf B -> Prf (And A B);
-
-axiom and_left (A B : Prop) : Prf (And A B) -> Prf A;
-
-axiom and_right (A B : Prop) : Prf (And A B) -> Prf B;
-
-axiom Or : Prop -> Prop -> Prop;
-
-axiom or_elim (A B C : Prop) : Prf (Or A B)
-  -> (Prf A -> Prf C) -> (Prf B -> Prf C) -> Prf C;
-
-axiom Not : Prop -> Prop;
-
-axiom False : Prop;
-
-axiom not_intro (A : Prop) : (Prf A -> Prf False) -> Prf (Not A);
-
-axiom not_elim (A : Prop) : Prf (Not A) -> Prf A -> Prf False;
-
-axiom or_left (A B : Prop) : Prf A -> Prf (Or A B);
-
-axiom or_right (A B : Prop) : Prf B -> Prf (Or A B);
-
-axiom false_elim (A : Prop) : Prf False -> Prf A;
+def False : Prop := AllProp (fun (C : Prop) => C);
+theorem false_elim (A : Prop) (h : Prf False) : Prf A :=
+  all_prop_elim (fun (C : Prop) => C) h A;
+def Not (A : Prop) : Prop := Imp A False;
+theorem not_intro (A : Prop) (f : Prf A -> Prf False) : Prf (Not A) := imp_intro A False f;
+theorem not_elim (A : Prop) (h : Prf (Not A)) (a : Prf A) : Prf False := imp_elim A False h a;

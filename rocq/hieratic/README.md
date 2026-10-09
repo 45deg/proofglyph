@@ -13,8 +13,8 @@ make -C rocq/hieratic
 make -C rocq/hieratic test
 
 # 抽出した CLI の実行
-rocq/hieratic/_build/hieratic check examples/basics.ht
-rocq/hieratic/_build/hieratic compile examples/basics.ht -o /tmp/basics.pg
+rocq/hieratic/_build/hieratic check examples/basics.ht --elaborate
+rocq/hieratic/_build/hieratic compile examples/basics.ht --elaborate -o /tmp/basics.pg
 rocq/hieratic/_build/hieratic check-proofglyph /tmp/basics.pg
 ```
 
@@ -25,6 +25,10 @@ rocq/hieratic/_build/hieratic check-proofglyph /tmp/basics.pg
 - **構文解析・import 展開の正しさ**: バイト列の字句・構文解析、および import 展開が、独立した仕様と同値であること。
 - **名前解決・変換の健全性と完全性**: 名前付き構文から de Bruijn インデックスへの変換が一意であり、宣言順・種類・スコープが保存されること。
 - **.pg 出力の往復性と再検査性**: 変換された宣言列を `.pg` バイト列に符号化・復号する往復性（roundtrip）と、生成された `.pg` が独立に再検査できること。
+
+## 新しい Hieratic 拡張
+
+通常の OCaml フロントエンドは `symbol` と透明な `def` をサポートします。これらは上記の形式証明の対象ではありません。`--elaborate` は通常のフロントエンドで `.pg` を生成し、抽出された独立の codec・型検査器で再検査するモードです。既存の証明済み解析・名前解決経路はこのモードでは使いません。フラグなしの経路は従来の構文と不透明定義の意味を保持します。
 
 ## 信頼境界と制限
 

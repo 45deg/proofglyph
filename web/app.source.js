@@ -10,6 +10,90 @@ const compileButton = document.getElementById("compile");
 const checkButton = document.getElementById("check");
 let selectedNames = new Set();
 
+const fileTabs = document.getElementById("file-tabs");
+const filePath = document.getElementById("file-path");
+const filePanel = document.getElementById("file-panel");
+const sources = new Map([[sourcePath, hieratic.value]]);
+const editorStates = new Map();
+let activePath = sourcePath;
+let openPaths = [sourcePath];
+
+function saveFile() {
+  sources.set(activePath, hieratic.value);
+  editorStates.set(activePath, {
+    start: hieratic.selectionStart, end: hieratic.selectionEnd,
+    top: hieratic.scrollTop, left: hieratic.scrollLeft
+  });
+}
+function projectJSON() {
+  return JSON.stringify([...sources].map(([path, source]) => ({path, source})));
+}
+function selectFile(path, focus = false, persist = true) {
+  if (persist) saveFile();
+  activePath = path;
+  hieratic.value = sources.get(path) ?? "";
+  const state = editorStates.get(path);
+  hieratic.setSelectionRange(state?.start ?? 0, state?.end ?? 0);
+  hieratic.scrollTop = state?.top ?? 0;
+  hieratic.scrollLeft = state?.left ?? 0;
+  filePath.textContent = path;
+  for (const tab of fileTabs.children) {
+    const selected = tab.dataset.path === path;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    if (selected) {
+      filePanel.setAttribute("aria-labelledby", tab.id);
+      hieratic.setAttribute("aria-label", `Hieratic: ${path}`);
+      if (focus) {
+        tab.focus();
+        tab.scrollIntoView({block: "nearest", inline: "nearest"});
+      }
+    }
+  }
+}
+function renderFileTabs() {
+  fileTabs.replaceChildren();
+  openPaths.forEach((path, index) => {
+    const tab = document.createElement("button");
+    tab.id = `file-tab-${index}`;
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-controls", "file-panel");
+    tab.dataset.path = path;
+    tab.textContent = path.split("/").pop();
+    tab.title = path === sourcePath ? `${path} (entry file)` : path;
+    tab.addEventListener("click", () => selectFile(path));
+    tab.addEventListener("keydown", event => {
+      let next;
+      if (event.key === "ArrowRight") next = (index + 1) % openPaths.length;
+      if (event.key === "ArrowLeft") next = (index + openPaths.length - 1) % openPaths.length;
+      if (event.key === "Home") next = 0;
+      if (event.key === "End") next = openPaths.length - 1;
+      if (next === undefined) return;
+      event.preventDefault();
+      selectFile(openPaths[next], true);
+    });
+    fileTabs.append(tab);
+  });
+  selectFile(activePath, false, false);
+}
+function refreshFiles() {
+  saveFile();
+  const loaded = globalThis.proofglyph.projectFiles(sourcePath, projectJSON());
+  // Keep existing tabs available when an edited file has a syntax/import error.
+  if (loaded.ok) openPaths = JSON.parse(loaded.output);
+  if (!openPaths.includes(activePath)) activePath = sourcePath;
+  renderFileTabs();
+}
+function openProject(path, source) {
+  saveFile();
+  sourcePath = path;
+  activePath = path;
+  openPaths = [path];
+  sources.set(path, source);
+  hieratic.value = source;
+  refreshFiles();
+}
+
 // Native textarea resizing sets an inline width. Let the grid follow that width
 // so a resized editor does not overlap the adjacent pane.
 const editorResize = new ResizeObserver(entries => {
@@ -23,7 +107,7 @@ const editorResize = new ResizeObserver(entries => {
 editorResize.observe(hieratic);
 editorResize.observe(proofglyph);
 
-const tabs = [...document.querySelectorAll('[role="tab"]')];
+const tabs = [...document.querySelectorAll('.app-header [role="tab"]')];
 function selectTab(id, focus = false) {
   const active = tabs.find(tab => tab.getAttribute("aria-controls") === id);
   if (!active) return;
@@ -64,8 +148,7 @@ selectHashTab();
 document.querySelectorAll("[data-snippet]").forEach(button => {
   button.addEventListener("click", () => {
     if (!globalThis.proofglyph) return;
-    hieratic.value = document.getElementById(button.dataset.snippet).textContent;
-    sourcePath = "examples/browser.ht";
+    openProject("examples/browser.ht", document.getElementById(button.dataset.snippet).textContent);
     selectedNames = new Set();
     example.value = "";
     compile();
@@ -95,7 +178,7 @@ function showProofs(entries) {
     const formula = document.createElement("div");
     formula.className = "formula";
     formula.tabIndex = 0;
-    const {latex} = globalThis.proofglyphMath.toLatex(entry.type);
+    const {latex} = globalThis.proofglyphMath.toLatex(entry.surfaceType ?? entry.type);
     if (globalThis.katex) {
       try { globalThis.katex.render(latex, formula, {displayMode: true, output: "htmlAndMathml", throwOnError: true, trust: false}); }
       catch (_) { formula.textContent = latex; }
@@ -126,7 +209,8 @@ function check() {
 
 function compile() {
   sourcemap = null;
-  const compiled = globalThis.proofglyph.compileAt(sourcePath, hieratic.value);
+  refreshFiles();
+  const compiled = globalThis.proofglyph.compileProject(sourcePath, projectJSON());
   if (!compiled.ok) {
     proofglyph.value = "";
     showText(compiled.output);
@@ -139,6 +223,7 @@ function compile() {
 }
 
 hieratic.addEventListener("input", () => {
+  saveFile();
   sourcemap = null;
   result.replaceChildren();
   status.textContent = "Hieratic の入力が変更されました。「コンパイルして検査」を実行してください。";
@@ -151,8 +236,7 @@ proofglyph.addEventListener("input", () => {
 });
 async function initialize() {
 if (globalThis.proofglyph) {
-  const sources = new Map(JSON.parse(globalThis.proofglyph.examples)
-    .map(entry => [entry.path, entry.source]));
+  for (const {path, source} of JSON.parse(globalThis.proofglyph.examples)) sources.set(path, source);
   compileButton.disabled = false;
   checkButton.disabled = false;
   compileButton.addEventListener("click", compile);
@@ -206,13 +290,11 @@ if (globalThis.proofglyph) {
     selectedNames = new Set(catalog.proofs[name].filter(match => match.path === path).map(match => match.name));
     if (path.endsWith(".pg")) {
       sourcemap = null;
-      hieratic.value = "";
-      sourcePath = "examples/browser.ht";
+      openProject("examples/browser.ht", "");
       proofglyph.value = source;
       check();
     } else {
-      sourcePath = path;
-      hieratic.value = source;
+      openProject(path, source);
       compile();
     }
   });

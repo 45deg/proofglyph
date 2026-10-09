@@ -109,8 +109,15 @@ let () =
   test "reject forward source name" (fun () -> reject_source "axiom x : A; axiom A : Type;");
   test "reject duplicate names" (fun () -> reject_source "axiom A : Type; axiom A : Type;");
   test "reject self reference" (fun () -> reject_source "axiom A : Type; def f : A := f;");
-  test "opaque definitions do not reduce" (fun () ->
-    reject_source "axiom A : Type; axiom B : A -> Type; axiom a : A; def id (x : A) : A := x; axiom b : B a; def bad : B (id a) := b;");
+  test "definitions expand and theorems remain opaque" (fun () ->
+    ignore (compile "symbol A : Type; symbol B : A -> Type; symbol a : A; def id (x : A) : A := x; axiom b : B a; theorem good : B (id a) := b;");
+    reject_source "symbol A : Type; symbol B : A -> Type; symbol a : A; theorem id (x : A) : A := x; axiom b : B a; theorem bad : B (id a) := b;");
+  test "transparent definitions preserve binders and reject ill-typed unused bodies" (fun () ->
+    ignore (compile "symbol A : Type; def keep (x y : A) : A := x; theorem good (x y : A) : A := keep x y;");
+    reject_source "symbol A : Type; symbol B : Type; def bad (x : A) : B := x;";
+    reject_source "symbol A : Type; def loop (x : A) : A := loop x;";
+    reject_source "symbol A : Type; symbol B : Type; symbol a : A; def id (x : A) : A := x; theorem erased : A := (fun (x : B) => a) a;";
+    reject_source "symbol A : Type; symbol a : A; def id (x : A) : A := x; theorem erased : A := (fun (x : Kind) => a) a;");
   test "index overflow" (fun () -> rejects(fun () -> verify "#999999999999999999999999999999:"));
   test "missing index" (fun () -> rejects(fun () -> verify "#:"));
   test "stack underflow" (fun () -> rejects(fun () -> verify "@"));
@@ -280,24 +287,45 @@ let () =
         write "root.ht" "axiom A : Type; theorem bad : A := Type;";
         run ()));
   let arithmetic_axioms = [
-    "All"; "AllBi"; "AllNat"; "AllSeq"; "And"; "Cong";
-    "Coprime"; "Divides"; "Eq"; "Even"; "Exists"; "False";
-    "Imp"; "Le"; "Lt"; "Nat"; "Not"; "Odd";
-    "Or"; "Prf"; "Prime"; "Prop"; "RationalRootTwo"; "U";
-    "add"; "add_succ"; "add_zero"; "all_bi_elim"; "all_bi_intro"; "all_elim";
-    "all_intro"; "all_nat_elim"; "all_nat_intro"; "all_seq_elim"; "all_seq_intro"; "and_intro";
-    "and_left"; "and_right"; "choose"; "choose_pascal"; "choose_zero_column"; "choose_zero_row";
-    "cong_elim"; "cong_intro"; "convolution"; "convolution_definition"; "coprime_elim"; "coprime_intro";
-    "diagonal"; "diagonal_succ"; "diagonal_zero"; "divides_elim"; "divides_intro"; "eq_refl";
-    "eq_subst"; "even_elim"; "even_intro"; "excluded_middle"; "exists_elim"; "exists_intro";
-    "factorial"; "factorial_succ"; "factorial_zero"; "false_elim"; "imp_elim"; "imp_intro";
-    "le_elim"; "le_intro"; "lt_elim"; "lt_intro"; "mul"; "mul_succ";
-    "mul_zero"; "nat_induction"; "not_elim"; "not_intro"; "odd_elim"; "odd_intro";
-    "or_elim"; "or_left"; "or_right"; "pow"; "pow_succ"; "pow_zero";
-    "pred"; "pred_succ"; "pred_zero"; "prime_elim"; "prime_intro"; "rational_root_two_elim";
-    "rational_root_two_intro"; "succ"; "succ_injective"; "succ_not_zero"; "sum"; "sum_between";
-    "sum_between_succ_inside"; "sum_between_succ_outside"; "sum_between_zero"; "sum_succ"; "sum_zero"; "triangular";
-    "triangular_succ"; "triangular_zero"; "zero";
+    "AllBi";
+    "AllNat";
+    "AllProp";
+    "AllSeq";
+    "Eq";
+    "Imp";
+    "Nat";
+    "Prf";
+    "Prop";
+    "all_bi_elim";
+    "all_bi_intro";
+    "all_nat_elim";
+    "all_nat_intro";
+    "all_prop_elim";
+    "all_prop_intro";
+    "all_seq_elim";
+    "all_seq_intro";
+    "bounded_rec";
+    "bounded_rec_inside";
+    "bounded_rec_outside";
+    "bounded_rec_zero";
+    "eq_refl";
+    "eq_subst";
+    "excluded_middle";
+    "imp_elim";
+    "imp_intro";
+    "nat_induction";
+    "nat_rec";
+    "nat_rec_diagonal";
+    "nat_rec_diagonal_succ";
+    "nat_rec_diagonal_zero";
+    "nat_rec_seq";
+    "nat_rec_seq_succ";
+    "nat_rec_seq_zero";
+    "nat_rec_succ";
+    "nat_rec_zero";
+    "succ";
+    "succ_not_zero";
+    "zero";
   ] in
   (* Build the test catalog in memory; users import subject modules directly. *)
   let load_modules files =
@@ -342,10 +370,26 @@ let () =
       if d.body = None then (
         assert (List.mem d.name arithmetic_axioms);
         assert (contains (Option.get d.at.file) "/examples/commons/foundation/"))
-      else assert (contains (Option.get d.at.file) "/examples/commons/nat/")) result.declarations;
+      else assert (contains (Option.get d.at.file) "/examples/commons/")) result.declarations;
     List.iter (fun name ->
       let d = List.find (fun (d:Source.declaration) -> d.name = name) result.declarations in
       assert (d.body <> None)) ["convolution_zero"; "convolution_pascal"]);
+  test "predicate rules and named arithmetic equations are proved, not assumed" (fun () ->
+    let ds = load_modules arithmetic_modules in
+    List.iter (fun name ->
+      let d = List.find (fun (d:Source.declaration) -> d.name = name) ds in
+      assert (d.at.text = "def" && d.body <> None))
+      ["And"; "Or"; "Not"; "False"; "Exists"; "Divides"; "Prime"; "Coprime"; "Lt"; "Le"; "Even"; "Odd"; "Cong";
+       "RationalRootTwo"; "add"; "mul"; "pow"; "pred"; "choose"; "convolution";
+       "diagonal"; "sum"; "sum_between"; "factorial"; "triangular"];
+    List.iter (fun name ->
+      let d = List.find (fun (d:Source.declaration) -> d.name = name) ds in
+      assert (d.at.text = "theorem" && d.body <> None))
+      ["and_intro"; "and_left"; "and_right"; "or_left"; "or_right"; "or_elim";
+       "false_elim"; "not_intro"; "not_elim"; "exists_intro"; "exists_elim"; "succ_injective";
+       "divides_intro"; "divides_elim"; "prime_intro"; "prime_elim";
+       "add_succ"; "mul_succ"; "pow_succ"; "sum_succ"; "sum_between_succ_inside";
+       "choose_pascal"; "convolution_definition"; "diagonal_succ"]);
   let reject_loaded declarations suffix =
     rejects (fun () -> ignore (Source.compile_declarations (declarations @ Source.parse suffix))) in
   let check_catalog files targets =
@@ -361,10 +405,9 @@ let () =
     List.iter (fun name ->
       let d = List.find (fun (d:Source.declaration) -> d.name = name) declarations in
       assert (d.body <> None)) targets;
-    (* Move the fixed definition/rule signature to a prefix and compile again.
-       All arithmetic axioms must be primitive rules or explicit definitions. *)
-    let assumptions, proofs = List.partition (fun (d:Source.declaration) -> d.body = None) declarations in
-    let replay = Source.compile_declarations (assumptions @ proofs) in
+    (* Replay in dependency order: definitions may occur in axiom types.
+       Every declaration with a body must use the proof-checking instruction. *)
+    let replay = Source.compile_declarations declarations in
     let k = Kernel.create () in
     List.iter2 (fun (d:Source.declaration) line ->
       Assembly.run ~allow_axioms:(d.body = None) k line)
@@ -392,19 +435,11 @@ let () =
       ^ " : Prf (Exists P) := exists_witness P y h;"));
   test "constructive De Morgan directions need no excluded middle" (fun () ->
     let declarations = load_modules logic_modules in
-    (* Re-encode the constructive fragment without either classical declaration. *)
-    let globals = ref [] in
-    let output = Buffer.create 256 in
-    List.iter (fun (d:Source.declaration) ->
-      if not (List.mem d.name ["excluded_middle"; "demorgan_and_forward"]) then (
-        let typ = Source.resolve !globals d.at d.typ in
-        Buffer.add_string output (Proofglyph_language.Writer.encode typ);
-        (match d.body with
-         | None -> Buffer.add_char output ':'
-         | Some b -> Buffer.add_string output (Proofglyph_language.Writer.encode (Source.resolve !globals d.at b));
-             Buffer.add_char output '!');
-        globals := (d.name,List.length !globals)::!globals)) declarations;
-    verify (Buffer.contents output));
+    (* Compile the constructive fragment without either classical declaration,
+       including the same transparent-definition elaboration used by the CLI. *)
+    let constructive = List.filter (fun (d:Source.declaration) ->
+      not (List.mem d.name ["excluded_middle"; "demorgan_and_forward"])) declarations in
+    verify (Source.compile_declarations constructive).assembly);
   test "Russell derives no universal set from separation without classical choice" (fun () ->
     let source = check_catalog ["../examples/commons/sets/russell.ht"]
       ["russell_not_self"; "russell_contradiction"; "no_universal_set_at"; "no_universal_set"] in

@@ -82,7 +82,7 @@ digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 
 登録済み定数には型と由来 (`Assumption` / `Proven`) を保持する。証明項 `t` はカーネルのシグネチャには残さず、登録後は本体を展開しない不透明な定数として扱う。
 
-自然数・算術・論理の推論規則や公理、演算の再帰方程式、述語の導入・除去規則はカーネルに組み込まず、すべてシグネチャの前提（`Assumption`）として与える。
+論理・等式・Peano・再帰の原理はシグネチャの前提（`Assumption`）として与える。述語や演算を定義する `def` と、その導入・除去規則や方程式を証明する `theorem` は検査済み（`Proven`）として登録する。
 
 ## 5. hieratic 言語 (.ht)
 
@@ -91,7 +91,7 @@ program = { import | declaration } ;
 import = "import", path, ";" ;
 path = '"', path_character, { path_character }, '"' ;
 declaration
-  = "axiom", name, { parameter }, ":", term, ";"
+  = ("axiom" | "symbol"), name, { parameter }, ":", term, ";"
   | ("def" | "theorem"), name, { parameter },
     ":", term, ":=", term, ";" ;
 parameter = "(", name, { name }, ":", term, ")" ;
@@ -104,9 +104,9 @@ application = atom, { atom } ;
 atom = name | "Type" | "Kind" | "(", term, ")" ;
 ```
 
-`axiom` 宣言は前提の登録に用いる。数学的な公理に加え、語彙、推論規則、定義方程式も前提として登録する。`def` と `theorem` は型検査済みの項を登録する宣言であり、登録後の定数はどちらも不透明である。
+`symbol` は未定義の型や記号、`axiom` は証明を与えず信頼する論理規則・数学的公理を宣言する。いずれもカーネルでは前提として登録され、`--no-axioms` では両方を禁止する。`def` と `theorem` は本体を型検査する。`def` の後続の参照はコンパイル時に本体へ展開するが、`theorem` の参照は不透明な定数のまま残る。
 
-識別子は ASCII の `[A-Za-z_][A-Za-z0-9_']*`。`axiom def theorem import forall fun Type Kind` は予約語。`//` から行末はコメント。数値リテラルや中置算術演算はない。
+識別子は ASCII の `[A-Za-z_][A-Za-z0-9_']*`。`symbol axiom def theorem import forall fun Type Kind` は予約語。`//` から行末はコメント。数値リテラルや中置算術演算はない。
 
 `import "../examples/commons/nat/addition.ht";` は、指定ファイルの宣言をその位置に読み込む。相対パスは読み込み元の実体ファイルのディレクトリを基準とし、絶対パスも許す。パスは空でない二重引用符付きの文字列で、引用符・改行・バックスラッシュを含められない。エスケープ構文はない。
 
@@ -127,9 +127,11 @@ atom = name | "Type" | "Kind" | "(", term, ")" ;
 | `forall (x:A), B` | `Pi(A,B)` |
 | `fun (x:A) => b` | `Lam(A,b)` |
 | 宣言の引数 | 型には Π、本体には λ を外側から追加 |
-| `axiom name : A;` | `encode(A)` の後に `:` |
+| `symbol/axiom name : A;` | `encode(A)` の後に `:` |
 | `def/theorem name : A := t;` | `encode(A) encode(t) !` |
 
 匿名の矢印 binder も de Bruijn の深さに数える。型と本体はそれぞれの束縛構造に従って名前解決する。
 
-`def` と `theorem` の意味は同じ。いずれも検査後は不透明。たとえば `id a` と `a` は定義的に等しくならない。インラインの `(fun (x:A) => x) a` は β 簡約で `a` と等しくなる。
+`def id (x:A) : A := x;` の後では `id a` は本体への展開と β 簡約により `a` と等しくなる。カーネルに定数展開を追加するのではなく、Hieratic が閉じた本体を展開して `.pg` を生成する。自己参照・前方参照は禁止し、展開による β 簡約回数は `fuel` と同じ上限を持つ。簡約前の項と生成された簡約後の `.pg` をそれぞれ検査するため、簡約で消える不正な引数も拒否する。
+
+名前付きの元の型は表示用に保持するが、検査対象は展開後の型である。`.pg` を直接検査する場合は元の名前付きの型を使用しない。新構文と展開処理は従来の Rocq フロントエンド証明の対象外。Rocq CLI の `--elaborate` はホスト側で展開した出力を抽出検査器で再検査する。

@@ -1,0 +1,33 @@
+// Axioms of primitive recursion on natural numbers.
+// The recursors return numbers, sequences, or functionals on two-variable functions.
+// Each has only a base axiom and a successor axiom. Named arithmetic functions
+// are definitions, and their equations are theorems derived from these axioms.
+
+import "nat_core.ht";
+
+symbol nat_rec : Nat -> (Nat -> Nat -> Nat) -> Nat -> Nat;
+axiom nat_rec_zero (z : Nat) (step : Nat -> Nat -> Nat)
+  : Prf (Eq (nat_rec z step zero) z);
+axiom nat_rec_succ (z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
+  : Prf (Eq (nat_rec z step (succ n)) (step n (nat_rec z step n)));
+
+symbol nat_rec_seq : (Nat -> Nat)
+  -> (Nat -> (Nat -> Nat) -> Nat -> Nat) -> Nat -> Nat -> Nat;
+axiom nat_rec_seq_zero (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (k : Nat)
+  : Prf (Eq (nat_rec_seq z step zero k) (z k));
+axiom nat_rec_seq_succ (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (n k : Nat)
+  : Prf (Eq (nat_rec_seq z step (succ n) k) (step n (nat_rec_seq z step n) k));
+
+symbol nat_rec_diagonal : ((Nat -> Nat -> Nat) -> Nat)
+  -> (Nat -> ((Nat -> Nat -> Nat) -> Nat) -> (Nat -> Nat -> Nat) -> Nat)
+  -> Nat -> (Nat -> Nat -> Nat) -> Nat;
+axiom nat_rec_diagonal_zero (z : (Nat -> Nat -> Nat) -> Nat)
+  (step : Nat -> ((Nat -> Nat -> Nat) -> Nat) -> (Nat -> Nat -> Nat) -> Nat)
+  (h : Nat -> Nat -> Nat) : Prf (Eq (nat_rec_diagonal z step zero h) (z h));
+axiom nat_rec_diagonal_succ (z : (Nat -> Nat -> Nat) -> Nat)
+  (step : Nat -> ((Nat -> Nat -> Nat) -> Nat) -> (Nat -> Nat -> Nat) -> Nat)
+  (n : Nat) (h : Nat -> Nat -> Nat)
+  : Prf (Eq (nat_rec_diagonal z step (succ n) h) (step n (nat_rec_diagonal z step n) h));
+
+theorem rec_eq_trans (a b c : Nat) (ab : Prf (Eq a b)) (bc : Prf (Eq b c)) : Prf (Eq a c)
+  := eq_subst (fun (x : Nat) => Eq a x) b c bc ab;

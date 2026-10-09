@@ -1,33 +1,17 @@
-// Trusted vocabulary, inference rules and explicit definitions.
-import "logic.ht";
+// Peano arithmetic with successor injectivity proved from primitive recursion.
+// The imported core contains induction, equality and successor disjointness.
+// Recursion supplies a left inverse to successor, so injectivity needs no axiom.
 
-// Vocabulary declaration; the defining rules are in separate theory files.
+import "recursion.ht";
 
-axiom Nat : Type;
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom Eq : Nat -> Nat -> Prop;
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom succ : Nat -> Nat;
-
-// Vocabulary declaration; the defining rules are in separate theory files.
-axiom zero : Nat;
-
-// Peano axiom.
-axiom nat_induction (P : Nat -> Prop) : Prf (P zero)
-  -> (forall (x : Nat), Prf (P x) -> Prf (P (succ x)))
-  -> forall (x : Nat), Prf (P x);
-
-// Logical or equality inference rule.
-axiom eq_refl (a : Nat) : Prf (Eq a a);
-
-// Logical or equality inference rule.
-axiom eq_subst (P : Nat -> Prop) (a b : Nat)
-  : Prf (Eq a b) -> Prf (P a) -> Prf (P b);
-
-// Peano axiom.
-axiom succ_injective (a b : Nat) : Prf (Eq (succ a) (succ b)) -> Prf (Eq a b);
-
-// Peano axiom.
-axiom succ_not_zero (a : Nat) : Prf (Eq (succ a) zero) -> Prf False;
+theorem succ_injective (a b : Nat) (h : Prf (Eq (succ a) (succ b))) : Prf (Eq a b) :=
+  eq_subst (fun (x : Nat) => Eq a x)
+    (nat_rec zero (fun (k r : Nat) => k) (succ b)) b
+    (nat_rec_succ zero (fun (k r : Nat) => k) b)
+    (eq_subst (fun (x : Nat) => Eq x (nat_rec zero (fun (k r : Nat) => k) (succ b)))
+      (nat_rec zero (fun (k r : Nat) => k) (succ a)) a
+      (nat_rec_succ zero (fun (k r : Nat) => k) a)
+      (eq_subst (fun (x : Nat) => Eq (nat_rec zero (fun (k r : Nat) => k) (succ a))
+          (nat_rec zero (fun (k r : Nat) => k) x))
+        (succ a) (succ b) h
+        (eq_refl (nat_rec zero (fun (k r : Nat) => k) (succ a)))));
