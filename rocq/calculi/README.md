@@ -16,7 +16,7 @@ dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pa --prelude rocq/cal
 
 ## 証明した保証
 
-- **導出と証明項の対応（Adequacy）**: 任意の NK / LK 導出に対し、対応する LF 証明項が存在すること、および逆に閉じた LF 証明項から NK / LK 導出を復元できること。
+- **導出と証明項の対応（Adequacy）**: 固定 LF シグネチャの下で、任意の NK / LK 導出に対し、対応する LF 証明項が存在すること、および逆に閉じた LF 証明項から NK / LK 導出を復元できること。
 - **カット除去定理（Cut Elimination）**: カット規則を含む任意の LK 導出から、カット規則を含まない導出が得られること。
 
 ## 信頼境界と制限

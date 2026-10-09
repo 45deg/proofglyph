@@ -14,6 +14,8 @@
 
 式中の `A → B` は証明の関数型 `Prf A -> Prf B`、`¬A` は `Not A` を表します。各宣言名のリンクから、個々の証明項と依存関係を参照できます。
 
+<!-- proof-catalog:start -->
+
 | 分野 | 命題・操作 | 宣言名 | ファイル |
 | --- | --- | --- | --- |
 | 入門 | 恒等関数・依存型・β同値 | [id](../examples/basics.tp), [dependent_id](../examples/basics.tp), [beta](../examples/basics.tp) | `basics.tp` |
@@ -44,6 +46,8 @@
 | 整数論 | √2 の無理性 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.tp), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.tp) | `nat/sqrt_two.tp` |
 | 整数論 | フェルマーの小定理と和への適用 | [fermat](../examples/commons/nat/fermat.tp), [fermat_sum](../examples/commons/nat/fermat.tp) | `nat/fermat.tp` |
 
+<!-- proof-catalog:end -->
+
 なお、`function_composition` は `f, g : U -> U` と `x : U` から合成関数 `g (f x) : U` を構築するプログラム項であり、命題の証明項ではありません。
 
 ## axiom の位置づけ
@@ -59,7 +63,7 @@
 
 たとえば `prime_intro` / `prime_elim` は、素数を「1より大きく、各約数が1または自分自身である数」と定義します（ユークリッドの補題は公理ではなく定理として証明します）。また `coprime_intro` / `coprime_elim` は、共通の約数が1のみであることを定義します。
 
-`proven` は、明示したシグネチャの下で証明項の型検査に成功した状態を表します。Peano の構成や定義方程式はシグネチャとして外部から与えられており、Kernel の内部に特定の算術論理や簡約規則は組み込まれていません。
+`proven` は、明示したシグネチャの下で証明項の型検査に成功した状態を表します。Peano の構成や定義方程式はシグネチャとして外部から与えられており、カーネルの内部に特定の算術論理や簡約規則は組み込まれていません。
 
 自然数ライブラリには135個の `theorem` が含まれます。読み込まれる `axiom` は利用するモジュールに応じて決定され、Peano 公理に加えて演算や述語の語彙、論理規則、再帰方程式などが含まれます。
 

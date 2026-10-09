@@ -86,10 +86,16 @@ let () =
   let document = read (Filename.concat (Filename.dirname root) "docs/proofs.md") in
   let link = Str.regexp "\\[\\([^]]+\\)\\](\\.\\./\\(examples/[^)]+\\))" in
   let section = ref false in
+  let started = ref false and finished = ref false in
   let lines = String.split_on_char '\n' document |> List.filter (fun line ->
-    if line = "## 実装した証明" then (section := true; false)
-    else if String.starts_with ~prefix:"## " line then (section := false; false)
+    if line = "<!-- proof-catalog:start -->" then (
+      if !started then failwith "duplicate proof catalog start marker";
+      started := true; section := true; false)
+    else if line = "<!-- proof-catalog:end -->" then (
+      if not !section then failwith "unexpected proof catalog end marker";
+      finished := true; section := false; false)
     else !section) in
+  if not !started || not !finished then failwith "missing proof catalog markers";
   let rows = lines |> List.filter_map (fun row ->
     match String.split_on_char '|' row |> List.map String.trim with
     | [""; subject; title; links; _; ""] when String.contains links '[' ->
@@ -108,6 +114,7 @@ let () =
         let title = String.concat "" (String.split_on_char '`' title) in
         Some (subject ^ "：" ^ title, "[" ^ String.concat "," (collect 0 []) ^ "]")
     | _ -> None) in
+  if rows = [] then failwith "empty proof catalog";
   let catalog = object_json ["proofs", object_json rows] ^ "\n" in
   print_string catalog)
   else (

@@ -15,7 +15,8 @@ assert.equal(api.compileAt('examples/a.tp', 'import "../../outside.tp";').ok, fa
 console.log(`All ${examples.length} examples passed; invalid imports rejected.`);
 
 const catalog = require('../_build/default/web/catalog.json');
-assert.equal(catalog.proofs['整数論：フェルマーの小定理と和への適用'][0].path, 'examples/commons/nat/fermat.tp');
+assert.ok(Object.values(catalog.proofs).some(matches =>
+  matches.some(({name, path}) => name === 'fermat' && path === 'examples/commons/nat/fermat.tp')));
 const sources = new Map(examples.map(({path, source}) => [path, source]));
 for (const matches of Object.values(catalog.proofs)) {
   for (const {name, path, line} of matches) {
@@ -28,14 +29,19 @@ assert.deepEqual(catalog, require('../examples/catalog.json'));
 console.log('Catalog names and source locations passed.');
 
 const fs = require('node:fs');
-const documentedRows = fs.readFileSync(require('node:path').join(__dirname, '../docs/proofs.md'), 'utf8')
-  .split('## 実装した証明')[1].split('\n## ')[0].split('\n')
+const document = fs.readFileSync(require('node:path').join(__dirname, '../docs/proofs.md'), 'utf8');
+const startMarker = '<!-- proof-catalog:start -->';
+const endMarker = '<!-- proof-catalog:end -->';
+assert.equal(document.split(startMarker).length, 2);
+assert.equal(document.split(endMarker).length, 2);
+assert.ok(document.indexOf(startMarker) < document.indexOf(endMarker));
+const documentedRows = document.split(startMarker)[1].split(endMarker)[0].split('\n')
   .filter(row => /^\|.*\[.*\]\(\.\.\/examples\//.test(row));
 assert.deepEqual(Object.keys(catalog.proofs), documentedRows.map(row => {
   const [, subject, title] = row.split('|').map(cell => cell.trim());
   return `${subject}：${title.replaceAll('`', '')}`;
 }));
-console.log('Japanese catalog matches the implemented proofs table.');
+console.log('Catalog matches the documented proofs table.');
 
 const mapped = api.compileAt('examples/map.tp', 'axiom A : Type;\ndef id (x : A) : A := x;');
 assert.equal(mapped.ok, true);
