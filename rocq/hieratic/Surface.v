@@ -1,7 +1,7 @@
 From Stdlib Require Import List String.
 Import ListNotations.
 
-(** The desugared, named AST at the boundary of Tinyprover_hieratic.Source.resolve.
+(** The desugared, named AST at the boundary of Proofglyph_hieratic.Source.resolve.
     Parsing, grouped parameters, locations and imports are outside this layer. *)
 Inductive expr :=
 | Name (x : string)

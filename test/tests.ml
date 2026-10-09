@@ -1,9 +1,9 @@
-open Tinyprover_core
-module Assembly = Tinyprover_proofglyph.Reader
-module Source = Tinyprover_hieratic.Source
+open Proofglyph_core
+module Assembly = Proofglyph_language.Reader
+module Source = Proofglyph_hieratic.Source
 open Term
 
-(** {1 tinyprover Regression Test Suite}
+(** {1 proofglyph Regression Test Suite}
 
     Covers unit and regression tests for kernel type checking, assembly execution,
     the .ht frontend compiler, import resolution, and mathematical libraries
@@ -182,7 +182,7 @@ let () =
       (String.sub text i (String.length fragment) = fragment || loop (i+1)) in
     loop 0 in
   let with_fixture files f =
-    let dir = Filename.temp_file "tinyprover-import-" "" in
+    let dir = Filename.temp_file "proofglyph-import-" "" in
     Sys.remove dir; Unix.mkdir dir 0o700;
     let rec mkdir p = if not (Sys.file_exists p) then (mkdir (Filename.dirname p); Unix.mkdir p 0o700) in
     let write relative contents =
@@ -204,7 +204,7 @@ let () =
         let log = Unix.openfile output [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
         let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
           Unix.create_process "../bin/main.exe"
-            [|"tinyprover"; command; Filename.concat dir "input.pg"|] Unix.stdin log log) in
+            [|"proofglyph"; command; Filename.concat dir "input.pg"|] Unix.stdin log log) in
         assert (snd (Unix.waitpid [] pid) = Unix.WEXITED 0);
         Source.read_file output in
       let summary = "Accepted: 2 declarations (1 assumptions).\n" in
@@ -272,7 +272,7 @@ let () =
           let log = Unix.openfile (Filename.concat dir "log") [Unix.O_WRONLY;Unix.O_CREAT;Unix.O_TRUNC] 0o600 in
           let pid = Fun.protect ~finally:(fun () -> Unix.close log) (fun () ->
             Unix.create_process "../bin/main.exe"
-              [|"tinyprover"; "compile"; root; "-o"; output; "--sourcemap"; Filename.concat dir "out.map"|] Unix.stdin log log) in
+              [|"proofglyph"; "compile"; root; "-o"; output; "--sourcemap"; Filename.concat dir "out.map"|] Unix.stdin log log) in
           assert (snd (Unix.waitpid [] pid) = Unix.WEXITED 1);
           assert (Source.read_file output = "sentinel");
           assert (Source.read_file (Filename.concat dir "out.map") = "map sentinel") in
@@ -398,10 +398,10 @@ let () =
     List.iter (fun (d:Source.declaration) ->
       if not (List.mem d.name ["excluded_middle"; "demorgan_and_forward"]) then (
         let typ = Source.resolve !globals d.at d.typ in
-        Buffer.add_string output (Tinyprover_proofglyph.Writer.encode typ);
+        Buffer.add_string output (Proofglyph_language.Writer.encode typ);
         (match d.body with
          | None -> Buffer.add_char output ':'
-         | Some b -> Buffer.add_string output (Tinyprover_proofglyph.Writer.encode (Source.resolve !globals d.at b));
+         | Some b -> Buffer.add_string output (Proofglyph_language.Writer.encode (Source.resolve !globals d.at b));
              Buffer.add_char output '!');
         globals := (d.name,List.length !globals)::!globals)) declarations;
     verify (Buffer.contents output));

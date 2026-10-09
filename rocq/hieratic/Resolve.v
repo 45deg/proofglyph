@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Hieratic Require Export ResolveImpl.
+From Proofglyph.Hieratic Require Export ResolveImpl.
 
 Lemma lookup_sound x ns i : lookup x ns = Some i -> binds x ns i.
 Proof.

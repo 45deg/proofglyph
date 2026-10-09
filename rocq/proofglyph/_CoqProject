@@ -1,4 +1,4 @@
--Q . Tinyprover.Proofglyph
+-Q . Proofglyph.Language
 Syntax.v
 Substitution.v
 KernelImpl.v

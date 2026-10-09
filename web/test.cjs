@@ -1,6 +1,6 @@
 // Run after dune build @web/browser: node web/test.cjs
 const assert = require('node:assert/strict');
-const api = require('../_build/default/web/browser.bc.js').tinyprover;
+const api = require('../_build/default/web/browser.bc.js').proofglyph;
 const examples = JSON.parse(api.examples);
 for (const { path, source } of examples) {
   const compiled = path.endsWith('.pg')

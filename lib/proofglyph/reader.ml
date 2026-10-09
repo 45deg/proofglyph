@@ -1,4 +1,4 @@
-open Tinyprover_core
+open Proofglyph_core
 open Term
 
 (** {1 .pg Assembly Reader and Stack Machine}

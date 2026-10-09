@@ -1,5 +1,5 @@
-module S = Tinyprover_hieratic.Source
-module T = Tinyprover_core.Term
+module S = Proofglyph_hieratic.Source
+module T = Proofglyph_core.Term
 module F = Frontend
 
 let rec term = function
@@ -29,7 +29,7 @@ let fuel = Adapter.nat_of_int 2048
 let reference_bytes ds =
   let globals = ref [] in
   let declarations = List.mapi (fun index (d : S.declaration) ->
-    let encode e = Tinyprover_proofglyph.Writer.encode (S.resolve !globals d.at e) in
+    let encode e = Proofglyph_language.Writer.encode (S.resolve !globals d.at e) in
     let a = encode d.typ in
     let bytes = match d.body with None -> a ^ ":" | Some b -> a ^ encode b ^ "!" in
     globals := (d.name, index) :: !globals;
@@ -50,7 +50,7 @@ let compare label ds =
       if F.decode_proofglyph bytes <> Some actual then failwith (label ^ ": byte roundtrip failed");
       if F.compile_proofglyph fuel true source <> Some (bytes, signature) then failwith (label ^ ": byte compilation failed");
       if F.check_proofglyph fuel true bytes <> Some signature then failwith (label ^ ": encoded bytes rejected");
-      Tinyprover_proofglyph.Reader.run (Tinyprover_core.Kernel.create ()) (Adapter.string_of_chars bytes)
+      Proofglyph_language.Reader.run (Proofglyph_core.Kernel.create ()) (Adapter.string_of_chars bytes)
 
 let codec_fixtures () =
   let decode s = F.decode_proofglyph (Adapter.chars s) in
@@ -79,8 +79,8 @@ let codec_fixtures () =
     let ds = [F.Assume (term t); F.Prove (term t, term (T.Lam (T.Type, t)))] in
     let bytes = F.encode_proofglyph ds in
     if F.decode_proofglyph bytes <> Some ds then failwith "generated raw term roundtrip";
-    let expected = Tinyprover_proofglyph.Writer.encode t ^ ":" ^ Tinyprover_proofglyph.Writer.encode t ^
-      Tinyprover_proofglyph.Writer.encode (T.Lam (T.Type, t)) ^ "!" in
+    let expected = Proofglyph_language.Writer.encode t ^ ":" ^ Proofglyph_language.Writer.encode t ^
+      Proofglyph_language.Writer.encode (T.Lam (T.Type, t)) ^ "!" in
     if Adapter.string_of_chars bytes <> expected then failwith "generated raw term writer mismatch") terms;
   Printf.printf "Codec fixtures and %d raw term cases passed\n" (List.length terms)
 

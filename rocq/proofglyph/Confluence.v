@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Substitution EvaluationSpec.
+From Proofglyph.Language Require Import Syntax Substitution EvaluationSpec.
 
 Inductive parallel : term -> term -> Prop :=
 | par_type : parallel tType tType

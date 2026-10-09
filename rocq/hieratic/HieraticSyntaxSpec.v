@@ -2,7 +2,7 @@ From Stdlib Require Import List String Ascii Bool Arith Lia.
 Import ListNotations.
 Open Scope string_scope.
 Open Scope nat_scope.
-From Tinyprover.Hieratic Require Export DesugarSpec.
+From Proofglyph.Hieratic Require Export DesugarSpec.
 
 Definition letter c := let n := nat_of_ascii c in
   ((65 <=? n) && (n <=? 90)) || ((97 <=? n) && (n <=? 122)) || (n =? 95).

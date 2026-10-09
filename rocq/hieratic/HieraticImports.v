@@ -1,5 +1,5 @@
 From Stdlib Require Import List String Arith Lia.
-From Tinyprover.Hieratic Require Export HieraticImportsImpl.
+From Proofglyph.Hieratic Require Export HieraticImportsImpl.
 Import ListNotations.
 Open Scope list_scope.
 

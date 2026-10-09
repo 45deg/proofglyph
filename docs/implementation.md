@@ -18,9 +18,9 @@
 | `web/bundle_examples.ml` | 証明例の import 展開、証明カタログの生成 |
 | `web/test.cjs` | JavaScript API、証明例、カタログ、ソースマップの実行テスト |
 
-Dune のライブラリは `tinyprover_core`、`tinyprover_proofglyph`、`tinyprover_hieratic` に分離する。proofglyph は core に、hieratic は proofglyph と core に依存し、core と proofglyph は hieratic に依存しない。ファイル import に必要な `unix` は hieratic の依存とする。
+Dune のライブラリは `proofglyph_core`、`proofglyph_language`、`proofglyph_hieratic` に分離する。proofglyph は core に、hieratic は proofglyph と core に依存し、core と proofglyph は hieratic に依存しない。ファイル import に必要な `unix` は hieratic の依存とする。
 
-OCaml API は `Tinyprover_core.Term` / `Kernel`、`Tinyprover_proofglyph.Reader` / `Writer`、`Tinyprover_hieratic.Source` から利用する。記号列の出力は `Tinyprover_proofglyph.Writer.encode` が担当する。各 API の詳細は後述の [ソース API とソースマップ](#ソース-api-とソースマップ) および各 `.mli` を参照。
+OCaml API は `Proofglyph_core.Term` / `Kernel`、`Proofglyph_language.Reader` / `Writer`、`Proofglyph_hieratic.Source` から利用する。記号列の出力は `Proofglyph_language.Writer.encode` が担当する。各 API の詳細は後述の [ソース API とソースマップ](#ソース-api-とソースマップ) および各 `.mli` を参照。
 
 カーネルのシグネチャ型は `.mli` で抽象化する。外部から未検査の定数を注入する操作は公開しない。コンパイラはカーネルの内部文脈や正規化器を操作しない。
 
@@ -104,7 +104,7 @@ lexer/parser と `HieraticImportsImpl.v` の有限ファイル集合上の impor
 
 ## Web デモ
 
-`web/browser.ml` は js_of_ocaml を通じて `globalThis.tinyprover` に `examples`、`compileAt`、`checkMapped`、`check` を公開する。関数は `{ok, output}` を返し、成功した `compileAt` は対応表の JSON 文字列も返す。検証は実行ごとに新しいカーネルで行い、fuel は既定値を使う。入力中の import は拒否する。
+`web/browser.ml` は js_of_ocaml を通じて `globalThis.proofglyph` に `examples`、`compileAt`、`checkMapped`、`check` を公開する。関数は `{ok, output}` を返し、成功した `compileAt` は対応表の JSON 文字列も返す。検証は実行ごとに新しいカーネルで行い、fuel は既定値を使う。入力中の import は拒否する。
 
 `compileAt` は表示用パスを位置情報に付け、呼び出し時に前回の結果を破棄する。`checkMapped` は直近の成功した `compileAt` の出力と完全一致する場合に対応表を使う。違う場合は `cN` 表示へ戻る。`check` は常に対応表を使わない。
 
@@ -115,8 +115,8 @@ lexer/parser と `HieraticImportsImpl.v` の有限ファイル集合上の impor
 `web/app.source.js` はカタログを配信元から取得し、分類別の選択肢を作る。ソース編集・proofglyph 編集で対応表と結果を無効化する。コンパイル成功後は自動で検査し、API が返す全宣言の結果から `proven` 宣言の成功表示を作る。ブラウザ内で完結するのは入力のコンパイル・検査である。
 
 ```sh
-dune exec web/bundle_examples.exe -- --catalog examples > /tmp/tinyprover-catalog.json
-cp /tmp/tinyprover-catalog.json examples/catalog.json
+dune exec web/bundle_examples.exe -- --catalog examples > /tmp/proofglyph-catalog.json
+cp /tmp/proofglyph-catalog.json examples/catalog.json
 dune build @web/browser
 node web/test.cjs
 ```

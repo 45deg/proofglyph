@@ -1,6 +1,6 @@
 From Stdlib Require Import List Permutation PeanoNat.
-From Tinyprover.Proofglyph Require Import Syntax Program.
-From Tinyprover.Calculi Require Import Calculi Encoding Verification.
+From Proofglyph.Language Require Import Syntax Program.
+From Proofglyph.Calculi Require Import Calculi Encoding Verification.
 Import ListNotations.
 
 (** Closed encodings can be substituted under any number of LF binders. *)

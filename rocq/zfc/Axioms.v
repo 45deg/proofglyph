@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Zfc Require Import Formula.
+From Proofglyph.Zfc Require Import Formula.
 
 Definition up (rho : nat -> nat) n := match n with 0 => 0 | S k => S (rho k) end.
 Fixpoint rename (rho : nat -> nat) p := match p with

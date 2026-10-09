@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Lia.
-From Tinyprover.Proofglyph Require Import Syntax.
+From Proofglyph.Language Require Import Syntax.
 
 Definition up_ren (r : nat -> nat) n := match n with 0 => 0 | S k => S (r k) end.
 

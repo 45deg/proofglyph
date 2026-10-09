@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Ascii Arith Lia DecimalString DecimalNat.
 Import ListNotations.
 Open Scope string_scope.
-From Tinyprover.Proofglyph Require Export CodecSpec.
+From Proofglyph.Language Require Export CodecSpec.
 
 (** Maximal contiguous decimal run, including leading zeroes. *)
 Fixpoint scan_digits (s : string) : Decimal.uint * string :=

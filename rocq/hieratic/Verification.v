@@ -1,5 +1,5 @@
-From Tinyprover.Hieratic Require Import Resolve Compile ProofglyphCodec ProofglyphCompile.
-From Tinyprover.Hieratic Require Import Desugar SurfaceCompile.
+From Proofglyph.Hieratic Require Import Resolve Compile ProofglyphCodec ProofglyphCompile.
+From Proofglyph.Hieratic Require Import Desugar SurfaceCompile.
 
 Print Assumptions resolve_correct.
 Print Assumptions resolves_unique.
@@ -38,11 +38,11 @@ Print Assumptions compile_surface_proofglyph_sound.
 Print Assumptions compile_surface_proofglyph_complete.
 Print Assumptions compile_surface_proofglyph_recheck.
 
-From Tinyprover.Hieratic Require Import HieraticImports.
+From Proofglyph.Hieratic Require Import HieraticImports.
 Print Assumptions load_hieratic_correct.
 Print Assumptions imports_complete.
 
-From Tinyprover.Hieratic Require Import HieraticSyntax FileCompile.
+From Proofglyph.Hieratic Require Import HieraticSyntax FileCompile.
 Print Assumptions lex_hieratic_correct.
 Print Assumptions parse_hieratic_correct.
 Print Assumptions parse_hieratic_unique.

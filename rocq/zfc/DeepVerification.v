@@ -1,7 +1,7 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Kernel Program WellFormed Checker.
-From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates.
-From Tinyprover.ZfcDeep Require Import Artifact.
+From Proofglyph.Language Require Import Syntax Kernel Program WellFormed Checker.
+From Proofglyph.Zfc Require Import Formula Axioms Deduction Encoding Certificates.
+From Proofglyph.ZfcDeep Require Import Artifact.
 Import ListNotations.
 
 Definition zfc_signature := map declared_type prelude.

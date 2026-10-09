@@ -1,4 +1,4 @@
-# tinyprover 言語仕様
+# proofglyph 言語仕様
 
 ## 1. 対象と項の構造
 

@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
-From Tinyprover.Hieratic Require Export DesugarSpec.
-From Tinyprover.Hieratic Require Export HieraticSyntaxSpec.
+From Proofglyph.Hieratic Require Export DesugarSpec.
+From Proofglyph.Hieratic Require Export HieraticSyntaxSpec.
 Import ListNotations.
 Open Scope list_scope.
 

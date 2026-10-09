@@ -1,5 +1,5 @@
 (* Host I/O boundary and reference AST adapters used by differential tests. *)
-module Source = Tinyprover_hieratic.Source
+module Source = Proofglyph_hieratic.Source
 module F = Frontend
 
 let chars s = List.init (String.length s) (String.get s)

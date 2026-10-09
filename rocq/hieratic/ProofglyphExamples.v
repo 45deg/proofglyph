@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Ascii.
-From Tinyprover.Proofglyph Require Import Syntax Program.
-From Tinyprover.Hieratic Require Import ProofglyphCodec ProofglyphCompile Examples.
+From Proofglyph.Language Require Import Syntax Program.
+From Proofglyph.Hieratic Require Import ProofglyphCodec ProofglyphCompile Examples.
 Import ListNotations.
 Open Scope string_scope.
 

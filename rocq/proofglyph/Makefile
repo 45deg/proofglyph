@@ -13,9 +13,9 @@ $(BUILD)/verified: $(VFILES) _CoqProject Makefile
 	@mkdir -p $(BUILD)
 	cp $(VFILES) $(BUILD)/
 	cd $(BUILD) && for f in $(VFILES); do \
-		$(ROCQ) compile -Q . Tinyprover.Proofglyph "$$f" || exit $$?; \
+		$(ROCQ) compile -Q . Proofglyph.Language "$$f" || exit $$?; \
 	done
-	cd $(BUILD) && $(ROCQ) check -silent -Q . Tinyprover.Proofglyph Tinyprover.Proofglyph.Verification
+	cd $(BUILD) && $(ROCQ) check -silent -Q . Proofglyph.Language Proofglyph.Language.Verification
 	touch $@
 
 verify: $(BUILD)/verified

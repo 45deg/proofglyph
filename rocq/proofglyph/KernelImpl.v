@@ -1,5 +1,5 @@
 From Stdlib Require Import List Bool.
-From Tinyprover.Proofglyph Require Export Syntax.
+From Proofglyph.Language Require Export Syntax.
 Import ListNotations.
 
 Definition bind {A B} (x : option A) (f : A -> option B) : option B :=

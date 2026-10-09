@@ -1,4 +1,4 @@
-From Tinyprover.Proofglyph Require Import Checker.
+From Proofglyph.Language Require Import Checker.
 
 (** Audit the public soundness/completeness guarantees and the CLI's signature
     invariant. Every command must report [Closed under the global context]. *)
@@ -14,7 +14,7 @@ Print Assumptions prelude_and_main_sound.
 Print Assumptions prelude_and_main_complete.
 Print Assumptions program_monotone.
 
-From Tinyprover.Proofglyph Require Import Codec.
+From Proofglyph.Language Require Import Codec.
 Print Assumptions lex_proofglyph_correct.
 Print Assumptions decode_proofglyph_correct.
 Print Assumptions proofglyph_roundtrip.

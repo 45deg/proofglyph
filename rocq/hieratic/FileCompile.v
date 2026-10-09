@@ -1,7 +1,7 @@
 From Stdlib Require Import List String.
-From Tinyprover.Proofglyph Require Import Codec.
-From Tinyprover.Hieratic Require Export FileImpl.
-From Tinyprover.Hieratic Require Import HieraticSyntax HieraticImports Desugar Compile SurfaceCompile ProofglyphCompile.
+From Proofglyph.Language Require Import Codec.
+From Proofglyph.Hieratic Require Export FileImpl.
+From Proofglyph.Hieratic Require Import HieraticSyntax HieraticImports Desugar Compile SurfaceCompile ProofglyphCompile.
 Import ListNotations.
 
 Theorem canonicalize_correct resolve origin items canonical :

@@ -1,7 +1,7 @@
 # 命題論理 NK / LK over proofglyph
 
 古典命題論理の自然演繹（NK）とシーケント計算（LK）を、固定の proofglyph prelude と LF 証明項として符号化した検証です。
-NK・LK の導出と tinyprover の証明項の対応関係、および LK のカット除去定理を Rocq で証明しています。
+NK・LK の導出と proofglyph の証明項の対応関係、および LK のカット除去定理を Rocq で証明しています。
 
 ## ビルドと実行
 

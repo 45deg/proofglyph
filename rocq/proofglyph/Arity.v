@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Substitution WellFormed TypingSubstitution
+From Proofglyph.Language Require Import Syntax Substitution WellFormed TypingSubstitution
   EvaluationSpec Confluence Generation Preservation Regularity.
 Import ListNotations.
 

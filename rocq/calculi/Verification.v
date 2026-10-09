@@ -1,7 +1,7 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Kernel Program WellFormed Checker.
-From Tinyprover.Calculi Require Import Artifact Encoding.
-From Tinyprover.Calculi Require NKArtifact LKArtifact.
+From Proofglyph.Language Require Import Syntax Kernel Program WellFormed Checker.
+From Proofglyph.Calculi Require Import Artifact Encoding.
+From Proofglyph.Calculi Require NKArtifact LKArtifact.
 Import ListNotations.
 
 Definition fixed_signature := map declared_type prelude.

@@ -1,5 +1,5 @@
 From Stdlib Require Import List String.
-From Tinyprover.Hieratic Require Import Desugar HieraticSyntax HieraticImports.
+From Proofglyph.Hieratic Require Import Desugar HieraticSyntax HieraticImports.
 Import ListNotations.
 Open Scope string_scope.
 

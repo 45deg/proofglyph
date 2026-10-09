@@ -1,6 +1,6 @@
 ROCQ ?= rocq
 BUILD := _build
-FLAGS := -Q ../../proofglyph/_build Tinyprover.Proofglyph -Q . Tinyprover.Calculi
+FLAGS := -Q ../../proofglyph/_build Proofglyph.Language -Q . Proofglyph.Calculi
 
 .PHONY: all export verify test
 all: test
@@ -22,7 +22,7 @@ verify: export
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) CutElimination.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Restoration.v
 	cd $(BUILD) && $(ROCQ) compile $(FLAGS) Examples.v
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Tinyprover.Calculi.Calculi Tinyprover.Calculi.Encoding Tinyprover.Calculi.Verification Tinyprover.Calculi.Derivations Tinyprover.Calculi.CutElimination Tinyprover.Calculi.Restoration Tinyprover.Calculi.Examples
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Proofglyph.Calculi.Calculi Proofglyph.Calculi.Encoding Proofglyph.Calculi.Verification Proofglyph.Calculi.Derivations Proofglyph.Calculi.CutElimination Proofglyph.Calculi.Restoration Proofglyph.Calculi.Examples
 
 test: verify
 	$(MAKE) -C ../proofglyph all ROCQ=$(ROCQ)

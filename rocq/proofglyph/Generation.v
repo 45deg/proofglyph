@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Substitution WellFormed Confluence.
+From Proofglyph.Language Require Import Syntax Substitution WellFormed Confluence.
 Import ListNotations.
 
 Definition generates sg ctx t typ :=

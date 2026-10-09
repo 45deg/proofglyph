@@ -1,4 +1,4 @@
-module Source = Tinyprover_hieratic.Source
+module Source = Proofglyph_hieratic.Source
 
 (** {1 Example Bundler and Catalog Generator}
 

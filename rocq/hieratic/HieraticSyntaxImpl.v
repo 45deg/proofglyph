@@ -2,7 +2,7 @@ From Stdlib Require Import List String Ascii Bool Arith Lia.
 Import ListNotations.
 Open Scope string_scope.
 Open Scope nat_scope.
-From Tinyprover.Hieratic Require Export HieraticSyntaxSpec.
+From Proofglyph.Hieratic Require Export HieraticSyntaxSpec.
 
 Fixpoint span (p : ascii -> bool) (s : string) : string * string :=
   match s with

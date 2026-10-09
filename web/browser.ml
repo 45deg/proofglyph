@@ -1,13 +1,13 @@
-open Tinyprover_core
-module Assembly = Tinyprover_proofglyph.Reader
-module Source = Tinyprover_hieratic.Source
+open Proofglyph_core
+module Assembly = Proofglyph_language.Reader
+module Source = Proofglyph_hieratic.Source
 open Js_of_ocaml
 
 (** {1 Browser JavaScript Bindings}
 
-    Interface exported via js_of_ocaml to run tinyprover's compiler and kernel
+    Interface exported via js_of_ocaml to run proofglyph's compiler and kernel
     inside web browsers.
-    Exposes the following API on the global [window.tinyprover] object:
+    Exposes the following API on the global [window.proofglyph] object:
     - [examples]: Bundled example file list (JSON array).
     - [compileAt(path, source)]: Compiles source with virtual file path, returning assembly and sourcemap.
     - [checkMapped(source)]: Verifies assembly using declaration names if it matches the last compile output.
@@ -87,7 +87,7 @@ let examples_json =
     Examples_data.files) ^ "]"
 
 let () =
-  Js.export "tinyprover" (Js.Unsafe.obj [|
+  Js.export "proofglyph" (Js.Unsafe.obj [|
     "examples", Js.Unsafe.inject (Js.string examples_json);
     "compileAt", Js.Unsafe.inject (Js.wrap_callback (fun path input -> protect (compile_at (Js.to_string path)) input));
     "checkMapped", Js.Unsafe.inject (Js.wrap_callback (protect check_mapped));

@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Ascii Arith Lia DecimalString DecimalNat.
 Import ListNotations.
 Open Scope string_scope.
-From Tinyprover.Proofglyph Require Export Syntax Program.
+From Proofglyph.Language Require Export Syntax Program.
 
 Inductive instruction :=
 | PushType | PushKind | PushVar (n : nat) | PushConst (n : nat)

@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Kernel Program WellFormed Checker.
-From Tinyprover.Zfc Require Import Artifact.
+From Proofglyph.Language Require Import Syntax Kernel Program WellFormed Checker.
+From Proofglyph.Zfc Require Import Artifact.
 Import ListNotations.
 
 Definition prelude_signature := map declared_type prelude.

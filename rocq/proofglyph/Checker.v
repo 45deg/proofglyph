@@ -1,6 +1,6 @@
 From Stdlib Require Import List Bool Lia.
-From Tinyprover.Proofglyph Require Export CheckerImpl CheckerSpec.
-From Tinyprover.Proofglyph Require Import WellFormed Kernel Evaluation Substitution TypingSubstitution Arity ConfluenceCorrectness PreservationCorrectness Confluence Generation Preservation Regularity TypedNormalization.
+From Proofglyph.Language Require Export CheckerImpl CheckerSpec.
+From Proofglyph.Language Require Import WellFormed Kernel Evaluation Substitution TypingSubstitution Arity ConfluenceCorrectness PreservationCorrectness Confluence Generation Preservation Regularity TypedNormalization.
 Import ListNotations.
 
 Theorem infer_sound fuel sg ctx t a : wf_signature sg -> wf_context sg ctx ->

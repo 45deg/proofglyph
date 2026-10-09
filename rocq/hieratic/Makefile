@@ -3,11 +3,11 @@ OCAMLC ?= ocamlc
 OCAMLFIND ?= ocamlfind
 ZARITH = $(shell $(OCAMLFIND) query zarith)
 BUILD := _build
-FLAGS := -Q ../../proofglyph/_build Tinyprover.Proofglyph -Q . Tinyprover.Hieratic
+FLAGS := -Q ../../proofglyph/_build Proofglyph.Language -Q . Proofglyph.Hieratic
 VFILES := $(shell sed -n '/^[^[:space:]].*\.v$$/p' _CoqProject)
 LIBROOT := ../../../_build/default/lib
-LIBFLAGS = -I "$(ZARITH)" -I +unix -I $(LIBROOT)/core/.tinyprover_core.objs/byte -I $(LIBROOT)/proofglyph/.tinyprover_proofglyph.objs/byte -I $(LIBROOT)/hieratic/.tinyprover_hieratic.objs/byte
-LIBS := zarith.cma unix.cma $(LIBROOT)/core/tinyprover_core.cma $(LIBROOT)/proofglyph/tinyprover_proofglyph.cma $(LIBROOT)/hieratic/tinyprover_hieratic.cma
+LIBFLAGS = -I "$(ZARITH)" -I +unix -I $(LIBROOT)/core/.proofglyph_core.objs/byte -I $(LIBROOT)/proofglyph/.proofglyph_language.objs/byte -I $(LIBROOT)/hieratic/.proofglyph_hieratic.objs/byte
+LIBS := zarith.cma unix.cma $(LIBROOT)/core/proofglyph_core.cma $(LIBROOT)/proofglyph/proofglyph_language.cma $(LIBROOT)/hieratic/proofglyph_hieratic.cma
 
 .PHONY: all verify test extracted clean force print-vfiles
 all: extracted
@@ -26,11 +26,11 @@ $(BUILD)/verified: ../proofglyph/_build/verified $(VFILES) _CoqProject Makefile
 	cd $(BUILD) && for f in $(VFILES); do \
 		$(ROCQ) compile $(FLAGS) "$$f" || exit $$?; \
 	done
-	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Tinyprover.Hieratic.Verification Tinyprover.Hieratic.Examples Tinyprover.Hieratic.ProofglyphExamples Tinyprover.Hieratic.DesugarExamples Tinyprover.Hieratic.HieraticExamples Tinyprover.Hieratic.FileExamples
+	cd $(BUILD) && $(ROCQ) check -silent $(FLAGS) Proofglyph.Hieratic.Verification Proofglyph.Hieratic.Examples Proofglyph.Hieratic.ProofglyphExamples Proofglyph.Hieratic.DesugarExamples Proofglyph.Hieratic.HieraticExamples Proofglyph.Hieratic.FileExamples
 	touch $@
 
 extracted: verify
-	cd ../.. && dune build lib/hieratic/tinyprover_hieratic.cma
+	cd ../.. && dune build lib/hieratic/proofglyph_hieratic.cma
 	cp adapter.ml main.ml test_frontend.ml $(BUILD)/
 	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -c frontend.mli && $(OCAMLC) -I "$(ZARITH)" -c frontend.ml
 	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -c adapter.ml

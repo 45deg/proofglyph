@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Proofglyph Require Import CheckerImpl.
-From Tinyprover.Hieratic Require Export CompileSpec ResolveImpl.
+From Proofglyph.Language Require Import CheckerImpl.
+From Proofglyph.Hieratic Require Export CompileSpec ResolveImpl.
 
 Definition lower_decl (gs : globals) (d : source_decl) : option declaration :=
   match resolve gs [] (decl_type d) with

@@ -1,7 +1,7 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Proofglyph Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed Checker.
-From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
-From Tinyprover.ZfcDeep Require Import Artifact DeepVerification.
+From Proofglyph.Language Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed Checker.
+From Proofglyph.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
+From Proofglyph.ZfcDeep Require Import Artifact DeepVerification.
 Import ListNotations.
 
 Fixpoint encode_map r := match r with

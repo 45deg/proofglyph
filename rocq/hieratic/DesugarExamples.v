@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
-From Tinyprover.Proofglyph Require Import Syntax.
-From Tinyprover.Hieratic Require Import Surface Desugar Resolve SurfaceCompile.
+From Proofglyph.Language Require Import Syntax.
+From Proofglyph.Hieratic Require Import Surface Desugar Resolve SurfaceCompile.
 Import ListNotations.
 Open Scope string_scope.
 

@@ -1,3 +1,3 @@
 (executable
  (name main)
- (libraries tinyprover_core tinyprover_proofglyph tinyprover_hieratic))
+ (libraries proofglyph_core proofglyph_language proofglyph_hieratic))

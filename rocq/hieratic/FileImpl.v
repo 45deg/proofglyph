@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
-From Tinyprover.Hieratic Require Export FileSpec.
-From Tinyprover.Hieratic Require Import HieraticSyntaxImpl HieraticImportsImpl SurfaceCompileImpl.
+From Proofglyph.Hieratic Require Export FileSpec.
+From Proofglyph.Hieratic Require Import HieraticSyntaxImpl HieraticImportsImpl SurfaceCompileImpl.
 Import ListNotations.
 
 Fixpoint canonicalize_items (resolve : path_resolver) origin items :=

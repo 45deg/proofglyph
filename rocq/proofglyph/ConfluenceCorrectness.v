@@ -1,5 +1,5 @@
-From Tinyprover.Proofglyph Require Export Confluence.
-From Tinyprover.Proofglyph Require Import Kernel Evaluation.
+From Proofglyph.Language Require Export Confluence.
+From Proofglyph.Language Require Import Kernel Evaluation.
 
 Theorem equal_complete_from_convertibility a b u v :
   conv a b -> evaluates a u -> evaluates b v ->

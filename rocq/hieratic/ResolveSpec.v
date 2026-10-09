@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Proofglyph Require Export Syntax.
-From Tinyprover.Hieratic Require Export Surface.
+From Proofglyph.Language Require Export Syntax.
+From Proofglyph.Hieratic Require Export Surface.
 
 Inductive binds (x : string) : locals -> nat -> Prop :=
 | binds_here : forall ns, binds x (Some x :: ns) 0

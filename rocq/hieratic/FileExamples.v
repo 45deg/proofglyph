@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
-From Tinyprover.Proofglyph Require Import Syntax.
-From Tinyprover.Hieratic Require Import FileCompile.
+From Proofglyph.Language Require Import Syntax.
+From Proofglyph.Hieratic Require Import FileCompile.
 Import ListNotations.
 Open Scope string_scope.
 

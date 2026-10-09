@@ -1,5 +1,5 @@
-From Tinyprover.Proofglyph Require Export Preservation.
-From Tinyprover.Proofglyph Require Import Kernel Evaluation WellFormed.
+From Proofglyph.Language Require Export Preservation.
+From Proofglyph.Language Require Import Kernel Evaluation WellFormed.
 
 Theorem normalization_preserves_type fuel sg ctx t u typ : wf_signature sg ->
   typing sg ctx t typ -> normal fuel t = Some u -> typing sg ctx u typ.

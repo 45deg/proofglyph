@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Ascii Arith Lia DecimalString DecimalNat.
 Import ListNotations.
 Open Scope string_scope.
-From Tinyprover.Proofglyph Require Export CodecCorrectness.
+From Proofglyph.Language Require Export CodecCorrectness.
 
 Lemma scan_digits_stop s : stops_number s -> scan_digits s = (Decimal.Nil, s).
 Proof. destruct s; cbn; auto; intros H; rewrite H; reflexivity. Qed.

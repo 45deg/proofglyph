@@ -1,6 +1,6 @@
 From Stdlib Require Import List PeanoNat Lia.
-From Tinyprover.Proofglyph Require Import Syntax Kernel.
-From Tinyprover.Proofglyph Require Export EvaluationSpec.
+From Proofglyph.Language Require Import Syntax Kernel.
+From Proofglyph.Language Require Export EvaluationSpec.
 Import ListNotations.
 
 (** Successful computations are stable when the depth budget increases. *)

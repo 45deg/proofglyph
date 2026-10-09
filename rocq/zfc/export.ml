@@ -1,7 +1,7 @@
 (* Untrusted artifact generator. Rocq independently checks the emitted AST.
    The proofglyph source is compiled with the same resolved declarations. *)
-open Tinyprover_core
-module Source = Tinyprover_hieratic.Source
+open Proofglyph_core
+module Source = Proofglyph_hieratic.Source
 
 let rec term = function
   | Term.Type -> "tType" | Term.Kind -> "tKind"
@@ -42,7 +42,7 @@ let () =
   if String.sub full.assembly 0 offset <> prelude.assembly then failwith "assembly prefix mismatch";
   out "proofs.pg" (String.sub full.assembly offset (String.length full.assembly - offset));
   out "names.txt" (String.concat "\n" full.names ^ "\n");
-  out "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\n"
+  out "Artifact.v" ("From Stdlib Require Import List.\nFrom Proofglyph.Language Require Import Syntax Program.\nImport ListNotations.\n"
     ^ "Definition prelude : list declaration := " ^ list before ^ ".\n"
     ^ "Definition proofs : list declaration := " ^ list after ^ ".\n");
   Printf.printf "exported %d prelude declarations and %d proved declarations\n" count (List.length body)

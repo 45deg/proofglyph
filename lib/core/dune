@@ -1,2 +1,2 @@
 (library
- (name tinyprover_core))
+ (name proofglyph_core))

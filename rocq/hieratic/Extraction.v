@@ -1,5 +1,5 @@
 From Stdlib Require Import Extraction ExtrOcamlBasic ExtrOcamlString ExtrOcamlNatBigInt.
-From Tinyprover.Hieratic Require Import Compile ProofglyphCodec ProofglyphCompile Desugar SurfaceCompile HieraticSyntax HieraticImports FileCompile.
+From Proofglyph.Hieratic Require Import Compile ProofglyphCodec ProofglyphCompile Desugar SurfaceCompile HieraticSyntax HieraticImports FileCompile.
 
 (** Extract naturals to Zarith to avoid unary allocation and machine overflow.
     The standard extraction mappings and Zarith arithmetic are trusted. *)

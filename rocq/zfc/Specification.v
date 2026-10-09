@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Kernel WellFormed Checker.
-From Tinyprover.Zfc Require Import Formula Axioms Encoding Deduction.
+From Proofglyph.Language Require Import Syntax Kernel WellFormed Checker.
+From Proofglyph.Zfc Require Import Formula Axioms Encoding Deduction.
 
 (** The abstract target contract. Reflection.v supplies a concrete inhabitant
     for the full fixed proof_prelude.ht signature. *)

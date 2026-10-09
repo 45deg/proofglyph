@@ -1,5 +1,5 @@
 From Stdlib Require Import List String Ascii Arith Lia DecimalNat.
-From Tinyprover.Proofglyph Require Export CodecImpl.
+From Proofglyph.Language Require Export CodecImpl.
 Import ListNotations.
 Open Scope string_scope.
 

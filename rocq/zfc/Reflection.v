@@ -1,8 +1,8 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Proofglyph Require Import Syntax Program Kernel Substitution WellFormed TypingSubstitution
+From Proofglyph.Language Require Import Syntax Program Kernel Substitution WellFormed TypingSubstitution
   Checker Evaluation Confluence Preservation TypedNormalization.
-From Tinyprover.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
-From Tinyprover.ZfcDeep Require Import Artifact DeepVerification Translation GroundAdequacy.
+From Proofglyph.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
+From Proofglyph.ZfcDeep Require Import Artifact DeepVerification Translation GroundAdequacy.
 Import ListNotations.
 
 Lemma index_code_injective n m : encode_index n = encode_index m -> n = m.

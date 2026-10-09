@@ -1,6 +1,6 @@
 # proofglyph 形式検証
 
-tinyprover の `.pg` を独立に再検査する、Rocq で実装・証明した型検査器です。
+proofglyph の `.pg` を独立に再検査する、Rocq で実装・証明した型検査器です。
 Gallina の復号器と検査器を OCaml に抽出し、専用 CLI から実行します（既存の OCaml カーネルは呼び出しません）。
 
 ## ビルドと実行

@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Hieratic Require Export DesugarSpec.
+From Proofglyph.Hieratic Require Export DesugarSpec.
 
 Fixpoint bind_products (ps : bindings) (body : expr) : expr :=
   match ps with [] => body | (x, a) :: rest => Product (Some x) a (bind_products rest body) end.

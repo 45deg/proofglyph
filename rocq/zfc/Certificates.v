@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Zfc Require Import Formula Axioms Deduction.
+From Proofglyph.Zfc Require Import Formula Axioms Deduction.
 Import ListNotations.
 
 (** First-order relational certificates for the computations in the fixed LF

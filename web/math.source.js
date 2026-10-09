@@ -103,6 +103,6 @@
     }
     return {latex: go(term)};
   }
-  root.tinyproverMath = {toLatex};
-  if (typeof module !== "undefined") module.exports = root.tinyproverMath;
+  root.proofglyphMath = {toLatex};
+  if (typeof module !== "undefined") module.exports = root.proofglyphMath;
 })(globalThis);

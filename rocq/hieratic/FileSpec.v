@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
-From Tinyprover.Proofglyph Require Export Syntax Program WellFormed CodecSpec.
-From Tinyprover.Hieratic Require Export HieraticImportsSpec CompileSpec.
+From Proofglyph.Language Require Export Syntax Program WellFormed CodecSpec.
+From Proofglyph.Hieratic Require Export HieraticImportsSpec CompileSpec.
 Import ListNotations.
 Open Scope list_scope.
 

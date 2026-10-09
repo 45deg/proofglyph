@@ -1,8 +1,8 @@
-open Tinyprover_core
-module Assembly = Tinyprover_proofglyph.Reader
-module Source = Tinyprover_hieratic.Source
+open Proofglyph_core
+module Assembly = Proofglyph_language.Reader
+module Source = Proofglyph_hieratic.Source
 
-(** {1 tinyprover CLI Entry Point}
+(** {1 proofglyph CLI Entry Point}
 
     Command-line interface implementation:
     - [compile]: Compiles a .ht source file into verified .pg assembly and optional sourcemap.
@@ -27,7 +27,7 @@ let write path data =
 
 (** Prints usage instructions to stderr and exits with status 2. *)
 let usage () =
-  prerr_endline "Usage: tinyprover (compile SOURCE [-o FILE] [--sourcemap FILE] | check ASSEMBLY [--prelude FILE] [--no-axioms] | inspect ASSEMBLY) [--fuel N]";
+  prerr_endline "Usage: proofglyph (compile SOURCE [-o FILE] [--sourcemap FILE] | check ASSEMBLY [--prelude FILE] [--no-axioms] | inspect ASSEMBLY) [--fuel N]";
   exit 2
 
 let () =

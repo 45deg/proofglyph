@@ -1,8 +1,8 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Proofglyph Require Import Checker.
-From Tinyprover.Hieratic Require Export CompileImpl.
-From Tinyprover.Hieratic Require Import Resolve.
+From Proofglyph.Language Require Import Checker.
+From Proofglyph.Hieratic Require Export CompileImpl.
+From Proofglyph.Hieratic Require Import Resolve.
 
 Lemma lower_decl_sound gs d d' : lower_decl gs d = Some d' -> translates_decl gs d d'.
 Proof.

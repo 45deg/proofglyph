@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Hieratic Require Export DesugarImpl.
+From Proofglyph.Hieratic Require Export DesugarImpl.
 
 Lemma products_sound ps b : products ps b (bind_products ps b).
 Proof. induction ps as [|[x a] ps IH]; cbn; constructor; assumption. Qed.

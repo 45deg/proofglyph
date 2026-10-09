@@ -1,4 +1,4 @@
-open Tinyprover_core.Term
+open Proofglyph_core.Term
 
 (** [encode term] serializes [term] into the reverse-Polish notation of the .pg assembly language:
     - [Type] -> [*]

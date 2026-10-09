@@ -1,6 +1,6 @@
 (* Untrusted generator: builds proofglyph terms directly, without the hieratic compiler. *)
-open Tinyprover_core
-module Writer = Tinyprover_proofglyph.Writer
+open Proofglyph_core
+module Writer = Proofglyph_language.Writer
 
 type expr = Name of string | Sort | Apply of expr * expr
   | Product of string * expr * expr | Lambda of string * expr * expr
@@ -165,7 +165,7 @@ let () =
   write "prelude.pg" (String.concat "" (List.map proofglyph !assumptions));
   write "proofs.pg" (String.concat "" (List.map proofglyph !proofs));
   write "names.txt" (String.concat "\n" (List.map fst !globals) ^ "\n");
-  write "Artifact.v" ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list !assumptions
+  write "Artifact.v" ("From Stdlib Require Import List.\nFrom Proofglyph.Language Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list !assumptions
     ^ ".\nDefinition proofs : list declaration := " ^ list !proofs ^ ".\n");
   (* Project the combined inventory, renumbering every reference. Each subset
      is checked in a fresh kernel so it must contain all its dependencies. *)
@@ -191,7 +191,7 @@ let () =
     write (prefix ^ "-prelude.pg") (String.concat "" (List.map proofglyph prelude));
     write (prefix ^ "-proofs.pg") (String.concat "" (List.map proofglyph proofs));
     write (prefix ^ "-names.txt") (String.concat "\n" (List.map (fun (name,_,_) -> name) entries) ^ "\n");
-    write artifact ("From Stdlib Require Import List.\nFrom Tinyprover.Proofglyph Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list prelude
+    write artifact ("From Stdlib Require Import List.\nFrom Proofglyph.Language Require Import Syntax Program.\nImport ListNotations.\nDefinition prelude : list declaration := " ^ list prelude
       ^ ".\nDefinition proofs : list declaration := " ^ list proofs ^ ".\n");
     Printf.printf "exported %s: %d assumptions and %d proofs\n"
       prefix (List.length prelude) (List.length proofs)

@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Compare_dec Lia.
-From Tinyprover.Proofglyph Require Import Syntax Substitution WellFormed TypingSubstitution
+From Proofglyph.Language Require Import Syntax Substitution WellFormed TypingSubstitution
   EvaluationSpec Confluence Generation Preservation.
 Import ListNotations.
 

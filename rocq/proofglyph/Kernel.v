@@ -1,5 +1,5 @@
 From Stdlib Require Import List Bool.
-From Tinyprover.Proofglyph Require Export KernelImpl.
+From Proofglyph.Language Require Export KernelImpl.
 Import ListNotations.
 
 Ltac split_options :=

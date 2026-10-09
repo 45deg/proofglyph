@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Program.
+From Proofglyph.Language Require Import Syntax Program.
 Import ListNotations.
 
 (** Declaration types must themselves be types/kinds in the preceding

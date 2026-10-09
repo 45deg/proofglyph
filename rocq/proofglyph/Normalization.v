@@ -1,5 +1,5 @@
 From Stdlib Require Import List Arith.Wf_nat.
-From Tinyprover.Proofglyph Require Import Syntax Substitution EvaluationSpec Confluence Preservation.
+From Proofglyph.Language Require Import Syntax Substitution EvaluationSpec Confluence Preservation.
 
 (** Accessibility is oriented towards reducts. It includes reductions inside
     annotations and under binders, just like [normal]. *)

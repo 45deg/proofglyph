@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Hieratic Require Export Surface.
+From Proofglyph.Hieratic Require Export Surface.
 
 Inductive raw_expr :=
 | RName (x : string) | RType | RKind

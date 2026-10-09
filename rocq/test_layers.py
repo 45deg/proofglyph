@@ -8,7 +8,7 @@ LANGUAGE = {
     "Proofglyph": set("Syntax Substitution Program WellFormed TypingSubstitution EvaluationSpec Confluence Generation Preservation Regularity Normalization Arity Reducibility TypedNormalization CheckerSpec CodecSpec".split()),
     "Hieratic": set("Surface DesugarSpec ResolveSpec CompileSpec HieraticSyntaxSpec HieraticImportsSpec FileSpec".split()),
 }
-IMPORT = re.compile(r"From\s+Tinyprover\.(Proofglyph|Hieratic)\s+Require\s+(?:Import|Export)\s+([^.]*)\.", re.S)
+IMPORT = re.compile(r"From\s+Proofglyph\.(Proofglyph|Hieratic)\s+Require\s+(?:Import|Export)\s+([^.]*)\.", re.S)
 modules = {(ns, p.stem): p for ns, directory in (("Proofglyph", "proofglyph"), ("Hieratic", "hieratic"))
            for p in (ROOT / directory).glob("*.v")}
 

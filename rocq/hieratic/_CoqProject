@@ -1,5 +1,5 @@
--Q ../proofglyph/_build Tinyprover.Proofglyph
--Q . Tinyprover.Hieratic
+-Q ../proofglyph/_build Proofglyph.Language
+-Q . Proofglyph.Hieratic
 Surface.v
 DesugarSpec.v
 DesugarImpl.v

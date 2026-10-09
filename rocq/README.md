@@ -1,14 +1,14 @@
 # Rocq による形式証明
 
-tinyprover に関連する Rocq（旧 Coq）の形式証明、抽出コード、テストをまとめています。
+proofglyph に関連する Rocq（旧 Coq）の形式証明、抽出コード、テストをまとめています。
 通常の OCaml ビルドには Rocq は不要です。
 
 | サブプロジェクト | 名前空間 | 対象 |
 | --- | --- | --- |
-| [proofglyph/](proofglyph/README.md) | `Tinyprover.Proofglyph` | 核心言語の型付け、検査器の健全性・完全性 |
-| [hieratic/](hieratic/README.md) | `Tinyprover.Hieratic` | 高水準言語の解析・変換・import 展開の検証 |
-| [calculi/](calculi/README.md) | `Tinyprover.Calculi` | 命題論理 NK・LK、LF との対応、カット除去 |
-| [zfc/](zfc/README.md) | `Tinyprover.Zfc` | ZFC 証明体系と proofglyph 符号化の同値性 |
+| [proofglyph/](proofglyph/README.md) | `Proofglyph.Language` | 核心言語の型付け、検査器の健全性・完全性 |
+| [hieratic/](hieratic/README.md) | `Proofglyph.Hieratic` | 高水準言語の解析・変換・import 展開の検証 |
+| [calculi/](calculi/README.md) | `Proofglyph.Calculi` | 命題論理 NK・LK、LF との対応、カット除去 |
+| [zfc/](zfc/README.md) | `Proofglyph.Zfc` | ZFC 証明体系と proofglyph 符号化の同値性 |
 
 ## 検証と実行
 

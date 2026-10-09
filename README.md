@@ -1,4 +1,4 @@
-# tinyprover
+# proofglyph
 
 依存型理論（λΠ計算 / LF）に基づく OCaml 製の小さな証明検査器です。空白不要の極小な記号言語（proofglyph 言語）で記述された証明を検査します。名前付きの構文から proofglyph 言語を生成する補助言語として hieratic 言語を備えています。
 

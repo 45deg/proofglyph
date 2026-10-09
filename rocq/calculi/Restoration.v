@@ -1,7 +1,7 @@
 From Stdlib Require Import List Permutation PeanoNat Lia.
-From Tinyprover.Proofglyph Require Import Syntax Substitution Program WellFormed Evaluation
+From Proofglyph.Language Require Import Syntax Substitution Program WellFormed Evaluation
   Confluence Generation Preservation TypedNormalization Checker.
-From Tinyprover.Calculi Require Import Calculi Encoding Verification Derivations CutElimination.
+From Proofglyph.Calculi Require Import Calculi Encoding Verification Derivations CutElimination.
 Import ListNotations.
 
 (** The fixed signature has first-order domains: none of its constants takes

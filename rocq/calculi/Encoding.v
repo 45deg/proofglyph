@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax.
-From Tinyprover.Calculi Require Import Calculi.
+From Proofglyph.Language Require Import Syntax.
+From Proofglyph.Calculi Require Import Calculi.
 Import ListNotations.
 
 Fixpoint encode_index i := match i with

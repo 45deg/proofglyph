@@ -1,7 +1,7 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Proofglyph Require Export Syntax Program WellFormed.
-From Tinyprover.Hieratic Require Export ResolveSpec.
+From Proofglyph.Language Require Export Syntax Program WellFormed.
+From Proofglyph.Hieratic Require Export ResolveSpec.
 
 Inductive translates_decl (gs : globals) : source_decl -> declaration -> Prop :=
 | translates_assume : forall n a a',

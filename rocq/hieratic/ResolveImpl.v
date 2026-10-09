@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Tinyprover.Hieratic Require Export ResolveSpec.
+From Proofglyph.Hieratic Require Export ResolveSpec.
 
 Definition name_eq_dec (a b : option string) : {a = b} + {a <> b}.
 Proof. decide equality; apply string_dec. Defined.

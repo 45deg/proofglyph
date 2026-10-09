@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Zfc Require Import Formula Axioms Semantics.
+From Proofglyph.Zfc Require Import Formula Axioms Semantics.
 Import ListNotations.
 
 (** Capture-avoiding instantiation of the outermost variable by a free

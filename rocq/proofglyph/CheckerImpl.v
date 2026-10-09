@@ -1,5 +1,5 @@
 From Stdlib Require Import List Bool.
-From Tinyprover.Proofglyph Require Export Syntax Program KernelImpl.
+From Proofglyph.Language Require Export Syntax Program KernelImpl.
 Import ListNotations.
 
 Fixpoint infer fuel sg ctx t : option term :=

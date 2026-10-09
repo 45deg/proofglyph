@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Tinyprover.Zfc Require Import Formula Axioms Semantics Deduction.
+From Proofglyph.Zfc Require Import Formula Axioms Semantics Deduction.
 Import ListNotations.
 
 (** Structural and propositional rules, derived from the existing constructors. *)

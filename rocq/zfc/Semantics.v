@@ -1,5 +1,5 @@
 From Stdlib Require Import List Bool PeanoNat Lia.
-From Tinyprover.Zfc Require Import Formula Axioms.
+From Proofglyph.Zfc Require Import Formula Axioms.
 
 Section Interpretation.
 Context {D : Type} (member : D -> D -> Prop).

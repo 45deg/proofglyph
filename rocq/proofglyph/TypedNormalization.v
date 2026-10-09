@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax WellFormed EvaluationSpec Confluence
+From Proofglyph.Language Require Import Syntax WellFormed EvaluationSpec Confluence
   Regularity Arity Normalization Reducibility.
 
 (** No termination or algorithmic-typing premise: this is strong normalization

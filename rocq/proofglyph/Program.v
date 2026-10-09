@@ -1,5 +1,5 @@
 From Stdlib Require Import List Bool.
-From Tinyprover.Proofglyph Require Import Syntax.
+From Proofglyph.Language Require Import Syntax.
 Import ListNotations.
 
 Inductive declaration :=

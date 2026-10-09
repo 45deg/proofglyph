@@ -1,4 +1,4 @@
-"""Cross-check the extracted checker against tinyprover, including .ht examples."""
+"""Cross-check the extracted checker against proofglyph, including .ht examples."""
 import pathlib
 import random
 import subprocess

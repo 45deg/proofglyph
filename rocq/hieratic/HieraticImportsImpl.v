@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
-From Tinyprover.Hieratic Require Export HieraticImportsSpec.
-From Tinyprover.Hieratic Require Export HieraticSyntaxSpec.
+From Proofglyph.Hieratic Require Export HieraticImportsSpec.
+From Proofglyph.Hieratic Require Export HieraticSyntaxSpec.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope nat_scope.

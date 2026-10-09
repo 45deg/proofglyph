@@ -1,9 +1,9 @@
 From Stdlib Require Import List String.
-From Tinyprover.Proofglyph Require Import Syntax Program WellFormed.
-From Tinyprover.Hieratic Require Import Surface Desugar Compile ProofglyphCodec ProofglyphCompile.
+From Proofglyph.Language Require Import Syntax Program WellFormed.
+From Proofglyph.Hieratic Require Import Surface Desugar Compile ProofglyphCodec ProofglyphCompile.
 Import ListNotations.
 
-From Tinyprover.Hieratic Require Export SurfaceCompileImpl.
+From Proofglyph.Hieratic Require Export SurfaceCompileImpl.
 
 Theorem compile_surface_proofglyph_sound fuel allow raw bytes sg :
   compile_surface_proofglyph fuel allow raw = Some (bytes, sg) ->

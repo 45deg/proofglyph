@@ -1,6 +1,6 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Kernel Program WellFormed Checker.
-From Tinyprover.Zfc Require Import Formula.
+From Proofglyph.Language Require Import Syntax Kernel Program WellFormed Checker.
+From Proofglyph.Zfc Require Import Formula.
 Import ListNotations.
 
 (** A deep syntax encoding. Formula binders are object-level constructors,

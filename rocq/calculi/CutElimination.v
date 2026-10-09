@@ -1,5 +1,5 @@
 From Stdlib Require Import List Permutation PeanoNat Lia Arith.Wf_nat.
-From Tinyprover.Calculi Require Import Calculi.
+From Proofglyph.Calculi Require Import Calculi.
 Import ListNotations.
 
 (** The same context-sharing LK, with no cut constructor. *)

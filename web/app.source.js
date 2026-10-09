@@ -31,7 +31,7 @@ function showProofs(entries) {
     const formula = document.createElement("div");
     formula.className = "formula";
     formula.tabIndex = 0;
-    const {latex} = globalThis.tinyproverMath.toLatex(entry.type);
+    const {latex} = globalThis.proofglyphMath.toLatex(entry.type);
     if (globalThis.katex) {
       try { globalThis.katex.render(latex, formula, {displayMode: true, output: "htmlAndMathml", throwOnError: true, trust: false}); }
       catch (_) { formula.textContent = latex; }
@@ -54,7 +54,7 @@ function showProofs(entries) {
 }
 
 function check() {
-  const checked = (sourcemap ? globalThis.tinyprover.checkMapped : globalThis.tinyprover.check)(proofglyph.value);
+  const checked = (sourcemap ? globalThis.proofglyph.checkMapped : globalThis.proofglyph.check)(proofglyph.value);
   if (checked.ok) showProofs(JSON.parse(checked.entries));
   else showText(`検査失敗\n${checked.output}`);
   status.textContent = checked.ok ? "検査成功" : "検査失敗";
@@ -62,7 +62,7 @@ function check() {
 
 function compile() {
   sourcemap = null;
-  const compiled = globalThis.tinyprover.compileAt(sourcePath, hieratic.value);
+  const compiled = globalThis.proofglyph.compileAt(sourcePath, hieratic.value);
   if (!compiled.ok) {
     proofglyph.value = "";
     showText(compiled.output);
@@ -86,8 +86,8 @@ proofglyph.addEventListener("input", () => {
   status.textContent = "proofglyph が変更されました。再検査してください。";
 });
 async function initialize() {
-if (globalThis.tinyprover) {
-  const sources = new Map(JSON.parse(globalThis.tinyprover.examples)
+if (globalThis.proofglyph) {
+  const sources = new Map(JSON.parse(globalThis.proofglyph.examples)
     .map(entry => [entry.path, entry.source]));
   compileButton.disabled = false;
   checkButton.disabled = false;

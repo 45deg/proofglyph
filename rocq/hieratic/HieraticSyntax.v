@@ -2,7 +2,7 @@ From Stdlib Require Import List String Ascii Bool Arith Lia.
 Import ListNotations.
 Open Scope string_scope.
 Open Scope nat_scope.
-From Tinyprover.Hieratic Require Export HieraticSyntaxImpl.
+From Proofglyph.Hieratic Require Export HieraticSyntaxImpl.
 
 Lemma consume_correct word ts tail : consume word ts = Some tail <-> token_at word ts tail.
 Proof.

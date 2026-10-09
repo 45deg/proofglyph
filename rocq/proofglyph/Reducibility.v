@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Import Syntax Substitution EvaluationSpec Confluence
+From Proofglyph.Language Require Import Syntax Substitution EvaluationSpec Confluence
   Preservation Normalization Arity.
 Import ListNotations.
 

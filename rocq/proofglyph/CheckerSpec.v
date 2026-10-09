@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Tinyprover.Proofglyph Require Export Syntax EvaluationSpec.
+From Proofglyph.Language Require Export Syntax EvaluationSpec.
 Import ListNotations.
 
 Inductive synthesizes (sg : list term) : list term -> term -> term -> Prop :=
