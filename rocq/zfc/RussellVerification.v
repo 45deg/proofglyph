@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Proofglyph.Language Require Import Syntax Program Checker.
+From Proofglyph.Language Require Import Syntax Program WeakChecker.
 From Proofglyph.Zfc Require Import Russell Encoding.
 From Proofglyph.ZfcDeep Require Import DeepVerification Translation.
 From Proofglyph.ZfcRussell Require Import Artifact.

@@ -1,6 +1,6 @@
 From Stdlib Require Import List String.
 Import ListNotations.
-From Proofglyph.Language Require Export Syntax CodecImpl CheckerImpl.
+From Proofglyph.Language Require Export Syntax CodecImpl WeakCheckerImpl.
 From Proofglyph.Hieratic Require Export CompileImpl.
 
 Definition compile_proofglyph fuel allow src : option (string * list term) :=

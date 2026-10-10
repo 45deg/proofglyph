@@ -5,7 +5,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parent
 LANGUAGE = {
-    "Proofglyph": set("Syntax Substitution Program WellFormed TypingSubstitution EvaluationSpec Confluence Generation Preservation Regularity Normalization Arity Reducibility TypedNormalization CheckerSpec CodecSpec".split()),
+    "Proofglyph": set("Syntax Substitution Program WellFormed TypingSubstitution EvaluationSpec WeakHeadSpec Confluence Generation Preservation Regularity Normalization Arity Reducibility TypedNormalization CheckerSpec CodecSpec".split()),
     "Hieratic": set("Surface DesugarSpec ResolveSpec CompileSpec HieraticSyntaxSpec HieraticImportsSpec FileSpec".split()),
 }
 IMPORT = re.compile(r"From\s+Proofglyph\.(Proofglyph|Hieratic)\s+Require\s+(?:Import|Export)\s+([^.]*)\.", re.S)

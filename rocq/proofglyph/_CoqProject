@@ -25,5 +25,13 @@ CodecSpec.v
 CodecImpl.v
 CodecCorrectness.v
 Codec.v
+WeakHeadSpec.v
+WeakHead.v
+WeakNormalization.v
+WeakKernelImpl.v
+WeakEvaluation.v
+WeakCheckerImpl.v
+WeakChecker.v
+WeakExamples.v
 Verification.v
 Extraction.v

@@ -23,6 +23,10 @@ def main():
         ("", True),
         ("*:", True),
         ("*:#0#0>#0$0\\!", True),
+        # A beta redex beneath Pi must be compared recursively, even though
+        # exposing the Pi head leaves its codomain untouched.
+        ("*:#0:#0*>:#0#2#1@>:#0#2#0$0\\#1@@>#3!", True),
+        ("*:#0:#0*>:#0#2#1@>:#0#0>#2#0$0\\#1@@>#3!", False),
         (" \n*:\t#00#0>#0$00\\!\r", True),
         # A family lambda is valid; a lambda returning Type would require a
         # Pi codomain Kind, which has no sort.

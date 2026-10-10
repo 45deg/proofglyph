@@ -127,12 +127,12 @@ node web/test.cjs
 
 | ディレクトリ | 実装・証明の構成 |
 | --- | --- |
-| `rocq/proofglyph/` | AST、宣言的型付け、置換・型保存・合流性・強正規化、`CheckerImpl.v` とその健全性・完全性、OCaml 抽出と手書き CLI |
+| `rocq/proofglyph/` | AST、宣言的型付け、置換・型保存・合流性・強正規化、`WeakCheckerImpl.v` とその健全性・完全性、OCaml 抽出と手書き CLI |
 | `rocq/hieratic/` | 糖衣 AST・展開、名前解決・宣言変換、proofglyph 側の共通 codec、独立した lexer/parser・import 展開、抽出コードと I/O アダプター |
 | `rocq/calculi/` | 独立した NK・LK、固定 LF シグネチャとの対応、LK のカット除去、直接 AST からの proofglyph 出力と再検査 |
 | `rocq/zfc/` | 一階論理・ZFC の証明体系、式の符号化、固定シグネチャとの翻訳・復元、生成証明と Russell の例の再検査 |
 
-`proofglyph` は `Checker.v` の抽出検査器を使い、通常の OCaml カーネルを呼ばない。proofglyph 側の共通抽出 codec が宣言列を構築する。任意バイト列の復号と独立した字句・スタック仕様の対応を証明している。I/O・CLI・index 上限の事前検査は未検証。
+`proofglyph` は `WeakChecker.v` で健全性・完全性を証明した弱頭検査器を抽出して使い、通常の OCaml カーネルを呼ばない。proofglyph 側の共通抽出 codec が宣言列を構築する。任意バイト列の復号と独立した字句・スタック仕様の対応を証明している。I/O・CLI・index 上限の事前検査は未検証。
 
 `hieratic` の実行経路は次のとおり。
 

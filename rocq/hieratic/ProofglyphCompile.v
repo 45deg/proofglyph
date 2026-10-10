@@ -1,5 +1,5 @@
 From Stdlib Require Import List String.
-From Proofglyph.Language Require Import Syntax Program WellFormed Checker.
+From Proofglyph.Language Require Import Syntax Program WellFormed WeakChecker.
 From Proofglyph.Hieratic Require Import Surface Compile ProofglyphCodec.
 Import ListNotations.
 

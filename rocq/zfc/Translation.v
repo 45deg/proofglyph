@@ -1,5 +1,5 @@
 From Stdlib Require Import List PeanoNat Bool Lia.
-From Proofglyph.Language Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed Checker.
+From Proofglyph.Language Require Import Syntax Kernel Program Substitution TypingSubstitution WellFormed WeakChecker.
 From Proofglyph.Zfc Require Import Formula Axioms Deduction Encoding Certificates Specification.
 From Proofglyph.ZfcDeep Require Import Artifact DeepVerification.
 Import ListNotations.

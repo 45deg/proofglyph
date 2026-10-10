@@ -1,6 +1,6 @@
 From Stdlib Require Import List Permutation PeanoNat Lia.
 From Proofglyph.Language Require Import Syntax Substitution Program WellFormed Evaluation
-  Confluence Generation Preservation TypedNormalization Checker.
+  Confluence Generation Preservation TypedNormalization WeakChecker.
 From Proofglyph.Calculi Require Import Calculi Encoding Verification Derivations CutElimination.
 Import ListNotations.
 

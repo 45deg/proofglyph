@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Proofglyph.Language Require Import Syntax Kernel Program WellFormed Checker.
+From Proofglyph.Language Require Import Syntax Kernel Program WellFormed WeakChecker.
 From Proofglyph.Calculi Require Import Artifact Encoding.
 From Proofglyph.Calculi Require NKArtifact LKArtifact.
 Import ListNotations.
