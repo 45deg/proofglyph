@@ -19,7 +19,7 @@ rocq/proofglyph/_build/proofglyph check /tmp/proof.pg --prelude /tmp/prelude.pg
 
 ## 証明した保証
 
-宣言的な型付け規則（`typing` / `valid_program`）に対し、弱頭検査器（`WeakCheckerImpl.check_program`）の以下を証明しています（追加公理や `Admitted` は使用していません）。
+宣言的な型付け規則（`typing` / `valid_program`）に対し、キャッシュ付き弱頭検査器（`CachedCheckerImpl.check_program`）の以下を証明しています（追加公理や `Admitted` は使用していません）。
 
 - **健全性（Soundness）**: 検査器が受理した宣言列は、宣言的な型付け規則を満たす。
 - **完全性（Completeness）**: 正しい宣言列は、十分な fuel を与えれば必ず受理される。
@@ -54,13 +54,32 @@ rocq/proofglyph/_build/proofglyph check /tmp/proof.pg --prelude /tmp/prelude.pg
 `WeakChecker.v` は実行可能な推論の仕様との対応、健全性、宣言的完全性、宣言列・prelude の検査の正しさを証明します。
 完全性は、ある上限以上のすべての fuel で成功するという保証です。任意の未型付け項の終了性は主張しません。
 
-抽出 CLI は弱頭版を使用します。Hieratic の再検査も同じ弱頭検査器を使います。
+抽出 CLI はキャッシュ付き弱頭版を使用します。Hieratic の再検査も同じ弱頭検査器を使います。
 完全正規化版の `Checker.v` は比較用に残し、Hieratic の出力を正規化する処理には引き続き `normal` を使います。
 `WeakExamples.v` は binder・引数を弱頭簡約しないこと、比較ではその内部も調べること、fuel 枯渇時の拒否を検証します。
 `make -C rocq/proofglyph verify` は主要定理の `Print Assumptions` と `rocq check` による再検査を行います。
 
-推論キャッシュはまだ抽出検査器には実装していません。キャッシュの証明はリストによるモデルを対象とし、
-ホスト OCaml のハッシュ表、機械整数、手書きコードとモデルの対応は未証明です。
+## 推論キャッシュとハッシュ表への抽出
+
+`CacheTableImpl.v` は有限な永続テーブルを定義し、`CacheTable.v` は lookup・insert と保存値の不変条件を証明します。
+`CachedCheckerImpl.v` は文脈全体と項をキーに、成功した推論型と必要な fuel を保存します。
+保存した fuel が現在の fuel に収まる場合だけヒットにし、足りなければ再計算します。
+失敗は保存せず、各宣言で新しいテーブルを作ります。
+
+`CachedChecker.v` の `infer_correct` / `check_equivalent` / `program_equivalent` は、
+有効なキャッシュのもとで、同じ fuel に対する結果がキャッシュなしの弱頭版と一致することを証明します。
+CLI のキャッシュは空から始まるため、この不変条件が保たれます。健全性・完全性・fuel の単調性も引き継ぎます。
+
+`CacheExtraction.v` はテーブルと操作を OCaml の `Persistent_hash` に置き換えます。
+実行時には `Hashtbl` のバケットを使い、衝突したキーは抽出した等値判定で比較します。
+版を切り替えるときに差分を戻すことで、古いテーブルの lookup 結果を保ち、通常の状態渡しではテーブル全体のコピーを避けます。
+キーは不変で、等しいキーのハッシュが一致することを前提とします。
+
+Gallina のテーブルとキャッシュの正しさは追加公理なしで証明済みです。
+OCaml の永続ハッシュ表と抽出置換との対応は信頼境界に残り、形式証明ではなく実行テストで検証します。
+`test_cache.ml` は分岐した版・長い履歴・衝突・Zarith キー・ヒット・失敗と、
+同じ fuel でのキャッシュなし推論との12,000件の比較を検証します。
+ホスト OCaml のハッシュ表・共有 fuel・手書きコード全体との一般的な対応は未証明です。
 
 ## 信頼境界と制限
 

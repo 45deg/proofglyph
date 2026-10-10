@@ -3,6 +3,8 @@ From Proofglyph.Hieratic Require Import Compile ProofglyphCodec ProofglyphCompil
 
 (** Extract naturals to Zarith to avoid unary allocation and machine overflow.
     The standard extraction mappings and Zarith arithmetic are trusted. *)
+From Proofglyph.Language Require Import CacheExtraction.
+
 Extraction Language OCaml.
 Set Extraction Output Directory ".".
 Extraction "frontend.ml" compile lower encode_proofglyph decode_proofglyph compile_proofglyph check_proofglyph

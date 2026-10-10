@@ -20,13 +20,18 @@ $(BUILD)/verified: $(VFILES) _CoqProject Makefile
 
 verify: $(BUILD)/verified
 
-$(BUILD)/proofglyph: $(BUILD)/verified main.ml
-	cp main.ml $(BUILD)/
+$(BUILD)/proofglyph: $(BUILD)/verified main.ml persistent_hash.ml persistent_hash.mli
+	cp main.ml persistent_hash.ml persistent_hash.mli $(BUILD)/
+	cd $(BUILD) && $(OCAMLC) -c persistent_hash.mli && $(OCAMLC) -c persistent_hash.ml
 	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -w +a-4-42-70 -c checker.mli
 	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -w +a-4-42-70 -c checker.ml
-	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -w +a-4-42-70 -o proofglyph zarith.cma checker.cmo main.ml
+	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -w +a-4-42-70 -o proofglyph zarith.cma persistent_hash.cmo checker.cmo main.ml
 
 test: all
+	cp test_cache.ml $(BUILD)/
+	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -c cache_reference.mli && $(OCAMLC) -I "$(ZARITH)" -c cache_reference.ml
+	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -o test_cache zarith.cma persistent_hash.cmo checker.cmo cache_reference.cmo test_cache.ml
+	$(BUILD)/test_cache
 	python3 test_cli.py
 
 clean:

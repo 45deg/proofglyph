@@ -54,3 +54,20 @@ Print Assumptions accepted_program_wf.
 Print Assumptions prelude_and_main_sound.
 Print Assumptions prelude_and_main_complete.
 Print Assumptions program_monotone.
+
+From Proofglyph.Language Require Import CacheTable CachedChecker.
+Print Assumptions table_lookup_valid.
+Print Assumptions table_insert_valid.
+Print Assumptions table_lookup_insert_same.
+Print Assumptions table_lookup_insert_other.
+Print Assumptions infer_correct.
+Print Assumptions check_equivalent.
+Print Assumptions program_equivalent.
+Print Assumptions check_sound.
+Print Assumptions declarative_check_complete.
+Print Assumptions declarative_program_complete.
+Print Assumptions program_correct.
+Print Assumptions accepted_program_wf.
+Print Assumptions prelude_and_main_sound.
+Print Assumptions prelude_and_main_complete.
+Print Assumptions program_monotone.

@@ -1,5 +1,5 @@
 From Stdlib Require Import List String Arith Lia.
-From Proofglyph.Language Require Import Evaluation Codec WeakChecker.
+From Proofglyph.Language Require Import Evaluation Codec CachedChecker.
 From Proofglyph.Hieratic Require Import Desugar Compile HieraticImports FileCompile ProofglyphCompile.
 Import ListNotations.
 Open Scope list_scope.

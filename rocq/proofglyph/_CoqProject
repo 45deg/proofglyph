@@ -33,5 +33,11 @@ WeakEvaluation.v
 WeakCheckerImpl.v
 WeakChecker.v
 WeakExamples.v
+CacheTableImpl.v
+CacheTable.v
+CachedCheckerImpl.v
+CachedChecker.v
+CacheExamples.v
+CacheExtraction.v
 Verification.v
 Extraction.v

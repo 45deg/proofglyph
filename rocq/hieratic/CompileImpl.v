@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Proofglyph.Language Require Import WeakCheckerImpl.
+From Proofglyph.Language Require Import CachedCheckerImpl.
 From Proofglyph.Hieratic Require Export CompileSpec ResolveImpl.
 
 Definition lower_decl (gs : globals) (d : source_decl) : option declaration :=

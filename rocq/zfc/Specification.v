@@ -1,5 +1,5 @@
 From Stdlib Require Import List.
-From Proofglyph.Language Require Import Syntax Kernel WellFormed WeakChecker.
+From Proofglyph.Language Require Import Syntax Kernel WellFormed CachedChecker.
 From Proofglyph.Zfc Require Import Formula Axioms Encoding Deduction.
 
 (** The abstract target contract. Reflection.v supplies a concrete inhabitant

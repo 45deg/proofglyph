@@ -1,6 +1,6 @@
 From Stdlib Require Import List String Arith Lia.
 Import ListNotations.
-From Proofglyph.Language Require Import WeakChecker.
+From Proofglyph.Language Require Import CachedChecker.
 From Proofglyph.Hieratic Require Export CompileImpl.
 From Proofglyph.Hieratic Require Import Resolve.
 

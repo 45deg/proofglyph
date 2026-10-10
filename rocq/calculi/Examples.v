@@ -1,5 +1,5 @@
 From Stdlib Require Import List Permutation.
-From Proofglyph.Language Require Import Syntax Kernel WeakChecker.
+From Proofglyph.Language Require Import Syntax Kernel CachedChecker.
 From Proofglyph.Calculi Require Import Calculi Encoding Verification Derivations
   CutElimination Restoration.
 Import ListNotations.

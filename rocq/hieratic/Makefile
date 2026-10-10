@@ -31,13 +31,14 @@ $(BUILD)/verified: ../proofglyph/_build/verified $(VFILES) _CoqProject Makefile
 
 extracted: verify
 	cd ../.. && dune build lib/hieratic/proofglyph_hieratic.cma
-	cp adapter.ml main.ml test_frontend.ml $(BUILD)/
+	cp adapter.ml main.ml test_frontend.ml ../proofglyph/persistent_hash.ml ../proofglyph/persistent_hash.mli $(BUILD)/
+	cd $(BUILD) && $(OCAMLC) -c persistent_hash.mli && $(OCAMLC) -c persistent_hash.ml
 	cd $(BUILD) && $(OCAMLC) -I "$(ZARITH)" -c frontend.mli && $(OCAMLC) -I "$(ZARITH)" -c frontend.ml
 	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -c adapter.ml
-	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -o hieratic $(LIBS) frontend.cmo adapter.cmo main.ml
+	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -o hieratic $(LIBS) persistent_hash.cmo frontend.cmo adapter.cmo main.ml
 
 test: extracted
-	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -o test_frontend $(LIBS) frontend.cmo adapter.cmo test_frontend.ml
+	cd $(BUILD) && $(OCAMLC) $(LIBFLAGS) -o test_frontend $(LIBS) persistent_hash.cmo frontend.cmo adapter.cmo test_frontend.ml
 	python3 test_cli.py
 
 clean:
