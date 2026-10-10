@@ -27,7 +27,7 @@ dune exec bin/main.exe -- check /tmp/addition.pg
 | [logic/classical.ht](logic/classical.ht) | 排中律を使うド・モルガン則の方向。 |
 | [logic/quantifiers.ht](logic/quantifiers.ht) | 型 `U` 上の全称・存在量化、関数の合成。 |
 | [equality.ht](equality.ht) | 型 `U` 上の等式の対称律・推移律・関数による保存。 |
-| [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、137定理。 |
+| [nat/](nat/) | 自然数の等式、算術、順序、整数論の証明。25モジュール、139定理。 |
 | [sets/russell.ht](sets/russell.ht) | 分出から導く普遍集合の非存在。排中律・選択公理は不要。 |
 
 `foundation/` では、未定義の型・論理記号を `symbol`、信頼する論理・等式・Peano・再帰・分出の原理を `axiom`、演算や述語を `def`、定義から導く規則や方程式を `theorem` で記述します。`And`・`Or`・`Not`・`False`・`Exists`・`Divides`・`Prime`・順序・偶奇・合同式などの導入除去規則や、加算・乗算・累乗・和・二項係数などの方程式は証明済みです。再帰の公理は `recursion.ht` に明示し、Peano 公理だけから導出したとは主張しません。列への再帰と境界付き再帰は定義であり、それぞれの方程式も証明済みです。`symbol` もカーネル上では前提として数えます。各定理の詳細と証明の一覧は [証明カタログ](../../docs/proofs.md) を参照してください。

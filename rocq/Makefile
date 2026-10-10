@@ -10,6 +10,7 @@ verify test:
 	$(MAKE) -C hieratic $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C calculi $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
 	$(MAKE) -C zfc $@ ROCQ=$(ROCQ) OCAMLC=$(OCAMLC)
+	$(MAKE) -C example_axioms $@ ROCQ=$(ROCQ)
 
 check-layers:
 	python3 test_layers.py

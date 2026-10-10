@@ -5,14 +5,9 @@ import "ordered_multiplication.ht";
 
 theorem prime_positive (p : Nat) (hp : Prf (Prime p)) : Prf (Lt zero p)
   := prime_elim p (Lt zero p) hp
-    (fun (h : Prf (Lt (succ zero) p)) (divs : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ
-    zero)) (Eq d p))) =>
-      lt_elim (succ zero) p (Lt zero p) h
-        (fun (k : Nat) (hk : Prf (Eq p (add (succ zero) (succ k)))) => lt_intro zero p (succ k) (eq_trans p
-    (succ (succ k)) (add zero (succ (succ k))) (eq_trans p (succ (add zero (succ k))) (succ (succ k))
-    (eq_trans p (add (succ zero) (succ k)) (succ (add zero (succ k))) (hk) (add_succ zero (succ k)))
-    (eq_cong (fun (z : Nat) => (succ z)) (add zero (succ k)) (succ k) (add_zero (succ k)))) (eq_sym (add
-    zero (succ (succ k))) (succ (succ k)) (add_zero (succ (succ k)))))));
+    (fun (h : Prf (Lt (succ zero) p))
+      (divs : forall (d : Nat), Prf (Divides d p) -> Prf (Or (Eq d (succ zero)) (Eq d p)))
+      => gt_one_positive p h);
 
 theorem prime_not_divides_interior (p k : Nat) (hp : Prf (Prime p))
   (hk : Prf (Lt zero k)) (hkp : Prf (Lt k p)) (hd : Prf (Divides p k)) : Prf False

@@ -8,6 +8,7 @@ proofglyph に関連する Rocq（旧 Coq）の形式証明、抽出コード、
 | [proofglyph/](proofglyph/README.md) | `Proofglyph.Language` | 核心言語の型付け、検査器の健全性・完全性 |
 | [hieratic/](hieratic/README.md) | `Proofglyph.Hieratic` | 高水準言語の解析・import 展開・透明な定義の展開・型検査の検証 |
 | [calculi/](calculi/README.md) | `Proofglyph.Calculi` | 命題論理 NK・LK、LF との対応、カット除去 |
+| [example_axioms/](example_axioms/README.md) | `Proofglyph.ExampleAxioms` | examples の17公理の独立したモデル検証 |
 | [zfc/](zfc/README.md) | `Proofglyph.Zfc` | ZFC 証明体系と proofglyph 符号化の同値性 |
 
 ## 検証と実行

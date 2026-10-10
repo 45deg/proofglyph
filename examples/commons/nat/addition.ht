@@ -86,11 +86,9 @@ theorem add_interchange (a b c d : Nat) : Prf (Eq (add (add a b) (add c d)) (add
     b d)));
 
 theorem add_one_right (a : Nat) : Prf (Eq (add a (succ zero)) (succ a))
-  := eq_trans (add a (succ zero)) (succ (add a zero)) (succ a) (eq_trans (add a (succ zero)) (add a (succ
-    zero)) (succ (add a
-    zero)) (eq_cong (fun (z : Nat) => (add a z)) (succ zero) (succ zero) (one_succ)) (add_succ_right a
-    zero)) (eq_cong
-    (fun (z : Nat) => (succ z)) (add a zero) a (add_zero_right a));
+  := eq_trans (add a (succ zero)) (succ (add a zero)) (succ a)
+    (add_succ_right a zero)
+    (eq_cong (fun (z : Nat) => succ z) (add a zero) a (add_zero_right a));
 
 theorem add_succ_not_self (a k : Nat) (h : Prf (Eq (add a (succ k)) a)) : Prf False
   := imp_elim (Eq (add a (succ k)) a) False

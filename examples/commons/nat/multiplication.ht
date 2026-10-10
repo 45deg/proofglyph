@@ -26,11 +26,10 @@ theorem mul_add_left (a b c : Nat) : Prf (Eq (mul (add a b) c) (add (mul a c) (m
     a;
 
 theorem mul_one_left (a : Nat) : Prf (Eq (mul (succ zero) a) a)
-  := eq_trans (mul (succ zero) a) (add a zero) a (eq_trans (mul (succ zero) a) (add a (mul zero a)) (add a
-    zero) (eq_trans
-    (mul (succ zero) a) (mul (succ zero) a) (add a (mul zero a)) (eq_cong (fun (z : Nat) => (mul z a)) (succ
-    zero) (succ zero)
-    (one_succ)) (mul_succ zero a)) (eq_cong (fun (z : Nat) => (add a z)) (mul zero a) zero (mul_zero a)))
+  := eq_trans (mul (succ zero) a) (add a zero) a
+    (eq_trans (mul (succ zero) a) (add a (mul zero a)) (add a zero)
+      (mul_succ zero a)
+      (eq_cong (fun (z : Nat) => add a z) (mul zero a) zero (mul_zero a)))
     (add_zero_right a);
 
 theorem mul_succ_right (a b : Nat) : Prf (Eq (mul a (succ b)) (add a (mul a b)))
@@ -111,8 +110,6 @@ theorem mul_one_right (a : Nat) : Prf (Eq (mul a (succ zero)) a)
   := eq_trans (mul a (succ zero)) (mul (succ zero) a) a (mul_comm a (succ zero)) (mul_one_left a);
 
 theorem mul_two_left (a : Nat) : Prf (Eq (mul (succ (succ zero)) a) (add a a))
-  := eq_trans (mul (succ (succ zero)) a) (add a (mul (succ zero) a)) (add a a) (eq_trans (mul (succ (succ
-    zero)) a) (mul (succ (succ zero)) a) (add a (mul
-    (succ zero) a)) (eq_cong (fun (z : Nat) => (mul z a)) (succ (succ zero)) (succ (succ zero)) (two_succ))
-    (mul_succ (succ zero) a)) (eq_cong (fun
-    (z : Nat) => (add a z)) (mul (succ zero) a) a (mul_one_left a));
+  := eq_trans (mul (succ (succ zero)) a) (add a (mul (succ zero) a)) (add a a)
+    (mul_succ (succ zero) a)
+    (eq_cong (fun (z : Nat) => add a z) (mul (succ zero) a) a (mul_one_left a));
