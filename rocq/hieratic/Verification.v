@@ -56,3 +56,14 @@ Print Assumptions compile_files_proofglyph_recheck.
 Print Assumptions compile_files_sound.
 Print Assumptions compile_files_complete.
 Print Assumptions compile_files_correct.
+
+From Proofglyph.Hieratic Require Import Elaboration.
+Print Assumptions expand_constants_correct.
+Print Assumptions elaborate_lower_sound.
+Print Assumptions elaborate_lower_complete.
+Print Assumptions compile_elaborated_sound.
+Print Assumptions compile_files_elaborated_sound.
+Print Assumptions compile_files_elaborated_recheck.
+Print Assumptions compile_elaborated_complete.
+Print Assumptions compile_files_elaborated_complete.
+Print Assumptions expand_constants_scoped.

@@ -35,7 +35,8 @@ Qed.
 
 Theorem equal_sound fuel a b : equal fuel a b = true -> conv a b.
 Proof.
-  unfold equal; intros H; split_options.
+  unfold equal; destruct (term_eq_dec a b) as [E|E]; [intros; subst; constructor|].
+  intros H; split_options.
   destruct (term_eq_dec t t0); try discriminate; subst.
   eapply cv_trans; [eapply normal_sound; eauto|].
   apply cv_sym; eapply normal_sound; eauto.

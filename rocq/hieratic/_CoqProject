@@ -29,5 +29,6 @@ FileSpec.v
 FileImpl.v
 FileCompile.v
 FileExamples.v
+Elaboration.v
 Verification.v
 Extraction.v

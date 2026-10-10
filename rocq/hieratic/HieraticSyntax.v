@@ -227,10 +227,9 @@ Proof.
     rewrite H,H0; cbn [andb]. rewrite PC by (cbn [List.length] in *; lia).
     rewrite (proj2 (consume_correct ":" _ _) eq_refl), TC by (cbn [List.length] in *; lia).
     inversion H4; subst.
-    + rewrite String.eqb_refl.
+    + match goal with E : assumption_keyword kind = true |- _ => rewrite E end.
       rewrite (proj2 (consume_correct ";" _ _) eq_refl), IHitems_parse by (cbn [List.length] in *; lia); reflexivity.
-    + match goal with NE : kind <> "axiom" |- _ =>
-        rewrite (proj2 (String.eqb_neq _ _) NE) end.
+    + match goal with E : assumption_keyword kind = false |- _ => rewrite E end.
       rewrite (proj2 (consume_correct ":=" _ _) eq_refl).
       match goal with B : term_parses _ _ (Word ";"::rest) |- _ =>
         pose proof (proj1 syntax_complete _ _ _ B) as BTBC end.

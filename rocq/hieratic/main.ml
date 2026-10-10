@@ -20,11 +20,11 @@ let run () =
   if Array.length Sys.argv < 3 then usage ();
   let command = Sys.argv.(1) in
   if not (List.mem command ["check"; "check-proofglyph"; "compile"]) then usage ();
-  let allow = ref true and fuel = ref 2048 and output = ref None and elaborate = ref false in
+  let allow = ref true and fuel = ref 2048 and output = ref None in
   let rec options i =
     if i < Array.length Sys.argv then
       match Sys.argv.(i) with
-      | "--elaborate" when command <> "check-proofglyph" -> elaborate := true; options (i + 1)
+      | "--elaborate" when command <> "check-proofglyph" -> options (i + 1)
       | "--no-axioms" -> allow := false; options (i + 1)
       | "-o" when command = "compile" && i + 1 < Array.length Sys.argv && !output = None ->
           output := Some Sys.argv.(i + 1); options (i + 2)
@@ -42,23 +42,13 @@ let run () =
     match Frontend.check_proofglyph fuel !allow bytes with
     | None -> reject ()
     | Some signature -> Printf.printf "Accepted %d declarations\n" (List.length signature))
-  else if !elaborate then (
-    (* Host elaboration is not covered by the extracted frontend proofs.
-       The unchanged extracted checker independently verifies every output byte. *)
-    let compiled = Adapter.Source.compile_file Sys.argv.(2) in
-    let bytes = Adapter.chars compiled.assembly in
-    match Frontend.check_proofglyph fuel !allow bytes with
-    | None -> reject ()
-    | Some signature ->
-        if command = "compile" then write_output !output compiled.assembly
-        else Printf.printf "Accepted %d declarations\n" (List.length signature))
   else (
     let entry, inputs, resolve = Adapter.load_inputs Sys.argv.(2) in
     if command = "compile" then (
-      match Frontend.compile_files_proofglyph fuel !allow resolve inputs entry with
+      match Frontend.compile_files_elaborated_proofglyph fuel !allow resolve inputs entry with
       | None -> reject ()
       | Some (bytes, _) -> write_output !output (Adapter.string_of_chars bytes))
-    else match Frontend.compile_files fuel !allow resolve inputs entry with
+    else match Frontend.compile_files_elaborated fuel !allow resolve inputs entry with
       | None -> reject ()
       | Some (checked, _) -> Printf.printf "Accepted %d declarations\n" (List.length checked))
 

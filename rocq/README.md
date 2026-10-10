@@ -6,7 +6,7 @@ proofglyph に関連する Rocq（旧 Coq）の形式証明、抽出コード、
 | サブプロジェクト | 名前空間 | 対象 |
 | --- | --- | --- |
 | [proofglyph/](proofglyph/README.md) | `Proofglyph.Language` | 核心言語の型付け、検査器の健全性・完全性 |
-| [hieratic/](hieratic/README.md) | `Proofglyph.Hieratic` | 高水準言語の解析・変換・import 展開の検証 |
+| [hieratic/](hieratic/README.md) | `Proofglyph.Hieratic` | 高水準言語の解析・import 展開・透明な定義の展開・型検査の検証 |
 | [calculi/](calculi/README.md) | `Proofglyph.Calculi` | 命題論理 NK・LK、LF との対応、カット除去 |
 | [zfc/](zfc/README.md) | `Proofglyph.Zfc` | ZFC 証明体系と proofglyph 符号化の同値性 |
 

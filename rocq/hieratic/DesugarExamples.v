@@ -34,9 +34,9 @@ Example no_parameters_is_identity :
 Proof. split; reflexivity. Qed.
 
 Example grouped_source_to_proofglyph : compile_surface_proofglyph 32 true
-  [RawDecl "A" RType None;
+  [RawDecl "A" RType None false;
    RawDecl "keep"
      (RForall (PGroup "x" ["y"] (RName "A") PNil) (RName "A"))
-     (Some (RLambda (PGroup "x" ["y"] (RName "A") PNil) (RName "x")))] =
+     (Some (RLambda (PGroup "x" ["y"] (RName "A") PNil) (RName "x"))) true] =
   Some ("*:#0#0#0>>#0#0$1\\!", [tType; tPi (tConst 0) (tPi (tConst 0) (tConst 0))]).
 Proof. reflexivity. Qed.

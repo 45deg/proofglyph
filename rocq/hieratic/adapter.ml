@@ -36,7 +36,7 @@ let raw_syntax : F.raw_expr Source.syntax = {
 }
 
 let raw_declaration (d : F.raw_expr Source.parsed_declaration) =
-  { F.raw_name = chars d.name; raw_type = d.typ; raw_body = d.body }
+  { F.raw_name = chars d.name; raw_type = d.typ; raw_body = d.body; raw_transparent = (d.at.text = "def") }
 
 (* Parsing and graph expansion run in extracted code. Only byte I/O and
    canonical path resolution are host operations. The old algebra above is

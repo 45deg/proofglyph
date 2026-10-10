@@ -181,14 +181,16 @@ let () =
   if F.compile (Adapter.nat_of_int 0) true axiom <> None then failwith "zero fuel accepted";
   if F.compile fuel false [] <> Some ([], []) then failwith "empty program rejected";
   Array.iteri (fun i path -> if i > 0 then (
-    (* New symbol/transparent-def syntax uses host elaboration. Check the emitted
-       bytes with the independent extracted codec and kernel, rather than claiming
-       that the legacy verified source parser implements this extension. *)
     let compiled = S.compile_file path in
-    let bytes = Adapter.chars compiled.assembly in
+    let entry, inputs, resolve = Adapter.load_inputs path in
+    let bytes, checked = match F.compile_files_elaborated_proofglyph fuel true resolve inputs entry with
+      | Some result -> result
+      | None -> failwith (path ^ ": verified elaboration rejected") in
+    if Adapter.string_of_chars bytes <> String.concat "" (String.split_on_char '\n' compiled.assembly) then
+      failwith (path ^ ": extracted and OCaml elaboration bytes disagree");
     match F.decode_proofglyph bytes, F.check_proofglyph fuel true bytes with
     | Some declarations, Some signature ->
-        if signature <> List.map F.declared_type declarations then
+        if signature <> checked || signature <> List.map F.declared_type declarations then
           failwith (path ^ ": elaborated signature mismatch");
         if F.decode_proofglyph (F.encode_proofglyph declarations) <> Some declarations then
           failwith (path ^ ": elaborated bytes failed roundtrip")

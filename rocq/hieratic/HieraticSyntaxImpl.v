@@ -129,14 +129,14 @@ Fixpoint parse_items_hieratic fuel ts : option (list hieratic_item) :=
       | Some (ps,tail) => match consume ":" tail with
         | Some tail => match parse_term k tail with
           | Some (a,tail) =>
-            let body := if String.eqb kind "axiom" then Some (None,tail) else
+            let body := if assumption_keyword kind then Some (None,tail) else
               match consume ":=" tail with
               | Some tail => match parse_term k tail with
                 | Some (b,tail) => Some (Some (RLambda ps b),tail) | None => None end
               | None => None end in
             match body with
             | Some (b,tail) => match consume ";" tail with
-              | Some tail => option_map (cons (HieraticDeclaration (RawDecl n (RForall ps a) b))) (parse_items_hieratic k tail)
+              | Some tail => option_map (cons (HieraticDeclaration (RawDecl n (RForall ps a) b (String.eqb kind "def")))) (parse_items_hieratic k tail)
               | None => None end
             | None => None end
           | None => None end

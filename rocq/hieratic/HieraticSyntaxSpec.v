@@ -10,7 +10,7 @@ Definition ident c := letter c ||
   ((48 <=? nat_of_ascii c) && (nat_of_ascii c <=? 57)) || (nat_of_ascii c =? 39).
 Definition whitespace c := existsb (Ascii.eqb c) [" "%char; "009"%char; "010"%char; "013"%char].
 Inductive hieratic_token := Word (s : string) | Path (s : string).
-Definition reserved s := existsb (String.eqb s) ["axiom";"def";"theorem";"import";"forall";"fun";"Type";"Kind"].
+Definition reserved s := existsb (String.eqb s) ["axiom";"symbol";"def";"theorem";"import";"forall";"fun";"Type";"Kind"].
 Definition name_token t := match t with
   | Word (String c _) => letter c && negb (reserved (match t with Word s => s | _ => "" end))
   | _ => false end.
@@ -70,11 +70,12 @@ with application_parses_ind' := Induction for application_parses Sort Prop
 with parameters_parse_ind' := Induction for parameters_parse Sort Prop.
 Combined Scheme syntax_ind from term_parses_ind', atom_parses_ind', application_parses_ind', parameters_parse_ind'.
 
-Definition declaration_keyword w := String.eqb w "axiom" || String.eqb w "def" || String.eqb w "theorem".
+Definition assumption_keyword w := String.eqb w "axiom" || String.eqb w "symbol".
+Definition declaration_keyword w := assumption_keyword w || String.eqb w "def" || String.eqb w "theorem".
 Inductive body_parses (kind : string) (ps : parameters) :
     list hieratic_token -> option raw_expr -> list hieratic_token -> Prop :=
-| body_axiom : forall ts, kind = "axiom" -> body_parses kind ps ts None ts
-| body_proof : forall ts b tail, kind <> "axiom" -> term_parses ts b tail ->
+| body_axiom : forall ts, assumption_keyword kind = true -> body_parses kind ps ts None ts
+| body_proof : forall ts b tail, assumption_keyword kind = false -> term_parses ts b tail ->
     body_parses kind ps (Word ":="::ts) (Some (RLambda ps b)) tail.
 Inductive items_parse : list hieratic_token -> list hieratic_item -> Prop :=
 | items_parse_nil : items_parse [] []
@@ -87,7 +88,7 @@ Inductive items_parse : list hieratic_token -> list hieratic_item -> Prop :=
     body_parses kind ps after_body body (Word ";"::rest) ->
     items_parse rest items ->
     items_parse (Word kind::Word n::ts)
-      (HieraticDeclaration (RawDecl n (RForall ps a) body)::items).
+      (HieraticDeclaration (RawDecl n (RForall ps a) body (String.eqb kind "def"))::items).
 
 (** Byte classification is part of the lexical language specification. *)
 Inductive byte_role := SpaceByte | SlashByte | LetterByte | QuoteByte | PairByte | PunctuationByte | InvalidByte.

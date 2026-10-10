@@ -13,8 +13,8 @@ make -C rocq/hieratic
 make -C rocq/hieratic test
 
 # 抽出した CLI の実行
-rocq/hieratic/_build/hieratic check examples/basics.ht --elaborate
-rocq/hieratic/_build/hieratic compile examples/basics.ht --elaborate -o /tmp/basics.pg
+rocq/hieratic/_build/hieratic check examples/basics.ht
+rocq/hieratic/_build/hieratic compile examples/basics.ht -o /tmp/basics.pg
 rocq/hieratic/_build/hieratic check-proofglyph /tmp/basics.pg
 ```
 
@@ -28,17 +28,22 @@ rocq/hieratic/_build/hieratic check-proofglyph /tmp/basics.pg
 
 ## 新しい Hieratic 拡張
 
-通常の OCaml フロントエンドは `symbol` と透明な `def` をサポートします。これらは上記の形式証明の対象ではありません。`--elaborate` は通常のフロントエンドで `.pg` を生成し、抽出された独立の codec・型検査器で再検査するモードです。既存の証明済み解析・名前解決経路はこのモードでは使いません。フラグなしの経路は従来の構文と不透明定義の意味を保持します。
+`symbol` は `axiom` と同じ前提宣言として解析し、`def` の本体は後続の参照へ展開します。`theorem` は不透明です。`Elaboration.v` の独立した展開関係・評価関係に対して、展開器の正しさとコンパイルの健全性・完全性を証明しています。展開済みの簡約前の項と簡約後の項を両方検査し、簡約で消える不正な引数も拒否します。閉じた定義の展開が局所変数を捕獲しないことも証明しています。
+
+抽出 CLI はこの経路を標準で使用します。`--elaborate` は互換用の別名で、ホスト OCaml コンパイラへ処理を委ねません。既存 OCaml との出力一致は例ごとのテストで検証し、一般的な実装間の同値性証明とは区別します。
 
 ## 信頼境界と制限
 
 - **抽出と整数演算**: 自然数は `ExtrOcamlNatBigInt` で Zarith の多倍長整数に抽出します。この置換設定と Zarith は信頼境界に残ります。
 - **ホスト環境**: ファイル I/O、実体パスの解決（`realpath`）、依存ファイルの収集は OCaml（ホスト環境）が担当します。
 - **名前付き言語の独立理論**: 名前付き言語自体の型理論は独立に定式化せず、核心言語（proofglyph）への宣言的翻訳関係を通じて検証しています。
+- **通常の OCaml カーネルとの差**: 同一項の比較を省略する最適化は反映しています。ホスト側の弱頭簡約による比較・型推論キャッシュは抽出検査器に移植しておらず、fuel の消費や実行時間は一致しません。
 - **計算資源**: fuel は再帰の深さであり、実機の時間・メモリ内での完了を保証するものではありません。
 
 ## TODO
 
+- [ ] 弱頭簡約による型の比較を Rocq の抽出検査器に移植し、健全性・完全性を証明する
+- [ ] 型推論キャッシュを Rocq の抽出検査器に移植し、文脈を含むキー、宣言登録時の無効化、失敗をキャッシュしない処理の正しさを証明する
 - [ ] 名前付き言語自体の型付け・置換・α同値性の独立な形式化
 - [ ] 既存 OCaml の reader / writer とのバイトレベルでの厳密な同値性証明
 - [ ] CLI の行・列位置情報の保持とエラー報告の強化

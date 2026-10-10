@@ -17,7 +17,7 @@ examples = sorted((ROOT.parent.parent / "examples").rglob("*.ht"))
 assert examples, "no example sources found"
 subprocess.run([str(ROOT / "_build" / "test_frontend"), *map(str, examples)], check=True)
 for example in examples:
-    run(["check", example, "--elaborate"])
+    run(["check", example])
 run([], 2)
 with tempfile.TemporaryDirectory(prefix="hieratic-") as tmp:
     directory = Path(tmp)
@@ -90,6 +90,30 @@ with tempfile.TemporaryDirectory(prefix="hieratic-") as tmp:
         run(["check-proofglyph", assembly], 1)
     assembly.write_text(" \t*\n\r: ")
     assert run(["check-proofglyph", assembly]).stdout.strip() == "Accepted 1 declarations"
+    # Transparent definitions affect later types; theorem bodies stay opaque.
+    entry.write_text("symbol A : Type; symbol a : A; def T : Type := A; "
+                     "def id (x : T) : T := x; theorem good : T := id a;")
+    assert run(["check", entry]).stdout.strip() == "Accepted 5 declarations"
+    transparent = run(["compile", entry]).stdout
+    assert run(["compile", entry, "--elaborate"]).stdout == transparent
+    run(["check", entry, "--no-axioms"], 1)
+    entry.write_text("symbol A : Type; symbol a : A; theorem T : Type := A; "
+                     "theorem bad : T := a;")
+    run(["check", entry], 1)
+    # The unreduced pass must reject ill-typed arguments erased by beta reduction.
+    for argument in ("Type", "Kind"):
+        entry.write_text("symbol A : Type; symbol a : A; "
+                         "def ignore (x : A) : A := a; "
+                         f"theorem bad : A := ignore {argument};")
+        run(["check", entry], 1)
+    # Closed macro bodies must not capture a new local binder.
+    entry.write_text("symbol A : Type; def id (x : A) : A := x; "
+                     "theorem nested (x : A) (y : A) : A := id x;")
+    assert run(["check", entry]).stdout.strip() == "Accepted 3 declarations"
+    for source in ("def self : Type := self;", "def early : Type := later; symbol later : Type;",
+                   "symbol A : Type; def A : Type := A;"):
+        entry.write_text(source)
+        run(["check", entry], 1)
     entry.write_text("")
     assert run(["check", entry, "--no-axioms"]).stdout.strip() == "Accepted 0 declarations"
     assert run(["compile", entry]).stdout == ""

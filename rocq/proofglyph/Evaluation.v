@@ -24,6 +24,7 @@ Theorem equal_monotone n m a b :
   n <= m -> equal n a b = true -> equal m a b = true.
 Proof.
   intros L H; unfold equal in *.
+  destruct (term_eq_dec a b); [reflexivity|].
   destruct (normal n a) eqn:A; try discriminate.
   destruct (normal n b) eqn:B; try discriminate.
   rewrite (normal_monotone _ _ _ _ L A), (normal_monotone _ _ _ _ L B); exact H.
@@ -77,7 +78,8 @@ Proof.
   intros A B.
   destruct (eventually_and _ _ (normal_complete _ _ A) (normal_complete _ _ B)) as [k HK].
   exists k; intros n L; destruct (HK n L) as [NA NB].
-  unfold equal; rewrite NA, NB; destruct (term_eq_dec u u); congruence.
+  unfold equal; destruct (term_eq_dec a b); [reflexivity|].
+  rewrite NA, NB; destruct (term_eq_dec u u); congruence.
 Qed.
 
 Theorem as_sort_complete a s : evaluates a s -> is_sort s ->

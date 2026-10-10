@@ -55,14 +55,15 @@ Combined Scheme expansion_mutind from expands_mut, expands_parameters_mut.
 Record raw_declaration := RawDecl {
   raw_name : string;
   raw_type : raw_expr;
-  raw_body : option raw_expr
+  raw_body : option raw_expr;
+  raw_transparent : bool
 }.
 
 Inductive expands_declaration : raw_declaration -> source_decl -> Prop :=
-| expands_assumption : forall n a a', expands a a' ->
-    expands_declaration (RawDecl n a None) (Decl n a' None)
-| expands_proof : forall n a b a' b', expands a a' -> expands b b' ->
-    expands_declaration (RawDecl n a (Some b)) (Decl n a' (Some b')).
+| expands_assumption : forall n a a' transparent, expands a a' ->
+    expands_declaration (RawDecl n a None transparent) (Decl n a' None)
+| expands_proof : forall n a b a' b' transparent, expands a a' -> expands b b' ->
+    expands_declaration (RawDecl n a (Some b) transparent) (Decl n a' (Some b')).
 
 Definition expands_program := Forall2 expands_declaration.
 

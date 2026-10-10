@@ -26,7 +26,7 @@ Fixpoint normal (fuel : nat) (t : term) : option term :=
   end.
 
 Definition equal (fuel : nat) (a b : term) : bool :=
-  match normal fuel a, normal fuel b with
+  if term_eq_dec a b then true else match normal fuel a, normal fuel b with
   | Some a', Some b' => if term_eq_dec a' b' then true else false
   | _, _ => false
   end.

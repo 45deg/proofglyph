@@ -45,7 +45,7 @@ Proof. reflexivity. Qed.
 
 Lemma desugar_declaration_sound d : expands_declaration d (desugar_declaration d).
 Proof.
-  destruct d as [n a [b|]]; cbn; constructor; apply desugar_sound_mutual.
+  destruct d as [n a [b|] transparent]; cbn; constructor; apply desugar_sound_mutual.
 Qed.
 Lemma desugar_declaration_complete d out :
   expands_declaration d out -> desugar_declaration d = out.
@@ -69,5 +69,5 @@ Proof. induction src; cbn; congruence. Qed.
 Theorem desugar_kinds src : map is_assumption (desugar_program src) =
   map (fun d => match raw_body d with None => true | Some _ => false end) src.
 Proof.
-  induction src as [|[n a [b|]] src IH]; cbn; try rewrite IH; reflexivity.
+  induction src as [|[n a [b|] transparent] src IH]; cbn; try rewrite IH; reflexivity.
 Qed.
