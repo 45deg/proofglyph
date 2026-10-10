@@ -1,6 +1,6 @@
 # proofglyph
 
-依存型理論（λΠ計算 / LF）に基づく OCaml 製の小さな証明検査器です。空白不要の極小な記号言語（proofglyph 言語）で記述された証明を検査します。名前付きの構文から proofglyph 言語を生成する補助言語として hieratic 言語を備えています。
+依存型理論（λΠ計算 / LF）に基づく OCaml 製の小さな証明検査器です。記号言語（proofglyph 言語）で記述された証明を検査します。名前付きの構文から proofglyph 言語を生成する補助言語として hieratic 言語を備えています。
 
 hieratic 言語の入力：
 
@@ -56,6 +56,14 @@ python3 web/dev.py
 ```
 
 [http://127.0.0.1:8765](http://127.0.0.1:8765) を開いて利用します。
+
+ブラウザ版のコンパイルと型検査は Web Worker で実行します。処理中も編集でき、「処理を中止」または入力の変更で実行中の処理を停止できます。Worker 化は画面の応答性を保つためのもので、証明の計算量自体を減らすものではありません。
+
+```sh
+dune build @web/browser
+node web/test.cjs
+node web/worker.test.cjs
+```
 
 ## 形式証明と信頼境界 (Rocq)
 
