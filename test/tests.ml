@@ -118,6 +118,20 @@ let () =
     reject_source "symbol A : Type; def loop (x : A) : A := loop x;";
     reject_source "symbol A : Type; symbol B : Type; symbol a : A; def id (x : A) : A := x; theorem erased : A := (fun (x : B) => a) a;";
     reject_source "symbol A : Type; symbol a : A; def id (x : A) : A := x; theorem erased : A := (fun (x : Kind) => a) a;");
+  test "weak-head conversion compares lambda bodies and rejects different neutrals" (fun () ->
+    let prefix = "symbol A : Type; symbol a : A; symbol b : A; symbol F : (A -> A) -> Type; symbol h : F (fun (x : A) => a);" in
+    ignore (compile (prefix ^ "theorem good : F (fun (x : A) => (fun (y : A) => a) x) := h;"));
+    reject_source (prefix ^ "theorem bad : F (fun (x : A) => (fun (y : A) => b) x) := h;"));
+  test "inference cache includes binder context and never caches failures" (fun () ->
+    let k = Kernel.create () in
+    ignore (Kernel.assume k Type);
+    ignore (Kernel.assume k Type);
+    assert (Kernel.infer k (Lam (Const 0, Var 0)) = Pi (Const 0, Const 0));
+    assert (Kernel.infer k (Lam (Const 1, Var 0)) = Pi (Const 1, Const 1));
+    rejects (fun () -> ignore (Kernel.infer k (Const 2)));
+    assert (Kernel.assume k (Const 1) = 2);
+    assert (Kernel.infer k (Const 2) = Const 1);
+    rejects (fun () -> ignore (Kernel.infer k (App (Lam (Const 0, Var 0), Const 2)))));
   test "index overflow" (fun () -> rejects(fun () -> verify "#999999999999999999999999999999:"));
   test "missing index" (fun () -> rejects(fun () -> verify "#:"));
   test "stack underflow" (fun () -> rejects(fun () -> verify "@"));
@@ -288,9 +302,7 @@ let () =
         run ()));
   let arithmetic_axioms = [
     "AllBi";
-    "AllNat";
     "AllProp";
-    "AllSeq";
     "Eq";
     "Imp";
     "Nat";
@@ -298,31 +310,16 @@ let () =
     "Prop";
     "all_bi_elim";
     "all_bi_intro";
-    "all_nat_elim";
-    "all_nat_intro";
     "all_prop_elim";
     "all_prop_intro";
-    "all_seq_elim";
-    "all_seq_intro";
-    "bounded_rec";
-    "bounded_rec_inside";
-    "bounded_rec_outside";
-    "bounded_rec_zero";
-    "eq_refl";
     "eq_subst";
     "excluded_middle";
     "imp_elim";
     "imp_intro";
     "nat_induction";
-    "nat_rec";
     "nat_rec_diagonal";
     "nat_rec_diagonal_succ";
     "nat_rec_diagonal_zero";
-    "nat_rec_seq";
-    "nat_rec_seq_succ";
-    "nat_rec_seq_zero";
-    "nat_rec_succ";
-    "nat_rec_zero";
     "succ";
     "succ_not_zero";
     "zero";
@@ -379,13 +376,13 @@ let () =
     List.iter (fun name ->
       let d = List.find (fun (d:Source.declaration) -> d.name = name) ds in
       assert (d.at.text = "def" && d.body <> None))
-      ["And"; "Or"; "Not"; "False"; "Exists"; "Divides"; "Prime"; "Coprime"; "Lt"; "Le"; "Even"; "Odd"; "Cong";
+      ["AllNat"; "AllSeq"; "nat_rec"; "bounded_rec"; "lt_flag"; "nat_rec_seq"; "And"; "Or"; "Not"; "False"; "Exists"; "Divides"; "Prime"; "Coprime"; "Lt"; "Le"; "Even"; "Odd"; "Cong";
        "RationalRootTwo"; "add"; "mul"; "pow"; "pred"; "choose"; "convolution";
        "diagonal"; "sum"; "sum_between"; "factorial"; "triangular"];
     List.iter (fun name ->
       let d = List.find (fun (d:Source.declaration) -> d.name = name) ds in
       assert (d.at.text = "theorem" && d.body <> None))
-      ["and_intro"; "and_left"; "and_right"; "or_left"; "or_right"; "or_elim";
+      ["eq_refl"; "all_nat_intro"; "all_nat_elim"; "all_seq_intro"; "all_seq_elim"; "nat_rec_zero"; "nat_rec_succ"; "bounded_rec_zero"; "bounded_rec_inside"; "bounded_rec_outside"; "lt_flag_inside"; "lt_flag_outside"; "nat_rec_seq_zero"; "nat_rec_seq_succ"; "and_intro"; "and_left"; "and_right"; "or_left"; "or_right"; "or_elim";
        "false_elim"; "not_intro"; "not_elim"; "exists_intro"; "exists_elim"; "succ_injective";
        "divides_intro"; "divides_elim"; "prime_intro"; "prime_elim";
        "add_succ"; "mul_succ"; "pow_succ"; "sum_succ"; "sum_between_succ_inside";
@@ -546,6 +543,15 @@ let () =
       "../examples/commons/nat/sqrt_two.ht";
       "../examples/commons/nat/sums.ht";
     ]);
+  test "bounded recursion is derived without classical assumptions" (fun () ->
+    let ds = Source.load "../examples/commons/foundation/bounded_recursion.ht" in
+    ignore (Source.compile_declarations ds);
+    assert (not (List.exists (fun (d:Source.declaration) ->
+      d.name = "excluded_middle") ds));
+    List.iter (fun name ->
+      let d = List.find (fun (d:Source.declaration) -> d.name = name) ds in
+      assert (d.body <> None))
+      ["bounded_rec"; "bounded_rec_zero"; "bounded_rec_inside"; "bounded_rec_outside"]);
   test "addition imports neither classical logic nor number theory" (fun () ->
     let declarations = Source.load "../examples/commons/nat/addition.ht" in
     List.iter (fun name ->

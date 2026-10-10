@@ -1,20 +1,8 @@
-// Primitive universal quantification over numbers, sequences and binary functions.
-// Exists is defined using AllProp, AllNat and implication; its rules are proved.
-// The primitive implication rules are imported from logic.ht.
+// Primitive quantification over binary natural-number functions.
+// AllNat and AllSeq use evaluation and constant-function embeddings of AllBi.
+// Their inference rules and the existential rules are checked proofs.
 
 import "peano.ht";
-
-symbol AllNat : (Nat -> Prop) -> Prop;
-
-axiom all_nat_intro (P : Nat -> Prop) : (forall (n : Nat), Prf (P n)) -> Prf (AllNat P);
-
-symbol AllSeq : ((Nat -> Nat) -> Prop) -> Prop;
-
-axiom all_nat_elim (P : Nat -> Prop) : Prf (AllNat P) -> forall (n : Nat), Prf (P n);
-
-axiom all_seq_elim (P : (Nat -> Nat) -> Prop) : Prf (AllSeq P) -> forall (f : Nat -> Nat), Prf (P f);
-
-axiom all_seq_intro (P : (Nat -> Nat) -> Prop) : (forall (f : Nat -> Nat), Prf (P f)) -> Prf (AllSeq P);
 
 symbol AllBi : ((Nat -> Nat -> Nat) -> Prop) -> Prop;
 
@@ -23,6 +11,26 @@ axiom all_bi_elim (P : (Nat -> Nat -> Nat) -> Prop) : Prf (AllBi P) -> forall (h
 
 axiom all_bi_intro (P : (Nat -> Nat -> Nat) -> Prop) : (forall (h : Nat -> Nat -> Nat), Prf (P h)) -> Prf
     (AllBi P);
+
+def AllNat (P : Nat -> Prop) : Prop :=
+  AllBi (fun (h : Nat -> Nat -> Nat) => P (h zero zero));
+theorem all_nat_intro (P : Nat -> Prop) (proof : forall (n : Nat), Prf (P n)) : Prf (AllNat P) :=
+  all_bi_intro (fun (h : Nat -> Nat -> Nat) => P (h zero zero))
+    (fun (h : Nat -> Nat -> Nat) => proof (h zero zero));
+theorem all_nat_elim (P : Nat -> Prop) (proof : Prf (AllNat P)) (n : Nat) : Prf (P n) :=
+  all_bi_elim (fun (h : Nat -> Nat -> Nat) => P (h zero zero)) proof
+    (fun (i j : Nat) => n);
+
+def AllSeq (P : (Nat -> Nat) -> Prop) : Prop :=
+  AllBi (fun (h : Nat -> Nat -> Nat) => P (h zero));
+theorem all_seq_intro (P : (Nat -> Nat) -> Prop)
+  (proof : forall (f : Nat -> Nat), Prf (P f)) : Prf (AllSeq P) :=
+  all_bi_intro (fun (h : Nat -> Nat -> Nat) => P (h zero))
+    (fun (h : Nat -> Nat -> Nat) => proof (h zero));
+theorem all_seq_elim (P : (Nat -> Nat) -> Prop) (proof : Prf (AllSeq P))
+  (f : Nat -> Nat) : Prf (P f) :=
+  all_bi_elim (fun (h : Nat -> Nat -> Nat) => P (h zero)) proof
+    (fun (i : Nat) => f);
 
 // Existential quantification is defined by its continuation encoding.
 def Exists (P : Nat -> Prop) : Prop :=

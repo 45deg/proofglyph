@@ -1,0 +1,98 @@
+// Bounded recursion defined using primitive recursion and a numeric comparison.
+// Its three equations are proved constructively, without a bounded-recursion axiom.
+
+import "../nat/order.ht";
+
+def lt_flag_base (a : Nat) : Nat := zero;
+def lt_flag_step (n : Nat) (previous : Nat -> Nat) (a : Nat) : Nat :=
+  nat_rec (succ zero) (fun (k r : Nat) => previous k) a;
+def lt_flag (a n : Nat) : Nat := nat_rec_seq lt_flag_base lt_flag_step n a;
+
+theorem lt_flag_zero (a : Nat) : Prf (Eq (lt_flag a zero) zero) :=
+  nat_rec_seq_zero lt_flag_base lt_flag_step a;
+theorem lt_flag_zero_succ (n : Nat) : Prf (Eq (lt_flag zero (succ n)) (succ zero)) :=
+  eq_trans (lt_flag zero (succ n)) (lt_flag_step n (fun (a : Nat) => lt_flag a n) zero) (succ zero)
+    (nat_rec_seq_succ lt_flag_base lt_flag_step n zero)
+    (nat_rec_zero (succ zero) (fun (k r : Nat) => lt_flag k n));
+theorem lt_flag_succ_succ (a n : Nat) : Prf (Eq (lt_flag (succ a) (succ n)) (lt_flag a n)) :=
+  eq_trans (lt_flag (succ a) (succ n)) (lt_flag_step n (fun (a : Nat) => lt_flag a n) (succ a)) (lt_flag a n)
+    (nat_rec_seq_succ lt_flag_base lt_flag_step n (succ a))
+    (nat_rec_succ (succ zero) (fun (k r : Nat) => lt_flag k n) a);
+
+theorem lt_flag_inside (a n : Nat) (h : Prf (Lt a n)) : Prf (Eq (lt_flag a n) (succ zero)) :=
+  imp_elim (Lt a n) (Eq (lt_flag a n) (succ zero))
+    (all_nat_elim (fun (a : Nat) => Imp (Lt a n) (Eq (lt_flag a n) (succ zero)))
+      (nat_induction (fun (x : Nat) => AllNat (fun (a : Nat) => Imp (Lt a x) (Eq (lt_flag a x) (succ zero))))
+        (all_nat_intro (fun (a : Nat) => Imp (Lt a zero) (Eq (lt_flag a zero) (succ zero)))
+          (fun (a : Nat) => imp_intro (Lt a zero) (Eq (lt_flag a zero) (succ zero))
+            (fun (h : Prf (Lt a zero)) => false_elim (Eq (lt_flag a zero) (succ zero)) (lt_zero_absurd a h))))
+        (fun (x : Nat) (ih : Prf (AllNat (fun (a : Nat) => Imp (Lt a x) (Eq (lt_flag a x) (succ zero))))) =>
+          all_nat_intro (fun (a : Nat) => Imp (Lt a (succ x)) (Eq (lt_flag a (succ x)) (succ zero)))
+            (fun (a : Nat) => nat_cases
+              (fun (a : Nat) => Imp (Lt a (succ x)) (Eq (lt_flag a (succ x)) (succ zero))) a
+              (imp_intro (Lt zero (succ x)) (Eq (lt_flag zero (succ x)) (succ zero))
+                (fun (h : Prf (Lt zero (succ x))) => lt_flag_zero_succ x))
+              (fun (k : Nat) => imp_intro (Lt (succ k) (succ x)) (Eq (lt_flag (succ k) (succ x)) (succ zero))
+                (fun (h : Prf (Lt (succ k) (succ x))) =>
+                  eq_trans (lt_flag (succ k) (succ x)) (lt_flag k x) (succ zero)
+                    (lt_flag_succ_succ k x)
+                    (imp_elim (Lt k x) (Eq (lt_flag k x) (succ zero))
+                      (all_nat_elim (fun (a : Nat) => Imp (Lt a x) (Eq (lt_flag a x) (succ zero))) ih k)
+                      (lt_succ_cancel k x h)))))) n) a) h;
+
+theorem lt_flag_outside (a n : Nat) (h : Prf (Not (Lt a n))) : Prf (Eq (lt_flag a n) (zero)) :=
+  imp_elim (Not (Lt a n)) (Eq (lt_flag a n) (zero))
+    (all_nat_elim (fun (a : Nat) => Imp (Not (Lt a n)) (Eq (lt_flag a n) (zero)))
+      (nat_induction (fun (x : Nat) => AllNat (fun (a : Nat) => Imp (Not (Lt a x)) (Eq (lt_flag a x) (zero))))
+        (all_nat_intro (fun (a : Nat) => Imp (Not (Lt a zero)) (Eq (lt_flag a zero) (zero)))
+          (fun (a : Nat) => imp_intro (Not (Lt a zero)) (Eq (lt_flag a zero) (zero))
+            (fun (h : Prf (Not (Lt a zero))) => lt_flag_zero a)))
+        (fun (x : Nat) (ih : Prf (AllNat (fun (a : Nat) => Imp (Not (Lt a x)) (Eq (lt_flag a x) (zero))))) =>
+          all_nat_intro (fun (a : Nat) => Imp (Not (Lt a (succ x))) (Eq (lt_flag a (succ x)) (zero)))
+            (fun (a : Nat) => nat_cases
+              (fun (a : Nat) => Imp (Not (Lt a (succ x))) (Eq (lt_flag a (succ x)) (zero))) a
+              (imp_intro (Not (Lt zero (succ x))) (Eq (lt_flag zero (succ x)) (zero))
+                (fun (h : Prf (Not (Lt zero (succ x)))) => false_elim (Eq (lt_flag zero (succ x)) (zero)) (not_elim (Lt zero (succ x)) h (zero_lt_succ x))))
+              (fun (k : Nat) => imp_intro (Not (Lt (succ k) (succ x))) (Eq (lt_flag (succ k) (succ x)) (zero))
+                (fun (h : Prf (Not (Lt (succ k) (succ x)))) =>
+                  eq_trans (lt_flag (succ k) (succ x)) (lt_flag k x) (zero)
+                    (lt_flag_succ_succ k x)
+                    (imp_elim (Not (Lt k x)) (Eq (lt_flag k x) (zero))
+                      (all_nat_elim (fun (a : Nat) => Imp (Not (Lt a x)) (Eq (lt_flag a x) (zero))) ih k)
+                      (not_intro (Lt k x) (fun (hk : Prf (Lt k x)) => not_elim (Lt (succ k) (succ x)) h (lt_succ k x hk)))))))) n) a) h;
+
+def bounded_select (outside inside flag : Nat) : Nat :=
+  nat_rec outside (fun (k r : Nat) => inside) flag;
+def bounded_rec (lo z : Nat) (step : Nat -> Nat -> Nat) (n : Nat) : Nat :=
+  nat_rec z (fun (k r : Nat) => bounded_select r (step k r) (lt_flag lo k)) n;
+theorem bounded_rec_zero (lo z : Nat) (step : Nat -> Nat -> Nat)
+  : Prf (Eq (bounded_rec lo z step zero) z) :=
+  nat_rec_zero z (fun (k r : Nat) => bounded_select r (step k r) (lt_flag lo k));
+theorem bounded_rec_inside (lo z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
+  (h : Prf (Lt lo n))
+  : Prf (Eq (bounded_rec lo z step (succ n)) (step n (bounded_rec lo z step n))) :=
+  eq_trans (bounded_rec lo z step (succ n))
+    (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) (lt_flag lo n))
+    (step n (bounded_rec lo z step n))
+    (nat_rec_succ z (fun (k r : Nat) => bounded_select r (step k r) (lt_flag lo k)) n)
+    (eq_trans
+      (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) (lt_flag lo n))
+      (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) (succ zero))
+      (step n (bounded_rec lo z step n))
+      (eq_cong (fun (flag : Nat) => bounded_select (bounded_rec lo z step n)
+        (step n (bounded_rec lo z step n)) flag) (lt_flag lo n) (succ zero) (lt_flag_inside lo n h))
+      (nat_rec_succ (bounded_rec lo z step n) (fun (k r : Nat) => step n (bounded_rec lo z step n)) zero));
+theorem bounded_rec_outside (lo z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
+  (h : Prf (Not (Lt lo n)))
+  : Prf (Eq (bounded_rec lo z step (succ n)) (bounded_rec lo z step n)) :=
+  eq_trans (bounded_rec lo z step (succ n))
+    (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) (lt_flag lo n))
+    (bounded_rec lo z step n)
+    (nat_rec_succ z (fun (k r : Nat) => bounded_select r (step k r) (lt_flag lo k)) n)
+    (eq_trans
+      (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) (lt_flag lo n))
+      (bounded_select (bounded_rec lo z step n) (step n (bounded_rec lo z step n)) zero)
+      (bounded_rec lo z step n)
+      (eq_cong (fun (flag : Nat) => bounded_select (bounded_rec lo z step n)
+        (step n (bounded_rec lo z step n)) flag) (lt_flag lo n) zero (lt_flag_outside lo n h))
+      (nat_rec_zero (bounded_rec lo z step n) (fun (k r : Nat) => step n (bounded_rec lo z step n))));

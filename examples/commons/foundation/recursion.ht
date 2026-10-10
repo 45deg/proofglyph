@@ -1,22 +1,8 @@
-// Axioms of primitive recursion on natural numbers.
-// The recursors return numbers, sequences, or functionals on two-variable functions.
-// Each has only a base axiom and a successor axiom. Named arithmetic functions
-// are definitions, and their equations are theorems derived from these axioms.
+// Primitive recursion with functional state: only two recursion axioms.
+// Number and sequence recursion are definitions using this single recursor.
+// Their base and successor equations below are checked proofs.
 
 import "nat_core.ht";
-
-symbol nat_rec : Nat -> (Nat -> Nat -> Nat) -> Nat -> Nat;
-axiom nat_rec_zero (z : Nat) (step : Nat -> Nat -> Nat)
-  : Prf (Eq (nat_rec z step zero) z);
-axiom nat_rec_succ (z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
-  : Prf (Eq (nat_rec z step (succ n)) (step n (nat_rec z step n)));
-
-symbol nat_rec_seq : (Nat -> Nat)
-  -> (Nat -> (Nat -> Nat) -> Nat -> Nat) -> Nat -> Nat -> Nat;
-axiom nat_rec_seq_zero (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (k : Nat)
-  : Prf (Eq (nat_rec_seq z step zero k) (z k));
-axiom nat_rec_seq_succ (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (n k : Nat)
-  : Prf (Eq (nat_rec_seq z step (succ n) k) (step n (nat_rec_seq z step n) k));
 
 symbol nat_rec_diagonal : ((Nat -> Nat -> Nat) -> Nat)
   -> (Nat -> ((Nat -> Nat -> Nat) -> Nat) -> (Nat -> Nat -> Nat) -> Nat)
@@ -28,6 +14,54 @@ axiom nat_rec_diagonal_succ (z : (Nat -> Nat -> Nat) -> Nat)
   (step : Nat -> ((Nat -> Nat -> Nat) -> Nat) -> (Nat -> Nat -> Nat) -> Nat)
   (n : Nat) (h : Nat -> Nat -> Nat)
   : Prf (Eq (nat_rec_diagonal z step (succ n) h) (step n (nat_rec_diagonal z step n) h));
+
+// The base equation provides Eq r a for every a. Substitution in Eq x a
+// then yields Eq a a, so natural-number reflexivity needs no separate axiom.
+def reflexivity_seed (a : Nat) : Nat :=
+  nat_rec_diagonal (fun (h : Nat -> Nat -> Nat) => a)
+    (fun (n : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) => a)
+    zero (fun (i j : Nat) => zero);
+theorem reflexivity_seed_eq (a : Nat) : Prf (Eq (reflexivity_seed a) a) :=
+  nat_rec_diagonal_zero (fun (h : Nat -> Nat -> Nat) => a)
+    (fun (n : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) => a)
+    (fun (i j : Nat) => zero);
+theorem eq_refl (a : Nat) : Prf (Eq a a) :=
+  eq_subst (fun (x : Nat) => Eq x a) (reflexivity_seed a) a
+    (reflexivity_seed_eq a) (reflexivity_seed_eq a);
+
+def nat_rec (z : Nat) (step : Nat -> Nat -> Nat) (n : Nat) : Nat :=
+  nat_rec_diagonal (fun (h : Nat -> Nat -> Nat) => z)
+    (fun (k : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step k (previous h)) n (fun (i j : Nat) => zero);
+theorem nat_rec_zero (z : Nat) (step : Nat -> Nat -> Nat)
+  : Prf (Eq (nat_rec z step zero) z) :=
+  nat_rec_diagonal_zero (fun (h : Nat -> Nat -> Nat) => z)
+    (fun (k : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step k (previous h)) (fun (i j : Nat) => zero);
+theorem nat_rec_succ (z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
+  : Prf (Eq (nat_rec z step (succ n)) (step n (nat_rec z step n))) :=
+  nat_rec_diagonal_succ (fun (h : Nat -> Nat -> Nat) => z)
+    (fun (k : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step k (previous h)) n (fun (i j : Nat) => zero);
+
+def nat_rec_seq (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat)
+  (n k : Nat) : Nat :=
+  nat_rec_diagonal (fun (h : Nat -> Nat -> Nat) => z (h zero zero))
+    (fun (i : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step i (fun (j : Nat) => previous (fun (a b : Nat) => j)) (h zero zero))
+    n (fun (a b : Nat) => k);
+theorem nat_rec_seq_zero (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (k : Nat)
+  : Prf (Eq (nat_rec_seq z step zero k) (z k)) :=
+  nat_rec_diagonal_zero (fun (h : Nat -> Nat -> Nat) => z (h zero zero))
+    (fun (i : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step i (fun (j : Nat) => previous (fun (a b : Nat) => j)) (h zero zero))
+    (fun (a b : Nat) => k);
+theorem nat_rec_seq_succ (z : Nat -> Nat) (step : Nat -> (Nat -> Nat) -> Nat -> Nat) (n k : Nat)
+  : Prf (Eq (nat_rec_seq z step (succ n) k) (step n (nat_rec_seq z step n) k)) :=
+  nat_rec_diagonal_succ (fun (h : Nat -> Nat -> Nat) => z (h zero zero))
+    (fun (i : Nat) (previous : (Nat -> Nat -> Nat) -> Nat) (h : Nat -> Nat -> Nat) =>
+      step i (fun (j : Nat) => previous (fun (a b : Nat) => j)) (h zero zero))
+    n (fun (a b : Nat) => k);
 
 theorem rec_eq_trans (a b c : Nat) (ab : Prf (Eq a b)) (bc : Prf (Eq b c)) : Prf (Eq a c)
   := eq_subst (fun (x : Nat) => Eq a x) b c bc ab;

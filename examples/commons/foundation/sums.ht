@@ -1,16 +1,8 @@
 // Definitions of sums, factorial and triangular numbers by recursion.
-// Bounded recursion has three axioms (base, inside and outside the lower bound).
+// Bounded recursion and its equations are defined and proved in bounded_recursion.ht.
 // All named summation/factorial/triangular equations below are proved.
 
-import "order.ht";
-
-symbol bounded_rec : Nat -> Nat -> (Nat -> Nat -> Nat) -> Nat -> Nat;
-axiom bounded_rec_zero (lo z : Nat) (step : Nat -> Nat -> Nat)
-  : Prf (Eq (bounded_rec lo z step zero) z);
-axiom bounded_rec_inside (lo z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
-  : Prf (Lt lo n) -> Prf (Eq (bounded_rec lo z step (succ n)) (step n (bounded_rec lo z step n)));
-axiom bounded_rec_outside (lo z : Nat) (step : Nat -> Nat -> Nat) (n : Nat)
-  : Prf (Not (Lt lo n)) -> Prf (Eq (bounded_rec lo z step (succ n)) (bounded_rec lo z step n));
+import "bounded_recursion.ht";
 
 def sum (n : Nat) (f : Nat -> Nat) : Nat := nat_rec zero (fun (k r : Nat) => add r (f k)) n;
 def sum_between (lo hi : Nat) (f : Nat -> Nat) : Nat
