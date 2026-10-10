@@ -37,7 +37,7 @@ let last_compiled : Source.compiled option ref = ref None
 
 (** Verifies .pg assembly and formats the output string.
     If [mappings] are provided, constant indices are replaced with original declaration names. *)
-let check ?(mappings=[]) ?(display_types=[]) source =
+let check ?(mappings=[]) ?(display_types=[]) ?(declarations=[]) source =
   let kernel = Kernel.create () in
   (try Assembly.run kernel source with Assembly.Error message ->
     raise (Assembly.Error (Source.annotate_assembly_error mappings message)));
@@ -57,6 +57,8 @@ let check ?(mappings=[]) ?(display_types=[]) source =
   let entries_json = "[" ^ String.concat "," (List.mapi (fun i (entry : Kernel.entry) ->
     "{\"name\":" ^ Source.json_string (names i) ^ ",\"origin\":"
     ^ Source.json_string (match entry.origin with Kernel.Assumption -> "assumption" | Kernel.Proven -> "proven")
+    ^ (match List.nth_opt declarations i with None -> "" | Some (d : Source.declaration) ->
+      ",\"declarationKind\":" ^ Source.json_string d.at.text)
     ^ ",\"type\":" ^ term_json entry.typ
     ^ (match List.nth_opt display_types i with None -> "" | Some typ ->
       ",\"surfaceType\":" ^ term_json typ) ^ "}") entries) ^ "]" in
@@ -71,10 +73,10 @@ let check ?(mappings=[]) ?(display_types=[]) source =
 
 (** Verifies assembly using declaration names if it exactly matches the last compiled output. *)
 let check_mapped source =
-  let mappings, display_types = match !last_compiled with
-    | Some compiled when compiled.assembly = source -> compiled.sourcemap, compiled.display_types
-    | _ -> [], [] in
-  check ~mappings ~display_types source
+  let mappings, display_types, declarations = match !last_compiled with
+    | Some compiled when compiled.assembly = source -> compiled.sourcemap, compiled.display_types, compiled.declarations
+    | _ -> [], [], [] in
+  check ~mappings ~display_types ~declarations source
 
 (** Normalize virtual paths without consulting the host filesystem. *)
 let normalize path =
@@ -148,5 +150,5 @@ let () =
         let _, paths = load_project (Js.to_string path) (project_files json) in
         response true ("[" ^ String.concat "," (List.map Source.json_string paths) ^ "]")) input));
     "checkMapped", Js.Unsafe.inject (Js.wrap_callback (protect check_mapped));
-    "check", Js.Unsafe.inject (Js.wrap_callback (protect (check ~mappings:[] ~display_types:[])))
+    "check", Js.Unsafe.inject (Js.wrap_callback (protect (check ~mappings:[] ~display_types:[] ~declarations:[])))
   |])

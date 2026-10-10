@@ -163,15 +163,26 @@ function showText(text) {
   result.replaceChildren(pre);
 }
 
+const formulaObserver = new ResizeObserver(records => {
+  for (const {target} of records) {
+    target.style.fontSize = "14px";
+    const math = target.querySelector(".katex-html");
+    const width = math ? Math.max(math.scrollWidth, math.getBoundingClientRect().width) : target.scrollWidth;
+    const available = target.clientWidth - 4;
+    if (width > available && available > 0) target.style.fontSize = `${14 * available / width}px`;
+  }
+});
+
 function showProofs(entries) {
+  formulaObserver.disconnect();
   result.replaceChildren();
-  const proofs = entries.filter(entry => entry.origin === "proven");
+  const proofs = entries;
   if (!proofs.length) { showText("検査成功（証明済みの宣言はありません）"); return; }
   function card(entry, parent) {
     const article = document.createElement("article");
     article.className = "theorem";
     const heading = document.createElement("h3");
-    heading.textContent = entry.name;
+    heading.textContent = `${entry.declarationKind ?? (entry.origin === "assumption" ? "前提" : "証明済み")} ${entry.name}`;
     const state = document.createElement("span");
     state.textContent = "検査成功";
     heading.append(state);
@@ -185,6 +196,7 @@ function showProofs(entries) {
     } else { formula.textContent = latex; }
     article.append(heading, formula);
     parent.append(article);
+    formulaObserver.observe(formula);
   }
   const featured = proofs.filter(entry => selectedNames.has(entry.name));
   if (!featured.length) { proofs.forEach(entry => card(entry, result)); return; }
@@ -193,7 +205,7 @@ function showProofs(entries) {
   if (others.length) {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
-    summary.textContent = `補題・定義（${others.length}件）`;
+    summary.textContent = `その他の宣言（${others.length}件）`;
     details.append(summary);
     others.forEach(entry => card(entry, details));
     result.append(details);

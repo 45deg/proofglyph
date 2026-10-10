@@ -53,6 +53,13 @@ assert.deepEqual(Object.keys(catalog.proofs), documentedRows.map(row => {
 }));
 console.log('Catalog matches the documented proofs table.');
 
+const kinds = api.compileAt('examples/kinds.ht',
+  'symbol A : Type; axiom a : A; def id (x : A) : A := x; theorem t : A := id a;');
+assert.equal(kinds.ok, true, kinds.output);
+assert.deepEqual(JSON.parse(api.checkMapped(kinds.output).entries).map(e => e.declarationKind),
+  ['symbol', 'axiom', 'def', 'theorem']);
+assert.ok(JSON.parse(api.check(kinds.output).entries).every(e => e.declarationKind === undefined));
+
 const mapped = api.compileAt('examples/map.ht', 'axiom A : Type;\ndef id (x : A) : A := x;');
 assert.equal(mapped.ok, true);
 const map = JSON.parse(mapped.sourcemap).mappings;
