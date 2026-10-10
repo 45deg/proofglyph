@@ -20,7 +20,7 @@ def index(n): return 'zero' if n == 0 else app('succ', index(n - 1))
 @cache
 def formula(p):
     if p == BOT: return 'bottom'
-    if p[0] == 'Member': return app('Member', index(p[1]), index(p[2]))
+    if p[0] in ('Member', 'Equal'): return app(p[0], index(p[1]), index(p[2]))
     return app(p[0], *(formula(q) for q in p[1:]))
 @cache
 def context(g):
@@ -32,7 +32,7 @@ def lt(x, n):
 @cache
 def scope(n, p):
     if p == BOT: return app('scoped_bottom', index(n))
-    if p[0] == 'Member': return app('scoped_member', index(n), index(p[1]), index(p[2]), lt(p[1], n), lt(p[2], n))
+    if p[0] in ('Member', 'Equal'): return app('scoped_' + p[0].lower(), index(n), index(p[1]), index(p[2]), lt(p[1], n), lt(p[2], n))
     if p[0] == 'All': return app('scoped_all', index(n), formula(p[1]), scope(n + 1, p[1]))
     return app('scoped_imp', index(n), formula(p[1]), formula(p[2]), scope(n, p[1]), scope(n, p[2]))
 
@@ -56,9 +56,9 @@ def maps(r, i):
 def rename(r, p):
     rt = map_term(r)
     if p == BOT: return p, app('rename_bottom', rt)
-    if p[0] == 'Member':
+    if p[0] in ('Member', 'Equal'):
         x, a = maps(r, p[1]); y, b = maps(r, p[2])
-        return mem(x, y), app('rename_member', rt, index(p[1]), index(p[2]), index(x), index(y), a, b)
+        return (p[0], x, y), app('rename_' + p[0].lower(), rt, index(p[1]), index(p[2]), index(x), index(y), a, b)
     if p[0] == 'All':
         q, proof = rename(('up', r), p[1])
         return all_(q), app('rename_all', rt, formula(p[1]), formula(q), proof)

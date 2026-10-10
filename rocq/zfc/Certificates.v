@@ -86,7 +86,6 @@ Definition replacement_body value unique image := Forall (Implies
 
 Inductive axiom_certificate : formula -> Prop :=
 | ca_extensionality : axiom_certificate extensionality
-| ca_empty : axiom_certificate empty_set
 | ca_pairing : axiom_certificate pairing
 | ca_union : axiom_certificate union
 | ca_power : axiom_certificate power_set

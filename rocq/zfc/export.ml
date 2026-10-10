@@ -25,12 +25,15 @@ let () =
   let body = List.filteri (fun i _ -> i >= count) full.declarations in
   if List.exists (fun (d:Source.declaration) -> d.body = None) body then
     failwith "proof file introduces an axiom";
-  let globals = ref [] in
+  let globals = ref [] and definitions = ref [] in
   let encoded = List.mapi (fun i (d:Source.declaration) ->
-    let a = Source.resolve !globals d.at d.typ in
+    let a = Source.resolve ~definitions:!definitions !globals d.at d.typ in
     let result = match d.body with
       | None -> "Assume " ^ term a
-      | Some b -> "Prove " ^ term a ^ " " ^ term (Source.resolve !globals d.at b)
+      | Some b ->
+          let body = Source.resolve ~definitions:!definitions !globals d.at b in
+          if d.at.text = "def" then definitions := (d.name, body) :: !definitions;
+          "Prove " ^ term a ^ " " ^ term body
     in
     globals := (d.name,i) :: !globals; result) full.declarations in
   let list xs = "[\n  " ^ String.concat ";\n  " xs ^ "\n]" in

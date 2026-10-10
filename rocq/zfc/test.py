@@ -21,7 +21,8 @@ def main():
         'inhabited_not_empty', 'pair_order_irrelevant',
     ]
     allowed = {
-        'Prop', 'Prf', 'And', 'and_intro', 'and_left', 'and_right', 'Or', 'or_elim',
+        'Prop', 'Prf', 'Imp', 'imp_intro', 'imp_elim',
+        'AllProp', 'all_prop_intro', 'all_prop_elim', 'And', 'and_intro', 'and_left', 'and_right', 'Or', 'or_elim',
         'Not', 'False', 'not_intro', 'not_elim', 'or_left', 'or_right', 'false_elim',
         'U', 'Exists', 'exists_intro', 'All', 'all_elim', 'all_intro', 'exists_elim',
         'Eq', 'eq_refl', 'eq_subst', 'excluded_middle',
@@ -40,7 +41,7 @@ def main():
             # A fresh axiom in the proof file is always rejected.
             bad.write_text(proofs.read_text() + '*:')
             run([checker, 'check', bad, '--prelude', prelude], 1)
-            # Type is not an inhabitant of the set domain U (constant 15).
+            # Type is not an inhabitant of the set domain U.
             u = names.index('U')
             bad.write_text(f'#{u}*!')
             run([checker, 'check', bad, '--prelude', prelude], 1)
@@ -54,7 +55,7 @@ def test_russell():
     prelude, proofs = out / 'prelude.pg', out / 'proofs.pg'
     assert prelude.read_bytes() == (OUT / 'deep/prelude.pg').read_bytes()
     assert (out / 'names.txt').read_text().splitlines() == (
-        (OUT / 'deep/names.txt').read_text().splitlines()[:83]
+        (OUT / 'deep/names.txt').read_text().splitlines()[:82]
         + ['proof_no_universal_set'])
     assembly = proofs.read_text()
     assert ':' not in assembly and assembly.count('!') == 1
@@ -76,7 +77,7 @@ def test_deep():
       maps_unique_zero maps_unique_one maps_unique_tail maps_image_zero maps_image_one maps_image_tail
       Renames rename_bottom rename_equal rename_member rename_imp rename_all
       Closes close_zero close_succ Context nil cons InContext in_here in_there
-      Lifts lifts_nil lifts_cons Zax ax_extensionality ax_empty ax_pairing ax_union ax_power
+      Lifts lifts_nil lifts_cons Zax ax_extensionality ax_pairing ax_union ax_power
       ax_infinity ax_foundation ax_choice ax_separation ax_replacement Derives
       nd_assume nd_axiom nd_imp_intro nd_imp_elim nd_false nd_classical nd_all_intro
       nd_all_elim nd_eq_refl nd_eq_subst

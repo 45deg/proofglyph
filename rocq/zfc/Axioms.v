@@ -100,7 +100,6 @@ Qed.
     asserting the truth or consistency of set theory. *)
 Inductive zfc_axiom : formula -> Prop :=
 | ax_extensionality : zfc_axiom extensionality
-| ax_empty : zfc_axiom empty_set
 | ax_pairing : zfc_axiom pairing
 | ax_union : zfc_axiom union
 | ax_power : zfc_axiom power_set

@@ -181,25 +181,24 @@ Ltac choose_rule t :=
   | 59 => eapply cl_nil
   | 60 => eapply cl_cons
   | 62 => eapply ca_extensionality
-  | 63 => eapply ca_empty
-  | 64 => eapply ca_pairing
-  | 65 => eapply ca_union
-  | 66 => eapply ca_power
-  | 67 => eapply ca_infinity
-  | 68 => eapply ca_foundation
-  | 69 => eapply ca_choice
-  | 70 => eapply ca_separation
-  | 71 => eapply ca_replacement
-  | 73 => eapply cp_assume
-  | 74 => eapply cp_axiom
-  | 75 => eapply cp_imp_intro
-  | 76 => eapply cp_imp_elim
-  | 77 => eapply cp_false
-  | 78 => eapply cp_classical
-  | 79 => eapply cp_all_intro
-  | 80 => eapply cp_all_elim
-  | 81 => eapply cp_eq_refl
-  | 82 => match goal with
+  | 63 => eapply ca_pairing
+  | 64 => eapply ca_union
+  | 65 => eapply ca_power
+  | 66 => eapply ca_infinity
+  | 67 => eapply ca_foundation
+  | 68 => eapply ca_choice
+  | 69 => eapply ca_separation
+  | 70 => eapply ca_replacement
+  | 72 => eapply cp_assume
+  | 73 => eapply cp_axiom
+  | 74 => eapply cp_imp_intro
+  | 75 => eapply cp_imp_elim
+  | 76 => eapply cp_false
+  | 77 => eapply cp_classical
+  | 78 => eapply cp_all_intro
+  | 79 => eapply cp_all_elim
+  | 80 => eapply cp_eq_refl
+  | 81 => match goal with
     | E : proof_certificate ?n ?g (Equal ?x ?y),
       R : renames (UnbindMap ?x) ?p ?px,
       S : renames (UnbindMap ?y) ?p ?py |- proof_certificate ?n ?g ?py =>
@@ -230,7 +229,7 @@ Ltac conclude_meaning :=
     let g := read_context x in let h := read_context y in apply (am_lifts g h t); choose_rule t
   | |- atomic_meaning (tApp (tConst 61) ?x) ?t =>
     let p := read_formula x in apply (am_axiom p t); choose_rule t
-  | |- atomic_meaning (tApp (tApp (tApp (tConst 72) ?x) ?y) ?z) ?t =>
+  | |- atomic_meaning (tApp (tApp (tApp (tConst 71) ?x) ?y) ?z) ?t =>
     let n := read_index x in let g := read_context y in let p := read_formula z in apply (am_proof n g p t); choose_rule t
   end.
 

@@ -17,7 +17,7 @@ Definition maps_type r i j := tApp (tApp (tApp (tConst 26) (encode_map r)) (enco
 Definition in_type p g := tApp (tApp (tConst 55) (encode p)) (encode_context g).
 Definition lifts_type g h := tApp (tApp (tConst 58) (encode_context g)) (encode_context h).
 Definition derives_type n g p :=
-  tApp (tApp (tApp (tConst 72) (encode_index n)) (encode_context g)) (encode p).
+  tApp (tApp (tApp (tConst 71) (encode_index n)) (encode_context g)) (encode p).
 
 Lemma subst_index d v n : subst d v (encode_index n) = encode_index n.
 Proof. induction n; cbn [encode_index subst]; congruence. Qed.
@@ -181,7 +181,7 @@ Proof.
   intros H; destruct H; unpack_translations;
     collect_translation scope_translation; collect_translation renames_translation;
     collect_translation closes_translation;
-    translation_rules 62 71.
+    translation_rules 62 70.
 Qed.
 
 Theorem certificate_translation n g p : proof_certificate n g p ->
@@ -191,7 +191,7 @@ Proof.
     collect_translation scope_translation; collect_translation in_translation;
     collect_translation axiom_translation; collect_translation lifts_translation;
     collect_translation lt_translation; collect_translation renames_translation;
-    translation_rules 73 82.
+    translation_rules 72 81.
 Qed.
 
 Corollary ZFC_translation p : ZFC_proves p -> exists t, typing zfc_signature [] t (proof_type p).
