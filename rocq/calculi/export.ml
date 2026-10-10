@@ -25,6 +25,13 @@ let g = n "G" and d = n "D" and h = n "H"
 let fs xs = List.map (fun x -> x,form) xs
 let cs xs = List.map (fun x -> x,ctx) xs
 
+let rec hieratic = function
+  | Name s -> s | Sort -> "Type"
+  | Apply (f,x) -> "(" ^ hieratic f ^ " " ^ hieratic x ^ ")"
+  | Product ("_",a,b) -> "(" ^ hieratic a ^ " -> " ^ hieratic b ^ ")"
+  | Product (x,a,b) -> "(forall (" ^ x ^ " : " ^ hieratic a ^ "), " ^ hieratic b ^ ")"
+  | Lambda (x,a,b) -> "(fun (" ^ x ^ " : " ^ hieratic a ^ ") => " ^ hieratic b ^ ")"
+
 let rec rocq = function
   | Term.Type -> "tType" | Term.Kind -> "tKind"
   | Term.Var i -> Printf.sprintf "(tVar %d)" i
@@ -36,6 +43,7 @@ let rec rocq = function
 let () =
   if Array.length Sys.argv <> 2 then failwith "usage: export OUTPUT_DIR";
   let globals = ref [] and assumptions = ref [] and proofs = ref [] in
+  let sources = ref [] in
   let kernel = Kernel.create () in
   let rec resolve locals = function
     | Sort -> Term.Type
@@ -48,40 +56,44 @@ let () =
     | Product (x,a,b) -> Term.Pi (resolve locals a,resolve (x::locals) b)
     | Lambda (x,a,b) -> Term.Lam (resolve locals a,resolve (x::locals) b)
   in
-  let add name typ body =
+  let add ?(kind = "theorem") name typ body =
     if List.mem_assoc name !globals then failwith ("duplicate name: " ^ name);
+    let source = kind ^ " " ^ name ^ " : " ^ hieratic typ
+      ^ (match body with None -> "" | Some t -> " := " ^ hieratic t) ^ ";\n" in
     let typ = resolve [] typ in
     let body = Option.map (resolve []) body in
     let id = try (match body with None -> Kernel.assume kernel typ
       | Some t -> Kernel.prove kernel typ t) with Kernel.Error msg ->
         failwith (name ^ ": " ^ msg) in
     globals := !globals @ [name,id];
+    sources := !sources @ [name,body = None,source];
     let entry = name,typ,body in
     match body with None -> assumptions := !assumptions @ [entry]
       | Some _ -> proofs := !proofs @ [entry]
   in
-  let assume name bs typ = add name (pi bs typ) None in
-  let rule name bs premises conclusion = assume name bs (arrows premises conclusion) in
-  assume "Index" [] Sort;
-  assume "zero" [] (n "Index");
-  assume "succ" [] (arrow (n "Index") (n "Index"));
-  assume "Formula" [] Sort;
-  assume "Atom" [] (arrow (n "Index") form);
-  assume "Bottom" [] form; assume "Top" [] form;
-  List.iter (fun s -> assume s [] (arrows [form;form] form)) ["Imp";"Conj";"Disj"];
-  assume "Neg" [] (arrow form form);
-  assume "Context" [] Sort; assume "nil" [] ctx;
-  assume "cons" [] (arrows [form;ctx] ctx);
-  assume "InContext" [] (arrows [form;ctx] Sort);
+  let symbol name bs typ = add ~kind:"symbol" name (pi bs typ) None in
+  let rule name bs premises conclusion =
+    add ~kind:"axiom" name (pi bs (arrows premises conclusion)) None in
+  symbol "Index" [] Sort;
+  symbol "zero" [] (n "Index");
+  symbol "succ" [] (arrow (n "Index") (n "Index"));
+  symbol "Formula" [] Sort;
+  symbol "Atom" [] (arrow (n "Index") form);
+  symbol "Bottom" [] form; symbol "Top" [] form;
+  List.iter (fun s -> symbol s [] (arrows [form;form] form)) ["Imp";"Conj";"Disj"];
+  symbol "Neg" [] (arrow form form);
+  symbol "Context" [] Sort; symbol "nil" [] ctx;
+  symbol "cons" [] (arrows [form;ctx] ctx);
+  symbol "InContext" [] (arrows [form;ctx] Sort);
   rule "in_here" (fs ["A"] @ cs ["G"]) [] (mem a (cons a g));
   rule "in_there" (fs ["A";"B"] @ cs ["G"]) [mem a g] (mem a (cons b g));
-  assume "Perm" [] (arrows [ctx;ctx] Sort);
+  symbol "Perm" [] (arrows [ctx;ctx] Sort);
   rule "perm_nil" [] [] (perm nil nil);
   rule "perm_cons" (fs ["A"] @ cs ["G";"H"]) [perm g h] (perm (cons a g) (cons a h));
   rule "perm_swap" (fs ["A";"B"] @ cs ["G"]) []
     (perm (cons a (cons b g)) (cons b (cons a g)));
   rule "perm_trans" (cs ["G";"H";"D"]) [perm g h;perm h d] (perm g d);
-  assume "NK" [] (arrows [ctx;form] Sort);
+  symbol "NK" [] (arrows [ctx;form] Sort);
   let ng xs = cs ["G"] @ fs xs in
   rule "nk_assume" (ng ["A"]) [mem a g] (nk g a);
   rule "nk_top" (cs ["G"]) [] (nk g (n "Top"));
@@ -98,7 +110,7 @@ let () =
   rule "nk_neg_intro" (ng ["A"]) [nk (cons a g) (n "Bottom")] (nk g (neg a));
   rule "nk_neg_elim" (ng ["A"]) [nk g (neg a);nk g a] (nk g (n "Bottom"));
   rule "nk_classical" (ng ["A"]) [nk (cons (neg a) g) (n "Bottom")] (nk g a);
-  assume "LK" [] (arrows [ctx;ctx] Sort);
+  symbol "LK" [] (arrows [ctx;ctx] Sort);
   let lg xs = cs ["G";"D"] @ fs xs in
   rule "lk_identity" (fs ["A"]) [] (lk (cons a nil) (cons a nil));
   rule "lk_bottom" (cs ["G";"D"]) [] (lk (cons (n "Bottom") g) d);
@@ -162,6 +174,15 @@ let () =
   let declaration (_,a,b) = match b with None -> "Assume " ^ rocq a
     | Some t -> "Prove " ^ rocq a ^ " " ^ rocq t in
   let list xs = "[\n  " ^ String.concat ";\n  " (List.map declaration xs) ^ "\n]" in
+  let write_hieratic prefix include_name =
+    let entries = List.filter (fun (name,_,_) -> include_name name) !sources in
+    let prelude,proofs = List.partition (fun (_,assumption,_) -> assumption) entries in
+    let contents xs = String.concat "" (List.map (fun (_,_,source) -> source) xs) in
+    write (prefix ^ "prelude.ht") (contents prelude);
+    write (prefix ^ "proofs.ht")
+      ("import \"" ^ prefix ^ "prelude.ht\";\n\n" ^ contents proofs)
+  in
+  write_hieratic "" (fun _ -> true);
   write "prelude.pg" (String.concat "" (List.map proofglyph !assumptions));
   write "proofs.pg" (String.concat "" (List.map proofglyph !proofs));
   write "names.txt" (String.concat "\n" (List.map fst !globals) ^ "\n");
@@ -170,6 +191,7 @@ let () =
   (* Project the combined inventory, renumbering every reference. Each subset
      is checked in a fresh kernel so it must contain all its dependencies. *)
   let export_subset prefix artifact include_name =
+    write_hieratic (prefix ^ "-") include_name;
     let subset_kernel = Kernel.create () and ids = ref [] in
     let rec remap = function
       | Term.Const old -> Term.Const (List.assoc old !ids)

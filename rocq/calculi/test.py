@@ -116,6 +116,18 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix='calculi-test-') as directory:
         candidate = Path(directory) / 'candidate.pg'
+        # The named presentation distinguishes vocabulary from inference rules,
+        # while compiling to exactly the independently generated LF signature.
+        symbols = set(EXPECTED[:14]) | {'InContext', 'Perm', 'NK', 'LK'}
+        for prefix in ['', 'nk-', 'lk-']:
+            source = (OUT / f'{prefix}prelude.ht').read_text()
+            for line in source.splitlines():
+                kind, name = line.split()[:2]
+                assert kind == ('symbol' if name in symbols else 'axiom'), (kind, name)
+            run([CHECKERS[0], 'compile', OUT / f'{prefix}proofs.ht', '-o', candidate])
+            expected = ((OUT / f'{prefix}prelude.pg').read_text()
+                        + (OUT / f'{prefix}proofs.pg').read_text())
+            assert ''.join(candidate.read_text().split()) == ''.join(expected.split()), prefix
         for checker in CHECKERS:
             test_separate_preludes(checker, candidate)
             run([checker, 'check', proofs, '--prelude', prelude])

@@ -14,6 +14,13 @@ make -C rocq/calculi export
 dune exec bin/main.exe -- check rocq/calculi/_build/proofs.pg --prelude rocq/calculi/_build/prelude.pg
 ```
 
+`export` は名前付きの `prelude.ht` / `proofs.ht` と、NK・LK 単独版の
+`nk-prelude.ht` / `nk-proofs.ht`、`lk-prelude.ht` / `lk-proofs.ht` も生成します。
+型・論理記号・判断の語彙は `symbol`、推論規則は `axiom`、証明済みの例は
+`theorem` として出力します。共通 prelude は18個の `symbol` と38個の `axiom` です。
+どちらの前提宣言もカーネルでは `Assume` となり、既存の `.pg` の内容は変わりません。
+テストでは `.ht` のコンパイル結果と直接生成した `.pg` の一致も確認します。
+
 ## 証明した保証
 
 - **導出と証明項の対応（Adequacy）**: 固定 LF シグネチャの下で、任意の NK / LK 導出に対し、対応する LF 証明項が存在すること、および逆に閉じた LF 証明項から NK / LK 導出を復元できること。
