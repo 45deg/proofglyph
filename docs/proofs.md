@@ -47,7 +47,7 @@ In formulas, `A → B` means the proof-function type `Prf A -> Prf B`, and `¬A`
 | Number theory | Infinitely many primes | [primes_infinite](../examples/commons/nat/prime_infinitude.ht) | `nat/prime_infinitude.ht` |
 | Number theory | Irrationality of √2 | [sqrt_two_coprime_contradiction](../examples/commons/nat/sqrt_two.ht), [sqrt_two_irrational](../examples/commons/nat/sqrt_two.ht) | `nat/sqrt_two.ht` |
 | Number theory | Fermat's little theorem and application to sums | [fermat](../examples/commons/nat/fermat.ht), [fermat_sum](../examples/commons/nat/fermat.ht) | `nat/fermat.ht` |
-| Set theory | No universal set via Russell’s paradox | [no_universal_set](../examples/commons/sets/russell.ht) | `sets/russell.ht` |
+| Set theory | No universal set via Russell's paradox | [no_universal_set](../examples/commons/sets/russell.ht) | `sets/russell.ht` |
 
 <!-- proof-catalog:end -->
 
@@ -72,7 +72,7 @@ For example, `Divides d a` is `Exists (fun (k : Nat) => Eq a (mul d k))`; `divid
 
 Across foundation files, unproved rules/axioms were reduced from 75 declarations to 17, and kernel assumptions including vocabulary from 116 to 31. These totals include same-named equality/quantification declarations over different domains. Each proof loads only its required modules.
 
-`proven` denotes a proof term type-checked under the stated assumptions. Recursion principles are among those assumptions, so existence of recursors is not claimed to follow from Peano axioms alone. The new definition expansion itself is outside the existing Rocq frontend proofs described here, but output is independently rechecked by the extracted checker.
+`Proven` denotes a proof term type-checked under the stated assumptions. Recursion principles are among those assumptions, so existence of recursors is not claimed to follow from Peano axioms alone. The new definition expansion itself is outside the existing Rocq frontend proofs described here, but output is independently rechecked by the extracted checker.
 
 Quantification over naturals (`AllNat`) and sequences (`AllSeq`) is defined from quantification over binary natural-number functions (`AllBi`). Their introduction/elimination rules use evaluation at zero and embedding into constant functions. No new quantification principle is added.
 
@@ -170,7 +170,7 @@ convolution n f g = diagonal n (i,j ↦ C(n,i)*f(i)*g(j))
 
 [sqrt_two_no_positive_fraction](../examples/commons/nat/sqrt_two.ht) derives a contradiction from `b > 0` and `a * a = 2 * (b * b)` for arbitrary naturals `a, b`. It assumes neither reduction to lowest terms nor coprimality.
 
-Euclid's lemma and primality of 2 show that both numbers are even: `a = 2k`, `b = 2j`. Cancelling 2 gives `k * k = 2 * (j * j)` with `0 < j < b`; strong induction on the denominator yields a contradiction. `sqrt_two_irrational` rules out a rational representation using this theorem.
+Euclid's lemma and the primality of 2 show that both `a` and `b` are even: `a = 2k`, `b = 2j`. Cancelling 2 gives `k * k = 2 * (j * j)` with `0 < j < b`; strong induction on the denominator yields a contradiction. `sqrt_two_irrational` rules out a rational representation using this theorem.
 
 ### Logic and classical reasoning
 

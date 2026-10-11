@@ -4,7 +4,7 @@
 
 This specifies a λΠ calculus (LF-style dependent type theory) with β equivalence only. Types and proof terms share the same syntax. CoC, η equivalence, constant unfolding, recursive definitions, built-in inductive types, user-defined rewriting, implicit arguments, holes (metavariables), unification, and tactics are unsupported.
 
-The languages are called proofglyph and hieratic; the type-checking core is the kernel. “Checking” means executing type checking, while “formal verification” means proving specifications or theorems in a proof assistant. Registered constants distinguish origins `Assumption` and `Proven`.
+The languages are called proofglyph and hieratic; the type-checking core is the kernel. “Checking” means executing type checking, while “formal verification” means proving specifications or theorems in a proof assistant. Registered constants distinguish between origins `Assumption` and `Proven`.
 
 Types/terms have seven AST forms:
 
@@ -53,7 +53,7 @@ This registers the assumption `c0 : Type`, checks `λ x:c0. x`, and registers `c
 
 ## 3. Typing and equivalence
 
-A sequence of registered constant types is a signature. `Kind` denotes the kind; `Type` and `Kind` are collectively called sorts.
+A sequence of registered constant types is a signature. `Kind` represents kinds; `Type` and `Kind` are collectively called sorts.
 
 The judgment is `Σ; Γ ⊢ t : A` under signature Σ and context Γ.
 
@@ -69,7 +69,7 @@ Thus the only Π-formation sort pairs are `(Type,Type)` and `(Type,Kind)`. `Π A
 
 Context types are stored relative to the context immediately before introducing the variable. Lookup at index `n` applies `shift(n+1,0,type)`.
 
-β reduction is `(λ x:A.b) u → b[u/x]`. Substitution avoids capture and adjusts indices for the removed binder. Application inference uses weak-head normalization. Equivalence accepts structurally identical subterms directly and recursively compares weak-head forms of differing parts. The de Bruijn representation incorporates α equivalence. η equivalence, proof irrelevance, and constant unfolding are unsupported.
+β reduction is `(λ x:A.b) u → b[u/x]`. Substitution avoids capture and adjusts indices for the removed binder. Application inference uses weak-head normalization. Equivalence accepts structurally identical subterms directly and recursively compares weak-head normal forms of differing parts. The de Bruijn representation incorporates α equivalence. η equivalence, proof irrelevance, and constant unfolding are unsupported.
 
 ## 4. Registering opaque constants
 
@@ -112,7 +112,7 @@ Identifiers are ASCII `[A-Za-z_][A-Za-z0-9_']*`. `symbol axiom def theorem impor
 
 Loading is depth-first in declaration order. `realpath` identifies canonical files, each loaded once per compilation; aliases using `./`, `../`, or symbolic links refer to the same file. Cycles and missing files are errors.
 
-There are no namespaces, aliases, or selective imports. Imported declarations share the global signature; duplicate names across files are rejected. Declarations after an import cannot be referenced in advance.
+There are no namespaces, aliases, or selective imports. Imported declarations share the global signature; duplicate names across files are rejected. Declarations appearing after an import cannot be forward-referenced.
 
 Application associates left; arrows associate right. Application binds more tightly than arrows. Parenthesize `forall` or `fun` when used as application arguments.
 

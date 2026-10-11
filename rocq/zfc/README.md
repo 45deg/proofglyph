@@ -21,7 +21,7 @@ rocq/proofglyph/_build/proofglyph check rocq/zfc/_build/russell/proofs.pg --prel
 
 ## Reducing the axioms
 
-The empty-set axiom has been removed from the full `zfc_axiom` and `proof_prelude.ht`. The fixed axioms decrease from eight to seven; separation and replacement schemas remain.
+The empty-set axiom has been removed from the full `zfc_axiom` and `proof_prelude.ht`. Fixed axioms were reduced from eight to seven; separation and replacement schemas remain.
 
 `empty_set_derived` in `Empty.v` derives an empty set from the infinity axiom's condition that its set contains an empty set, at any variable depth and under any assumptions. This derivation can replace uses of the old empty-set axiom. `empty_set_not_primitive` verifies that the empty set is not a primitive axiom.
 
