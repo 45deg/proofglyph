@@ -1,21 +1,21 @@
-# proofglyph 言語仕様
+# proofglyph language specification
 
-## 1. 対象と項の構造
+## 1. Scope and term structure
 
-β 同値のみを持つ λΠ 計算（LF 系の依存型理論）の言語仕様を定める。型と証明項には同じ構文を使用する。CoC、η 同値、定数の展開、再帰定義、帰納型の組込み、ユーザー定義書換え規則、暗黙引数、穴（メタ変数）、単一化、タクティクスはサポートしない。
+This specifies a λΠ calculus (LF-style dependent type theory) with β equivalence only. Types and proof terms share the same syntax. CoC, η equivalence, constant unfolding, recursive definitions, built-in inductive types, user-defined rewriting, implicit arguments, holes (metavariables), unification, and tactics are unsupported.
 
-本書では、言語名を proofglyph / hieratic、型検査を行う中核をカーネルと表記する。型検査の実行を「検査」、仕様や定理を証明支援系で証明することを「形式検証」と呼ぶ。登録済み定数の由来は「前提」（`Assumption`）と「証明済み」（`Proven`）で区別する。
+The languages are called proofglyph and hieratic; the type-checking core is the kernel. “Checking” means executing type checking, while “formal verification” means proving specifications or theorems in a proof assistant. Registered constants distinguish origins `Assumption` and `Proven`.
 
-型・項の AST は次の7種類。
+Types/terms have seven AST forms:
 
 ```text
 t ::= Type | Kind | Var(n) | Const(n)
     | Pi(t,t) | Lam(t,t) | App(t,t)
 ```
 
-`n` は非負の整数。定数番号は登録順に 0 から割り振る。Π と λ の第2引数（本体）だけが新しい変数を束縛する。`Var(0)` は最も内側の束縛変数を表す de Bruijn インデックス。型注釈にも同じ束縛規則が適用される。
+`n` is nonnegative. Constants are numbered from zero in registration order. Only the second argument (body) of Π and λ binds a new variable. `Var(0)` is the innermost bound variable, using de Bruijn indices. Type annotations follow the same binding rules.
 
-## 2. proofglyph 言語 (.pg)
+## 2. proofglyph (.pg)
 
 ```ebnf
 program = { token } ;
@@ -25,11 +25,11 @@ natural = digit, { digit } ;
 digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 ```
 
-空白、タブ、CR、LF はトークン間で無視する。`$` / `#` と数字の間には入れられない。数字は最長一致で読む。先頭の0は許す。OCaml の `int` の範囲外の番号は拒否する。コメント機能や別名命令、任意の文字の読み飛ばしなどは存在しない。
+Spaces, tabs, CR, and LF are ignored between tokens, but cannot separate `$` / `#` from their digits. Numbers use longest-match scanning; leading zeros are allowed. Indices outside OCaml's `int` range are rejected. There are no comments, instruction aliases, or arbitrary-character skipping.
 
-表中のスタックは右端が最上部（最後に積んだ項）。
+The rightmost stack element is the top (most recently pushed term).
 
-| 命令 | 操作 |
+| Instruction | Operation |
 | --- | --- |
 | `*` | `S → S Type` |
 | `^` | `S → S Kind` |
@@ -38,53 +38,53 @@ digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 | `>` | `S A B → S Pi(A,B)` |
 | `\` | `S A b → S Lam(A,b)` |
 | `@` | `S f x → S App(f,x)` |
-| `:` | スタックが厳密に `[A]` のとき前提を登録し、空にする |
-| `!` | スタックが厳密に `[A,t]` のとき `t:A` を検査・登録し、空にする |
+| `:` | Register an assumption when the stack is exactly `[A]`, then empty it |
+| `!` | Check and register `t:A` when the stack is exactly `[A,t]`, then empty it |
 
-構築時は型検査しない。登録時に閉じた項として検査する。未知の定数、自由変数、スタック不足、登録時の余分な項、EOF の残りスタック、不正文字はエラー。
+Construction does not type-check. Registration checks closed terms. Unknown constants, free variables, stack underflow, extra terms at registration, a nonempty stack at EOF, and invalid characters are errors.
 
 ```text
 *:#0#0>#0$0\!
 ```
 
-上記は `c0 : Type` を前提として登録し、`λ x:c0. x` を検査して `c1 : Π x:c0. c0` を登録する。
+This registers the assumption `c0 : Type`, checks `λ x:c0. x`, and registers `c1 : Π x:c0. c0`.
 
-`^` を構築することはできるが、`Kind` 自体には型がないため `^:` は拒否される。
+`^` can construct `Kind`, but `^:` is rejected because `Kind` itself has no type.
 
-## 3. 型付けと等価性
+## 3. Typing and equivalence
 
-定数の型を登録する列をシグネチャ（signature）と呼ぶ。`Kind` はカインド（kind）を表し、`Type` と `Kind` を総称してソート（sort）と呼ぶ。
+A sequence of registered constant types is a signature. `Kind` denotes the kind; `Type` and `Kind` are collectively called sorts.
 
-シグネチャ Σ と文脈 Γ の下で `Σ; Γ ⊢ t : A` を判定する。
+The judgment is `Σ; Γ ⊢ t : A` under signature Σ and context Γ.
 
-- `Type : Kind`。`Kind` には型を与えない。
-- 変数は文脈に記録した型を現在の深さへ shift して取り出す。
-- 定数は Σ に記録された閉じた型を持つ。
-- `A : Type` かつ `Γ,x:A ⊢ B:s`、`s ∈ {Type,Kind}` なら `Π x:A.B : s`。
-- `A : Type`、`Γ,x:A ⊢ b:B`、かつ `Π x:A.B` が形成可能なら `λ x:A.b : Π x:A.B`。
-- `f : Π x:A.B`、`u:A` なら `f u : B[u/x]`。
-- 型の比較では β 同値を認める。この関係を調べる操作を同値判定と呼ぶ。
+- `Type : Kind`; `Kind` has no type.
+- Variable lookup shifts the stored type to the current depth.
+- Constants have the closed types stored in Σ.
+- If `A : Type` and `Γ,x:A ⊢ B:s`, where `s ∈ {Type,Kind}`, then `Π x:A.B : s`.
+- If `A : Type`, `Γ,x:A ⊢ b:B`, and `Π x:A.B` can be formed, then `λ x:A.b : Π x:A.B`.
+- If `f : Π x:A.B` and `u:A`, then `f u : B[u/x]`.
+- Type comparison admits β equivalence; testing this relation is the equivalence check.
 
-したがって Π 形成のソートの組は `(Type,Type)` と `(Type,Kind)` のみ。`Π A:Type.A→A` は拒否される。
+Thus the only Π-formation sort pairs are `(Type,Type)` and `(Type,Kind)`. `Π A:Type.A→A` is rejected.
 
-文脈の型は、その変数を導入する直前の文脈に相対的に格納する。index `n` の型を取得するとき `shift(n+1,0,型)` を行う。
+Context types are stored relative to the context immediately before introducing the variable. Lookup at index `n` applies `shift(n+1,0,type)`.
 
-β 簡約は `(λ x:A.b) u → b[u/x]`。置換は捕獲を避け、取り除いた binder に対応する index を調整する。適用の型を調べるときは弱頭正規化、等価性は構造的に等しい部分をそのまま受理し、異なる部分の弱頭正規形を再帰的に比較して判定する。α 同値は de Bruijn 表現に吸収される。η 同値、証明無関係性、定数展開はサポートしない。
+β reduction is `(λ x:A.b) u → b[u/x]`. Substitution avoids capture and adjusts indices for the removed binder. Application inference uses weak-head normalization. Equivalence accepts structurally identical subterms directly and recursively compares weak-head forms of differing parts. The de Bruijn representation incorporates α equivalence. η equivalence, proof irrelevance, and constant unfolding are unsupported.
 
-## 4. 定数登録（不透明定数）
+## 4. Registering opaque constants
 
-不透明定数（opaque constant）は、型と由来だけを登録し、定義や証明の本体を展開しない定数である。
+Opaque constants store only a type and origin; definition/proof bodies are not unfolded.
 
-- `assume A` は、空の文脈で `A` のソートが `Type` または `Kind` であることを検査し、新しい前提定数を登録する。
-- `prove A t` は、同じく `A` の整形式性と `t:A` を検査して新しい証明済み定数を登録する。失敗した宣言は登録しない。
+- `assume A` checks in the empty context that `A` has sort `Type` or `Kind`, then registers a new assumption constant.
+- `prove A t` checks well-formedness of `A` and `t:A`, then registers a new proven constant. Failed declarations are not registered.
 
-いずれの登録も、自分自身や後続の定数を参照することはできない。
+Neither form may refer to itself or later constants.
 
-登録済み定数には型と由来 (`Assumption` / `Proven`) を保持する。証明項 `t` はカーネルのシグネチャには残さず、登録後は本体を展開しない不透明な定数として扱う。
+Registered constants retain their type and origin (`Assumption` / `Proven`). The proof term `t` is not retained in the kernel signature; the constant is opaque after registration.
 
-論理・等式・Peano・再帰の原理はシグネチャの前提（`Assumption`）として与える。述語や演算を定義する `def` と、その導入・除去規則や方程式を証明する `theorem` は検査済み（`Proven`）として登録する。
+Logic, equality, Peano, and recursion principles are signature assumptions (`Assumption`). `def` declarations for predicates/operations and `theorem` declarations proving their rules/equations are registered as checked (`Proven`).
 
-## 5. hieratic 言語 (.ht)
+## 5. hieratic (.ht)
 
 ```ebnf
 program = { import | declaration } ;
@@ -104,34 +104,34 @@ application = atom, { atom } ;
 atom = name | "Type" | "Kind" | "(", term, ")" ;
 ```
 
-`symbol` は未定義の型や記号、`axiom` は証明を与えず信頼する論理規則・数学的公理を宣言する。いずれもカーネルでは前提として登録され、`--no-axioms` では両方を禁止する。`def` と `theorem` は本体を型検査する。`def` の後続の参照はコンパイル時に本体へ展開するが、`theorem` の参照は不透明な定数のまま残る。
+`symbol` declares undefined types/symbols. `axiom` declares trusted logical rules and mathematical axioms without proofs. Both register kernel assumptions and are prohibited by `--no-axioms`. `def` and `theorem` type-check their bodies. Later references to `def` expand its body at compile time; `theorem` references remain opaque constants.
 
-識別子は ASCII の `[A-Za-z_][A-Za-z0-9_']*`。`symbol axiom def theorem import forall fun Type Kind` は予約語。`//` から行末はコメント。数値リテラルや中置算術演算はない。
+Identifiers are ASCII `[A-Za-z_][A-Za-z0-9_']*`. `symbol axiom def theorem import forall fun Type Kind` are reserved. `//` starts a comment until the end of the line. There are no numeric literals or infix arithmetic operators.
 
-`import "../examples/commons/nat/addition.ht";` は、指定ファイルの宣言をその位置に読み込む。相対パスは読み込み元の実体ファイルのディレクトリを基準とし、絶対パスも許す。パスは空でない二重引用符付きの文字列で、引用符・改行・バックスラッシュを含められない。エスケープ構文はない。
+`import "../examples/commons/nat/addition.ht";` loads declarations at that position. Relative paths resolve against the canonical importing file's directory; absolute paths are allowed. Paths are nonempty, double-quoted strings without quotes, newlines, or backslashes. There is no escape syntax.
 
-読み込みは宣言順の深さ優先。同じ実体ファイルは `realpath` で識別し、1回のコンパイルにつき1度だけ読み込む。`./`、`../`、シンボリックリンクによる別表記も同じファイルとして扱う。循環 import と存在しないファイルはエラー。
+Loading is depth-first in declaration order. `realpath` identifies canonical files, each loaded once per compilation; aliases using `./`, `../`, or symbolic links refer to the same file. Cycles and missing files are errors.
 
-名前空間・別名・選択的 import はない。読み込んだ宣言は同じグローバルシグネチャに入り、別ファイルの同名宣言も拒否する。import より後の宣言を先に参照することはできない。
+There are no namespaces, aliases, or selective imports. Imported declarations share the global signature; duplicate names across files are rejected. Declarations after an import cannot be referenced in advance.
 
-適用は左結合、矢印は右結合。適用の方が矢印より強く結合する。`forall` と `fun` を適用の引数に置く場合は括弧を使う。
+Application associates left; arrows associate right. Application binds more tightly than arrows. Parenthesize `forall` or `fun` when used as application arguments.
 
-名前解決は最も内側のローカル変数を優先し、次に先行するグローバル宣言を探す。ローカルのシャドーイングは許す。グローバルの重複、前方参照、自己参照は拒否する。`_` も通常の名前であり、穴ではない。
+Name resolution searches innermost locals first, then preceding globals. Local shadowing is allowed. Duplicate globals, forward references, and self-reference are rejected. `_` is an ordinary name, not a hole.
 
-`(x y : A)` は `(x : A) (y : A)` という逐次束縛へ展開する。この規則はシャドーイングがある場合にも適用する。
+`(x y : A)` expands into sequential binders `(x : A) (y : A)`, including when shadowing occurs.
 
-| 表記 | 展開 |
+| Syntax | Expansion |
 | --- | --- |
 | `f x y` | `App(App(f,x),y)` |
-| `A -> B` | 名前のない binder を持つ `Pi(A,B)` |
+| `A -> B` | `Pi(A,B)` with an unnamed binder |
 | `forall (x:A), B` | `Pi(A,B)` |
 | `fun (x:A) => b` | `Lam(A,b)` |
-| 宣言の引数 | 型には Π、本体には λ を外側から追加 |
-| `symbol/axiom name : A;` | `encode(A)` の後に `:` |
+| Declaration parameters | Add outer Π binders to the type and λ binders to the body |
+| `symbol/axiom name : A;` | `encode(A)` followed by `:` |
 | `def/theorem name : A := t;` | `encode(A) encode(t) !` |
 
-匿名の矢印 binder も de Bruijn の深さに数える。型と本体はそれぞれの束縛構造に従って名前解決する。
+Anonymous arrow binders also count toward de Bruijn depth. Types and bodies resolve names according to their respective binding structures.
 
-`def id (x:A) : A := x;` の後では `id a` は本体への展開と β 簡約により `a` と等しくなる。カーネルに定数展開を追加するのではなく、Hieratic が閉じた本体を展開して `.pg` を生成する。自己参照・前方参照は禁止し、展開による β 簡約回数は `fuel` と同じ上限を持つ。簡約前の項と生成された簡約後の `.pg` をそれぞれ検査するため、簡約で消える不正な引数も拒否する。
+After `def id (x:A) : A := x;`, expansion and β reduction make `id a` equal to `a`. Hieratic expands closed bodies when generating `.pg`; it does not add unfolding to the kernel. Self/forward references are forbidden, and expansion's β-reduction count has the same limit as `fuel`. Both pre-reduction terms and generated reduced `.pg` are checked, so invalid arguments erased by reduction are rejected.
 
-名前付きの元の型は表示用に保持するが、検査対象は展開後の型である。`.pg` を直接検査する場合は元の名前付きの型を使用しない。Rocq CLI でも構文解析から定義の展開・β 簡約・簡約前後の型検査まで、抽出した実装を使用する。これらの健全性・完全性は宣言的な翻訳・評価・型付け関係に対して証明されている。`--elaborate` は互換用の別名。
+Original named types are retained for display, while checking uses expanded types. Direct `.pg` checking does not use the original named types. The Rocq CLI also uses extracted implementations from parsing through expansion, β reduction, and checking before/after reduction. Their soundness and completeness are proved against declarative translation, evaluation, and typing relations. `--elaborate` is a compatibility alias.

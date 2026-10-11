@@ -1,94 +1,99 @@
 # proofglyph
 
-依存型理論（λΠ計算 / LF）に基づく OCaml 製の小さな証明検査器です。記号言語（proofglyph 言語）で記述された証明を検査します。名前付きの構文から proofglyph 言語を生成する補助言語として hieratic 言語を備えています。
+[English](README.md) | [日本語](README.ja.md)
 
-hieratic 言語の入力：
+A small proof checker written in OCaml, based on dependent type theory (the λΠ calculus / LF). It checks proofs written in the symbolic proofglyph language. The companion hieratic language compiles named syntax into proofglyph.
+
+Hieratic input:
 
 ```text
 symbol A : Type;
 def id (x : A) : A := x;
 ```
 
-生成される proofglyph 言語のコード（proofglyph にコメント構文はありません）：
+Generated proofglyph code (proofglyph has no comment syntax):
 
 ```text
 *:#0#0>#0$0\!
 ```
 
-カーネルは de Bruijn index、`Type/Kind`、Π、λ、関数適用、不透明な定数のみを扱います。型の比較には β 同値を用い、登録後の定数本体は展開しません。hieratic の `def` は後続の参照で本体を展開します。展開と β 簡約はコンパイラが行い、生成した項をカーネルが再検査します。`theorem` は展開しない不透明な証明です。`symbol` は未定義の型・記号、`axiom` は信頼する論理規則や数学的公理を宣言します。どちらもカーネルでは前提として数えられます。
+The kernel handles only de Bruijn indices, `Type/Kind`, Π, λ, application, and opaque constants. Type comparison uses β equivalence; registered constant bodies are never unfolded. Hieratic expands `def` bodies at subsequent references. The compiler performs expansion and β reduction, and the kernel rechecks the generated terms. A `theorem` is an opaque proof that is not expanded. `symbol` declares undefined types and symbols; `axiom` declares trusted logical rules and mathematical axioms. Both count as assumptions in the kernel.
 
-## ビルドと実行
+## Build and run
 
-OCaml と Dune 3.0 以上が必要です（外部ライブラリへの依存はありません）。
+Requires OCaml and Dune 3.0 or later, with no external library dependencies.
 
 ```sh
 dune build bin/main.exe
 dune runtest
 ```
 
-### CLI の使い方
+### CLI usage
 
 ```sh
-# hieratic 言語をコンパイルして proofglyph 言語を出力
+# Compile hieratic into proofglyph
 dune exec bin/main.exe -- compile examples/basics.ht -o /tmp/basics.pg
 
-# proofglyph 言語を検査
+# Check proofglyph
 dune exec bin/main.exe -- check /tmp/basics.pg
 
-# 各定数の型と由来（前提／証明済み）の一覧を表示
+# List each constant's type and origin (assumption or proven)
 dune exec bin/main.exe -- inspect /tmp/basics.pg
 ```
 
-- `-o FILE`（`compile`）: 出力先を指定（省略時は標準出力）。検査成功時のみ書き込みます。
-- `--sourcemap FILE`（`compile`）: 宣言単位のソースマップを JSON 形式で出力します。
-- `--prelude FILE`（`check`）: 前提を別ファイルから読み込み、対象ファイル内での新たな前提登録（`:`）を禁止します。
-- `--no-axioms`（`check`）: ファイル内での前提登録（`:`）を禁止します。
-- `--fuel N`（全コマンド）: 型推論・弱頭正規化で消費する共有予算（既定値: 1,000,000）。時間やメモリの上限ではありません。
+- `-o FILE` (`compile`): output file; defaults to standard output. Written only after successful checking.
+- `--sourcemap FILE` (`compile`): write a declaration-level source map as JSON.
+- `--prelude FILE` (`check`): load assumptions from a separate file and prohibit new assumptions (`:`) in the target file.
+- `--no-axioms` (`check`): prohibit assumptions (`:`) in the file.
+- `--fuel N` (all commands): shared budget consumed by type inference and weak-head normalization (default: 1,000,000). This is not a time or memory limit.
 
-hieratic 言語では `import "相対パス.ht";` でファイルを分割できます。ルートファイルを `compile` すると、依存関係を展開した単一の `.pg` ファイルが生成されます。
+Split hieratic sources with `import "relative/path.ht";`. Compiling the root file expands its dependencies into a single `.pg` file.
 
-## Web デモ
+## Web demo
 
-ブラウザ上で動作する Web デモです。コンパイラとカーネルを JavaScript に変換しており、ブラウザ内のみでコンパイルと検査を実行できます。
+The compiler and kernel are compiled to JavaScript, so compilation and checking run entirely in the browser.
 
 ```sh
 python3 web/dev.py
 ```
 
-[http://127.0.0.1:8765](http://127.0.0.1:8765) を開いて利用します。
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765).
 
-ブラウザ版のコンパイルと型検査は Web Worker で実行します。処理中も編集でき、「処理を中止」または入力の変更で実行中の処理を停止できます。Worker 化は画面の応答性を保つためのもので、証明の計算量自体を減らすものではありません。
+The interface and documentation support English and Japanese. The first supported language in `navigator.languages` (falling back to `navigator.language`) selects the language; other languages fall back to English. Browser language changes are applied without reloading.
+
+Compilation and type checking run in a Web Worker. You can edit while processing; the cancel button or an input change stops the running operation. Workers keep the interface responsive but do not reduce the computational cost of proofs.
 
 ```sh
 dune build @web/browser
 node web/test.cjs
 node web/worker.test.cjs
+node web/i18n.test.cjs
 ```
 
-## 形式証明と信頼境界 (Rocq)
+## Formal proofs and trust boundaries (Rocq)
 
-カーネルの型検査は、導入された公理自体の無矛盾性までは保証しません。算術の信頼する前提には、論理・等式・Peano 公理に加えて、関数型の原始再帰の公理を含みます。演算や述語ごとの定義・導入除去規則は `def` と証明済みの `theorem` にしています。
+Kernel type checking does not establish the consistency of the supplied axioms. The trusted arithmetic assumptions include logic, equality, Peano axioms, and axioms for primitive recursion at function types. Definitions and introduction/elimination rules for individual operations and predicates are expressed as `def` and proved `theorem` declarations.
 
-通常の OCaml 実装とは独立した Rocq 実装と形式証明を [rocq/](rocq/README.md) に収録しています。以下は Rocq 側の保証であり、通常の OCaml 実装自体の正しさを形式証明したものではありません。通常の利用に Rocq は不要です。
+[rocq/](rocq/README.md) contains an independent Rocq implementation and formal proofs. The guarantees below apply to the Rocq implementation; they do not formally prove the correctness of the ordinary OCaml implementation. Rocq is not required for ordinary use.
 
-| 対象 | 保証内容 |
+| Component | Guarantee |
 | --- | --- |
-| [proofglyph](rocq/proofglyph/README.md) | 宣言的型付けに対する検査器の健全性と、十分な fuel の下での完全性を証明。OCaml コードを抽出して `.pg` を再検査可能 |
-| [hieratic](rocq/hieratic/README.md) | 解析・import 展開の仕様との同値性、名前解決・定義の展開・簡約前後の検査の健全性・完全性、`.pg` の符号化・復号の往復性を証明 |
-| [命題論理 NK・LK](rocq/calculi/README.md) | 固定 LF シグネチャ上の証明項と NK・LK の導出の対応、および LK のカット除去を証明 |
-| [ZFC](rocq/zfc/README.md) | 閉じた式について、ZFC での証明可能性と固定 LF シグネチャ上の型付き証明項の存在の同値性を証明 |
+| [proofglyph](rocq/proofglyph/README.md) | Checker soundness with respect to declarative typing, and completeness with sufficient fuel. Extracted OCaml code can independently recheck `.pg` files. |
+| [hieratic](rocq/hieratic/README.md) | Equivalence to parsing/import specifications; soundness and completeness of name resolution, definition expansion, and checking before and after reduction; round trips for `.pg` encoding/decoding. |
+| [Propositional NK/LK](rocq/calculi/README.md) | Correspondence between proof terms over a fixed LF signature and NK/LK derivations, plus LK cut elimination. |
+| [ZFC](rocq/zfc/README.md) | For closed formulas, equivalence between ZFC provability and the existence of a typed proof term over a fixed LF signature. |
 
-NK・LK と ZFC の定理は Rocq 内の AST を対象とします。生成した proofglyph バイト列と AST の一般的な対応は未証明です。詳細な保証と信頼境界は各 README を参照してください。
+The NK/LK and ZFC theorems concern ASTs inside Rocq. The general correspondence between generated proofglyph bytes and those ASTs is not proved. See each README for the detailed guarantees and trust boundaries.
 
 ```sh
 make -C rocq verify
 make -C rocq test
 ```
 
-## ドキュメントと例
+## Documentation and examples
 
-- [仕様](docs/spec.md): 型理論、proofglyph 言語・hieratic 言語の文法、型付けと等価性の言語仕様。
-- [実装の構成](docs/implementation.md): モジュール分割、検査パイプライン、ソースマップ。
-- [証明カタログ](docs/proofs.md): 収録されている証明例（論理・等式・自然数・整数論）の解説。
-- [算術ライブラリ](examples/commons/README.md): Peano・再帰の公理を基礎とする自然数の演算、整除性、二項定理、素数の無限性、$\sqrt{2}$ の無理性など。
-- [基本例](examples/basics.ht) / [論理の例](examples/logic.ht) / [フェルマーの小定理の適用例](examples/fermat_application.ht)
+- [Specification](docs/spec.md): type theory, proofglyph/hieratic grammars, typing, and equivalence.
+- [Implementation](docs/implementation.md): modules, checking pipelines, and source maps.
+- [Proof catalog](docs/proofs.md): included proofs in logic, equality, natural numbers, and number theory.
+- [Arithmetic library](examples/commons/README.md): operations on natural numbers, divisibility, the binomial theorem, infinitely many primes, irrationality of $\sqrt{2}$, and more, based on Peano and recursion axioms.
+- [Basics](examples/basics.ht) / [Logic](examples/logic.ht) / [Applying Fermat's little theorem](examples/fermat_application.ht)

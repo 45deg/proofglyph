@@ -1,47 +1,48 @@
-# hieratic 形式検証
+# Formal verification of hieratic
 
-proofglyph の `.ht`（高水準言語）から `.pg`（低水準言語）への解析・変換・出力までを Rocq で実装・証明したコンパイラです。
-解析器・変換器を OCaml に抽出し、`proofglyph` 側の共通 codec・型検査器へ接続しています。
+[English](README.md) | [日本語](README.ja.md)
 
-## ビルドと実行
+A compiler implemented and proved in Rocq, covering parsing, translation, and output from high-level `.ht` to low-level `.pg`. The parser and translator are extracted to OCaml and connected to the shared proofglyph codec and type checker.
 
-抽出 CLI のビルドには ocamlfind と Zarith が必要です。
+## Build and run
+
+Building the extracted CLI requires ocamlfind and Zarith.
 
 ```sh
-# 検証とテスト
+# Verify and test
 make -C rocq/hieratic
 make -C rocq/hieratic test
 
-# 抽出した CLI の実行
+# Run the extracted CLI
 rocq/hieratic/_build/hieratic check examples/basics.ht
 rocq/hieratic/_build/hieratic compile examples/basics.ht -o /tmp/basics.pg
 rocq/hieratic/_build/hieratic check-proofglyph /tmp/basics.pg
 ```
 
-## 証明した保証
+## Proved guarantees
 
-高水準な構文から名前解決、`.pg` 出力・再検査までの全経路について、以下を証明しています（追加公理や `Admitted` は使用していません）。
+The complete path from high-level syntax through name resolution to `.pg` output and rechecking has the following proofs, without additional axioms or `Admitted`:
 
-- **構文解析・import 展開の正しさ**: バイト列の字句・構文解析、および import 展開が、独立した仕様と同値であること。
-- **名前解決・変換の健全性と完全性**: 名前付き構文から de Bruijn インデックスへの変換が一意であり、宣言順・種類・スコープが保存されること。
-- **.pg 出力の往復性と再検査性**: 変換された宣言列を `.pg` バイト列に符号化・復号する往復性（roundtrip）と、生成された `.pg` が独立に再検査できること。
+- **Parsing and import correctness**: byte-level lexing/parsing and import expansion are equivalent to independent specifications.
+- **Sound and complete name resolution and translation**: translation from named syntax to de Bruijn indices is unique and preserves declaration order, kinds, and scope.
+- **.pg round trips and rechecking**: translated declaration sequences round-trip through byte encoding/decoding, and generated `.pg` files can be independently rechecked.
 
-## 新しい Hieratic 拡張
+## New Hieratic extensions
 
-`symbol` は `axiom` と同じ前提宣言として解析し、`def` の本体は後続の参照へ展開します。`theorem` は不透明です。`Elaboration.v` の独立した展開関係・評価関係に対して、展開器の正しさとコンパイルの健全性・完全性を証明しています。展開済みの簡約前の項と簡約後の項を両方検査し、簡約で消える不正な引数も拒否します。閉じた定義の展開が局所変数を捕獲しないことも証明しています。
+`symbol` is parsed as an assumption, like `axiom`. `def` bodies are expanded at later references; `theorem` remains opaque. Expander correctness and compilation soundness/completeness are proved against the independent expansion and evaluation relations in `Elaboration.v`. Both expanded terms before reduction and reduced terms are checked, rejecting invalid arguments that reduction would erase. Closed definition expansion is also proved not to capture local variables.
 
-抽出 CLI はこの経路を標準で使用します。`--elaborate` は互換用の別名で、ホスト OCaml コンパイラへ処理を委ねません。既存 OCaml との出力一致は例ごとのテストで検証し、一般的な実装間の同値性証明とは区別します。
+The extracted CLI uses this path by default. `--elaborate` is a compatibility alias; processing is not delegated to the host OCaml compiler. Agreement with the existing OCaml output is tested on individual examples, separately from a general equivalence proof between implementations.
 
-## 信頼境界と制限
+## Trust boundaries and limitations
 
-- **抽出と整数演算**: 自然数は `ExtrOcamlNatBigInt` で Zarith の多倍長整数に抽出します。この置換設定と Zarith は信頼境界に残ります。
-- **ホスト環境**: ファイル I/O、実体パスの解決（`realpath`）、依存ファイルの収集は OCaml（ホスト環境）が担当します。
-- **名前付き言語の独立理論**: 名前付き言語自体の型理論は独立に定式化せず、核心言語（proofglyph）への宣言的翻訳関係を通じて検証しています。
-- **通常の OCaml カーネルとの差**: 弱頭簡約による再帰比較と同一項の比較省略を使用し、健全性・完全性を証明しています。文脈と項をキーにした推論キャッシュも使用し、同じ fuel でキャッシュなし版と結果が一致することを証明しています。テーブルは抽出時に永続ハッシュ表へ置換し、そのランタイムとの対応は実行テストで検証します。fuel はホストの共有予算とは異なる再帰の深さであり、消費量や実行時間は一致しません。
-- **計算資源**: fuel は再帰の深さであり、実機の時間・メモリ内での完了を保証するものではありません。
+- **Extraction and integers**: naturals are extracted to Zarith arbitrary-precision integers via `ExtrOcamlNatBigInt`. These substitutions and Zarith remain trusted.
+- **Host environment**: OCaml handles file I/O, canonical paths (`realpath`), and dependency collection.
+- **Independent named-language theory**: the named language's type theory is not independently formalized; verification uses a declarative translation relation to the proofglyph core.
+- **Differences from the ordinary OCaml kernel**: recursive weak-head comparison and skipping identical terms are proved sound and complete. An inference cache keyed by context and term is proved to agree with the uncached checker at the same fuel. Extraction replaces the table with a persistent hash table; correspondence with that runtime is tested. Fuel measures recursion depth rather than the host's shared budget, so consumption and runtime differ.
+- **Resources**: recursion-depth fuel does not guarantee completion within physical time or memory limits.
 
 ## TODO
 
-- [ ] 名前付き言語自体の型付け・置換・α同値性の独立な形式化
-- [ ] 既存 OCaml の reader / writer とのバイトレベルでの厳密な同値性証明
-- [ ] CLI の行・列位置情報の保持とエラー報告の強化
+- [ ] Independently formalize typing, substitution, and α equivalence for the named language
+- [ ] Prove exact byte-level equivalence with the existing OCaml reader/writer
+- [ ] Preserve CLI line/column positions and improve diagnostics

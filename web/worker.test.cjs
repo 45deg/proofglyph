@@ -57,7 +57,7 @@ async function main() {
     const previous = client.worker;
     const pending = client.request({kind: 'compile', path: 'examples/worker.ht', files});
     client.cancel();
-    await assert.rejects(pending, /中止/);
+    await assert.rejects(pending, /Operation cancelled/);
     assert.equal(client.worker, null);
     const retry = await client.request({kind: 'compile', path: 'examples/worker.ht', files});
     assert.notEqual(client.worker, previous);
